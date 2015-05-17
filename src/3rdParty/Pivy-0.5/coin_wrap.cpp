@@ -244966,7 +244966,7 @@ SWIGINTERN PyObject *_wrap_SoMFPlane_setValues(PyObject *SWIGUNUSEDPARM(self), P
           SbPlane * plane = NULL;
           PyObject * item = PyList_GetItem(obj3,i);
           SWIG_ConvertPtr(item, (void **) &plane, SWIGTYPE_p_SbPlane, 1);
-          if (time != NULL) {
+          if (plane != NULL) {
             arg4[i] = *plane; 
           }
         }
