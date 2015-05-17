@@ -343959,7 +343959,7 @@ fail:
 
 SWIGINTERN PyObject *_wrap_new_SbImage(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[2];
+  PyObject *argv[3];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
@@ -344142,7 +344142,7 @@ fail:
 
 SWIGINTERN PyObject *_wrap_SbImage_setValue(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[3];
+  PyObject *argv[4];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
@@ -344310,7 +344310,7 @@ fail:
 
 SWIGINTERN PyObject *_wrap_SbImage_setValuePtr(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[3];
+  PyObject *argv[4];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
