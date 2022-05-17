@@ -40,13 +40,10 @@ from PathScripts import PostUtilsExport
 #    called to create TOOLTIP_ARGS, so they also end up having to be globals.
 #
 TOOLTIP = """This is a postprocessor file for the Path workbench. It is used to
-take a pseudo-gcode fragment outputted by a Path object, and output
-real GCode suitable for a linuxcnc 3 axis mill. This postprocessor, once placed
-in the appropriate PathScripts folder, can be used directly from inside
-FreeCAD, via the GUI importer or via python scripts with:
+test the postprocessor code.  It probably isn't useful for "real" gcode.
 
-import refactored_linuxcnc_post
-refactored_linuxcnc_post.export(object,"/path/to/file.ncc","")
+import refactored_test_post
+refactored_test_post.export(object,"/path/to/file.ncc","")
 """
 #
 # Default to metric mode
@@ -64,9 +61,30 @@ def init_values(values):
     # Set any values here that need to override the default values set
     # in the init_shared_values routine.
     #
-    values["ENABLE_COOLANT"] = True
-    # the order of parameters
-    # linuxcnc doesn't want K properties on XY plane; Arcs need work.
+    # Turn off as much functionality as possible by default.
+    # Then the tests can turn back on the appropriate options as needed.
+    #
+    # Used in the argparser code as the "name" of the postprocessor program.
+    # This would normally show up in the usage message in the TOOLTIP_ARGS,
+    # but we are suppressing the usage message, so it doesn't show up after all.
+    #
+    values["MACHINE_NAME"] = "test"
+    #
+    # Don't output comments by default
+    #
+    values["OUTPUT_COMMENTS"] = False
+    #
+    # Don't output the header by default
+    #
+    values["OUTPUT_HEADER"] = False
+    #
+    # Convert M56 tool change commands to comments,
+    # which are then suppressed by default.
+    #
+    values["OUTPUT_TOOL_CHANGE"] = False
+    #
+    # Enable as many parameters as possible to be output by default
+    #
     values["PARAMETER_ORDER"] = [
         "X",
         "Y",
@@ -74,8 +92,12 @@ def init_values(values):
         "A",
         "B",
         "C",
+        "U",
+        "V",
+        "W",
         "I",
         "J",
+        "K",
         "F",
         "S",
         "T",
@@ -86,27 +108,27 @@ def init_values(values):
         "D",
         "P",
     ]
-    #
-    # Used in the argparser code as the "name" of the postprocessor program.
-    # This would normally show up in the usage message in the TOOLTIP_ARGS,
-    # but we are suppressing the usage message, so it doesn't show up after all.
-    #
-    values["MACHINE_NAME"] = "LinuxCNC"
-    #
-    # Any commands in this value will be output as the last commands
-    # in the G-code file.
-    #
-    values[
-        "POSTAMBLE"
-    ] = """M05
-G17 G54 G90 G80 G40
-M2"""
     values["POSTPROCESSOR_FILE_NAME"] = __name__
     #
-    # Any commands in this value will be output after the header and
-    # safety block at the beginning of the G-code file.
+    # Do not show the editor by default since we are testing.
     #
-    values["PREAMBLE"] = """G17 G54 G40 G49 G80 G90"""
+    values["SHOW_EDITOR"] = False
+    #
+    # Don't show the current machine units by default
+    #
+    values["SHOW_MACHINE_UNITS"] = False
+    #
+    # Don't show the current operation label by default.
+    #
+    values["SHOW_OPERATION_LABELS"] = False
+    #
+    # Don't output an M5 command to stop the spindle after an M6 tool change by default.
+    #
+    values["STOP_SPINDLE_FOR_TOOL_CHANGE"] = False
+    #
+    # Don't output a G43 tool length command following tool changes by default.
+    #
+    values["USE_TLO"] = False
     values["UNITS"] = UNITS
 
 
@@ -136,6 +158,11 @@ def init_arguments_visible(arguments_visible):
     #
     # Modify the visibility of any arguments from the defaults here.
     #
+    #
+    # Make all arguments invisible by default.
+    #
+    for k in iter(arguments_visible):
+        arguments_visible[k] = False
 
 
 def init_arguments(values, argument_defaults, arguments_visible):

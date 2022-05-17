@@ -27,14 +27,14 @@ import Path
 import PathScripts.PathLog as PathLog
 import PathTests.PathTestUtils as PathTestUtils
 from importlib import reload
-from PathScripts.post import linuxcnc_post as postprocessor
+from PathScripts.post import grbl_post as postprocessor
 
 
 PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
 PathLog.trackModule(PathLog.thisModule())
 
 
-class TestLinuxCNCPost(PathTestUtils.PathTestBase):
+class TestGrblPost(PathTestUtils.PathTestBase):
     @classmethod
     def setUpClass(cls):
         """setUpClass()...
@@ -94,15 +94,15 @@ class TestLinuxCNCPost(PathTestUtils.PathTestBase):
         self.assertTrue(len(gcode.splitlines()) == 13)
 
         # Test without header
-        expected = """(begin preamble)
-G17 G54 G40 G49 G80 G90
+        expected = """(Begin preamble)
+G17 G90
 G21
-(begin operation: testpath)
-(machine units: mm/min)
-(finish operation: testpath)
-(begin postamble)
-M05
-G17 G54 G90 G80 G40
+(Begin operation: testpath)
+(Path: testpath)
+(Finish operation: testpath)
+(Begin postamble)
+M5
+G17 G90
 M2
 """
 
@@ -115,10 +115,10 @@ M2
         self.assertEqual(gcode, expected)
 
         # test without comments
-        expected = """G17 G54 G40 G49 G80 G90
+        expected = """G17 G90
 G21
-M05
-G17 G54 G90 G80 G40
+M5
+G17 G90
 M2
 """
 
@@ -140,13 +140,13 @@ M2
         args = "--no-header --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "G0 X10.000 Y20.000 Z30.000 "
+        expected = "G0 X10.000 Y20.000 Z30.000"
         self.assertEqual(result, expected)
 
         args = "--no-header --precision=2 --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "G0 X10.00 Y20.00 Z30.00 "
+        expected = "G0 X10.00 Y20.00 Z30.00"
         self.assertEqual(result, expected)
 
 
@@ -163,7 +163,7 @@ M2
         args = "--no-header --line-numbers --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "N160  G0 X10.000 Y20.000 Z30.000 "
+        expected = "N150 G0 X10.000 Y20.000 Z30.000"
         self.assertEqual(result, expected)
 
     def test030(self):
@@ -174,7 +174,7 @@ M2
         self.docobj.Path = Path.Path([])
         postables = [self.docobj]
 
-        args = "--no-header --no-comments --preamble='G18 G55' --no-show-editor"
+        args = "--no-header --no-comments --preamble='G18 G55\n' --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[0]
         self.assertEqual(result, "G18 G55")
@@ -205,7 +205,7 @@ M2
         self.assertEqual(gcode.splitlines()[2], "G20")
 
         result = gcode.splitlines()[5]
-        expected = "G0 X0.3937 Y0.7874 Z1.1811 "
+        expected = "G0 X0.3937 Y0.7874 Z1.1811"
         self.assertEqual(result, expected)
 
         # Technical debt.   The following test fails.  Precision not working
@@ -228,11 +228,14 @@ M2
         self.docobj.Path = Path.Path([c, c1])
         postables = [self.docobj]
 
-        args = "--no-header --modal --no-show-editor"
-        gcode = postprocessor.export(postables, "gcode.tmp", args)
-        result = gcode.splitlines()[6]
-        expected = "X10.000 Y30.000 Z30.000 "
-        self.assertEqual(result, expected)
+        #
+        # The grbl postprocessor does not have a --modal option.
+        #
+        # args = "--no-header --modal --no-show-editor"
+        # gcode = postprocessor.export(postables, "gcode.tmp", args)
+        # result = gcode.splitlines()[6]
+        # expected = "X10.000 Y30.000 Z30.000 "
+        # self.assertEqual(result, expected)
 
     def test070(self):
         """
@@ -245,11 +248,14 @@ M2
         self.docobj.Path = Path.Path([c, c1])
         postables = [self.docobj]
 
-        args = "--no-header --axis-modal --no-show-editor"
-        gcode = postprocessor.export(postables, "gcode.tmp", args)
-        result = gcode.splitlines()[6]
-        expected = "G0 Y30.000 "
-        self.assertEqual(result, expected)
+        #
+        # The grbl postprocessor does not have a --axis-modal option.
+        #
+        # args = "--no-header --axis-modal --no-show-editor"
+        # gcode = postprocessor.export(postables, "gcode.tmp", args)
+        # result = gcode.splitlines()[6]
+        # expected = "G0 Y30.000 "
+        # self.assertEqual(result, expected)
 
     def test080(self):
         """
@@ -262,15 +268,16 @@ M2
 
         args = "--no-header --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
-        self.assertEqual(gcode.splitlines()[5], "M5")
-        self.assertEqual(gcode.splitlines()[6], "M6 T2 ")
-        self.assertEqual(gcode.splitlines()[7], "G43 H2 ")
-        self.assertEqual(gcode.splitlines()[8], "M3 S3000 ")
+        self.assertEqual(gcode.splitlines()[6], "( M6 T2 )")
+        self.assertEqual(gcode.splitlines()[7], "M3 S3000")
 
         # suppress TLO
-        args = "--no-header --no-tlo --no-show-editor"
-        gcode = postprocessor.export(postables, "gcode.tmp", args)
-        self.assertEqual(gcode.splitlines()[7], "M3 S3000 ")
+        #
+        # The grbl postprocessor does not have a --no-tlo option.
+        #
+        # args = "--no-header --no-tlo --no-show-editor"
+        # gcode = postprocessor.export(postables, "gcode.tmp", args)
+        # self.assertEqual(gcode.splitlines()[7], "M3 S3000 ")
 
     def test090(self):
         """
@@ -285,5 +292,5 @@ M2
         args = "--no-header --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "(comment) "
+        expected = "(comment)"
         self.assertEqual(result, expected)

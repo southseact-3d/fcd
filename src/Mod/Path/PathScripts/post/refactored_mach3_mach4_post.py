@@ -20,8 +20,7 @@
 # *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
 # *   USA                                                                   *
 # *                                                                         *
-# ***************************************************************************
-
+# ***************************************************************************/
 from __future__ import print_function
 
 from PathScripts import PostUtilsArguments
@@ -39,14 +38,15 @@ from PathScripts import PostUtilsExport
 #    need to be defined before the "init_shared_arguments" routine can be
 #    called to create TOOLTIP_ARGS, so they also end up having to be globals.
 #
-TOOLTIP = """This is a postprocessor file for the Path workbench. It is used to
+TOOLTIP = """
+This is a postprocessor file for the Path workbench. It is used to
 take a pseudo-gcode fragment outputted by a Path object, and output
-real GCode suitable for a linuxcnc 3 axis mill. This postprocessor, once placed
+real GCode suitable for a mach3_4 3 axis mill. This postprocessor, once placed
 in the appropriate PathScripts folder, can be used directly from inside
 FreeCAD, via the GUI importer or via python scripts with:
 
-import refactored_linuxcnc_post
-refactored_linuxcnc_post.export(object,"/path/to/file.ncc","")
+import mach3_mach4_post
+mach3_mach4_post.export(object,"/path/to/file.ncc","")
 """
 #
 # Default to metric mode
@@ -65,8 +65,18 @@ def init_values(values):
     # in the init_shared_values routine.
     #
     values["ENABLE_COOLANT"] = True
+    #
+    # Used in the argparser code as the "name" of the postprocessor program.
+    # This would normally show up in the usage message in the TOOLTIP_ARGS,
+    # but we are suppressing the usage message, so it doesn't show up after all.
+    #
+    values["MACHINE_NAME"] = "mach3_4"
+    # Enable special processing for operations with "Adaptive" in the name
+    values["OUTPUT_ADAPTIVE"] = True
+    # Output the machine name for mach3_mach4 instead of the machine units alone.
+    values["OUTPUT_MACHINE_NAME"] = True
     # the order of parameters
-    # linuxcnc doesn't want K properties on XY plane; Arcs need work.
+    # mach3_mach4 doesn't want K properties on XY plane; Arcs need work.
     values["PARAMETER_ORDER"] = [
         "X",
         "Y",
@@ -87,12 +97,6 @@ def init_values(values):
         "P",
     ]
     #
-    # Used in the argparser code as the "name" of the postprocessor program.
-    # This would normally show up in the usage message in the TOOLTIP_ARGS,
-    # but we are suppressing the usage message, so it doesn't show up after all.
-    #
-    values["MACHINE_NAME"] = "LinuxCNC"
-    #
     # Any commands in this value will be output as the last commands
     # in the G-code file.
     #
@@ -107,6 +111,8 @@ M2"""
     # safety block at the beginning of the G-code file.
     #
     values["PREAMBLE"] = """G17 G54 G40 G49 G80 G90"""
+    # Output the machine name for mach3_mach4 instead of the machine units alone.
+    values["SHOW_MACHINE_UNITS"] = False
     values["UNITS"] = UNITS
 
 
@@ -136,6 +142,7 @@ def init_arguments_visible(arguments_visible):
     #
     # Modify the visibility of any arguments from the defaults here.
     #
+    arguments_visible["axis-modal"] = True
 
 
 def init_arguments(values, argument_defaults, arguments_visible):

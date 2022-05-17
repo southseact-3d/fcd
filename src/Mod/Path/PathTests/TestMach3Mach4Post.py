@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # ***************************************************************************
 # *   Copyright (c) 2022 sliptonic <shopinthewoods@gmail.com>               *
+# *   Copyright (c) 2022 Larry Woestman <LarryWoestman2@gmail.com>          *
 # *                                                                         *
 # *   This program is free software; you can redistribute it and/or modify  *
 # *   it under the terms of the GNU Lesser General Public License (LGPL)    *
@@ -20,21 +21,22 @@
 # *                                                                         *
 # ***************************************************************************
 
+from importlib import reload
+
 import FreeCAD
 
 # import Part
 import Path
 import PathScripts.PathLog as PathLog
 import PathTests.PathTestUtils as PathTestUtils
-from importlib import reload
-from PathScripts.post import linuxcnc_post as postprocessor
+from PathScripts.post import mach3_mach4_post as postprocessor
 
 
 PathLog.setLevel(PathLog.Level.DEBUG, PathLog.thisModule())
 PathLog.trackModule(PathLog.thisModule())
 
 
-class TestLinuxCNCPost(PathTestUtils.PathTestBase):
+class TestMach3Mach4Post(PathTestUtils.PathTestBase):
     @classmethod
     def setUpClass(cls):
         """setUpClass()...
@@ -89,7 +91,8 @@ class TestLinuxCNCPost(PathTestUtils.PathTestBase):
         postables = [self.docobj]
 
         # Test generating with header
-        args = "--no-show-editor"  # header contains a time stamp that messes up unit testing. Only test length of result
+        # header contains a time stamp that messes up unit testing. Only test length of result
+        args = "--no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         self.assertTrue(len(gcode.splitlines()) == 13)
 
@@ -98,7 +101,7 @@ class TestLinuxCNCPost(PathTestUtils.PathTestBase):
 G17 G54 G40 G49 G80 G90
 G21
 (begin operation: testpath)
-(machine units: mm/min)
+(machine: mach3_4, mm/min)
 (finish operation: testpath)
 (begin postamble)
 M05
@@ -130,7 +133,6 @@ M2
     def test010(self):
         """Test command Generation.
         Test Precision
-        Test imperial / inches
         """
         c = Path.Command("G0 X10 Y20 Z30")
 
@@ -140,13 +142,13 @@ M2
         args = "--no-header --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "G0 X10.000 Y20.000 Z30.000 "
+        expected = "G0 X10.000 Y20.000 Z30.000"
         self.assertEqual(result, expected)
 
         args = "--no-header --precision=2 --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "G0 X10.00 Y20.00 Z30.00 "
+        expected = "G0 X10.00 Y20.00 Z30.00"
         self.assertEqual(result, expected)
 
 
@@ -163,7 +165,7 @@ M2
         args = "--no-header --line-numbers --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "N160  G0 X10.000 Y20.000 Z30.000 "
+        expected = "N160  G0 X10.000 Y20.000 Z30.000"
         self.assertEqual(result, expected)
 
     def test030(self):
@@ -205,16 +207,16 @@ M2
         self.assertEqual(gcode.splitlines()[2], "G20")
 
         result = gcode.splitlines()[5]
-        expected = "G0 X0.3937 Y0.7874 Z1.1811 "
+        expected = "G0 X0.3937 Y0.7874 Z1.1811"
         self.assertEqual(result, expected)
 
         # Technical debt.   The following test fails.  Precision not working
         # with imperial units.
 
-        # args = ("--no-header --inches --precision=2")
+        # args = ("--no-header --inches --precision=2 --no-show-editor")
         # gcode = postprocessor.export(postables, "gcode.tmp", args)
         # result = gcode.splitlines()[5]
-        # expected = "G0 X0.39 Y0.78 Z1.18 "
+        # expected = "G0 X0.39 Y0.79 Z1.18"
         # self.assertEqual(result, expected)
 
     def test060(self):
@@ -231,7 +233,7 @@ M2
         args = "--no-header --modal --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[6]
-        expected = "X10.000 Y30.000 Z30.000 "
+        expected = "X10.000 Y30.000 Z30.000"
         self.assertEqual(result, expected)
 
     def test070(self):
@@ -248,7 +250,7 @@ M2
         args = "--no-header --axis-modal --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[6]
-        expected = "G0 Y30.000 "
+        expected = "G0 Y30.000"
         self.assertEqual(result, expected)
 
     def test080(self):
@@ -264,13 +266,13 @@ M2
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         self.assertEqual(gcode.splitlines()[5], "M5")
         self.assertEqual(gcode.splitlines()[6], "M6 T2 ")
-        self.assertEqual(gcode.splitlines()[7], "G43 H2 ")
-        self.assertEqual(gcode.splitlines()[8], "M3 S3000 ")
+        self.assertEqual(gcode.splitlines()[7], "G43 H2")
+        self.assertEqual(gcode.splitlines()[8], "M3 S3000")
 
         # suppress TLO
         args = "--no-header --no-tlo --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
-        self.assertEqual(gcode.splitlines()[7], "M3 S3000 ")
+        self.assertEqual(gcode.splitlines()[7], "M3 S3000")
 
     def test090(self):
         """
@@ -285,5 +287,5 @@ M2
         args = "--no-header --no-show-editor"
         gcode = postprocessor.export(postables, "gcode.tmp", args)
         result = gcode.splitlines()[5]
-        expected = "(comment) "
+        expected = "(comment)"
         self.assertEqual(result, expected)

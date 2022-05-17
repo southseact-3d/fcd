@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
 # ***************************************************************************
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
+# *   Copyright (c) 2018, 2019 Gauthier Briere                              *
+# *   Copyright (c) 2019, 2020 Schildkroet                                  *
 # *   Copyright (c) 2022 Larry Woestman <LarryWoestman2@gmail.com>          *
 # *                                                                         *
 # *   This file is part of the FreeCAD CAx development system.              *
@@ -39,14 +42,11 @@ from PathScripts import PostUtilsExport
 #    need to be defined before the "init_shared_arguments" routine can be
 #    called to create TOOLTIP_ARGS, so they also end up having to be globals.
 #
-TOOLTIP = """This is a postprocessor file for the Path workbench. It is used to
-take a pseudo-gcode fragment outputted by a Path object, and output
-real GCode suitable for a linuxcnc 3 axis mill. This postprocessor, once placed
-in the appropriate PathScripts folder, can be used directly from inside
-FreeCAD, via the GUI importer or via python scripts with:
+TOOLTIP = """
+Generate g-code from a Path that is compatible with the grbl controller:
 
-import refactored_linuxcnc_post
-refactored_linuxcnc_post.export(object,"/path/to/file.ncc","")
+import refactored_grbl_post
+refactored_grbl_post.export(object, "/path/to/file.ncc")
 """
 #
 # Default to metric mode
@@ -64,9 +64,29 @@ def init_values(values):
     # Set any values here that need to override the default values set
     # in the init_shared_values routine.
     #
-    values["ENABLE_COOLANT"] = True
-    # the order of parameters
-    # linuxcnc doesn't want K properties on XY plane; Arcs need work.
+    #
+    # If this is set to True, then commands that are placed in
+    # comments that look like (MC_RUN_COMMAND: blah) will be output.
+    #
+    values["ENABLE_MACHINE_SPECIFIC_COMMANDS"] = True
+    #
+    # Used in the argparser code as the "name" of the postprocessor program.
+    # This would normally show up in the usage message in the TOOLTIP_ARGS,
+    # but we are suppressing the usage message, so it doesn't show up after all.
+    #
+    values["MACHINE_NAME"] = "Grbl"
+    #
+    # Default to outputting Path labels at the beginning of each Path.
+    #
+    values["OUTPUT_PATH_LABELS"] = True
+    #
+    # Default to not outputting M6 tool changes (comment it) as grbl currently does not handle it
+    #
+    values["OUTPUT_TOOL_CHANGE"] = False
+    #
+    # The order of the parameters.
+    # Arcs may only work on the XY plane (this needs to be verified).
+    #
     values["PARAMETER_ORDER"] = [
         "X",
         "Y",
@@ -74,40 +94,44 @@ def init_values(values):
         "A",
         "B",
         "C",
+        "U",
+        "V",
+        "W",
         "I",
         "J",
+        "K",
         "F",
         "S",
         "T",
         "Q",
         "R",
         "L",
-        "H",
-        "D",
         "P",
     ]
-    #
-    # Used in the argparser code as the "name" of the postprocessor program.
-    # This would normally show up in the usage message in the TOOLTIP_ARGS,
-    # but we are suppressing the usage message, so it doesn't show up after all.
-    #
-    values["MACHINE_NAME"] = "LinuxCNC"
     #
     # Any commands in this value will be output as the last commands
     # in the G-code file.
     #
     values[
         "POSTAMBLE"
-    ] = """M05
-G17 G54 G90 G80 G40
+    ] = """M5
+G17 G90
 M2"""
     values["POSTPROCESSOR_FILE_NAME"] = __name__
     #
     # Any commands in this value will be output after the header and
     # safety block at the beginning of the G-code file.
     #
-    values["PREAMBLE"] = """G17 G54 G40 G49 G80 G90"""
+    values["PREAMBLE"] = """G17 G90"""
+    #
+    # Do not show the current machine units just before the PRE_OPERATION.
+    #
+    values["SHOW_MACHINE_UNITS"] = False
     values["UNITS"] = UNITS
+    #
+    # Default to not outputting a G43 following tool changes
+    #
+    values["USE_TLO"] = False
 
 
 def init_argument_defaults(argument_defaults):
@@ -128,6 +152,8 @@ def init_argument_defaults(argument_defaults):
     # Note:  You also need to modify the corresponding entries in the "values" hash
     #        to actually make the default value(s) change to match.
     #
+    argument_defaults["tlo"] = False
+    argument_defaults["tool_change"] = False
 
 
 def init_arguments_visible(arguments_visible):
@@ -136,6 +162,13 @@ def init_arguments_visible(arguments_visible):
     #
     # Modify the visibility of any arguments from the defaults here.
     #
+    arguments_visible["bcnc"] = True
+    arguments_visible["axis-modal"] = False
+    arguments_visible["return-to"] = True
+    arguments_visible["tlo"] = False
+    arguments_visible["tool_change"] = True
+    arguments_visible["translate_drill"] = True
+    arguments_visible["wait-for-spindle"] = True
 
 
 def init_arguments(values, argument_defaults, arguments_visible):
