@@ -123,6 +123,27 @@ jobs:
             FC-${{ env.cacheKey }}-${{ github.ref }}-
             FC-${{ env.cacheKey }}-
 
+      - name: Restore incremental build tree
+        id: build-cache-restore
+        if: always()
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.builddir }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          restore-keys: |
+            FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-
+            FC-BUILD-${{ env.cacheKey }}-
+
+      - name: Print incremental build cache status
+        if: always()
+        run: |
+          if ("${{ steps.build-cache-restore.outputs.cache-hit }}" -eq "true") {
+            Write-Host "Incremental build cache hit: restored previous build outputs."
+          }
+          else {
+            Write-Host "Incremental build cache miss: this run will prime the build cache."
+          }
+
       - name: Print Ccache statistics before build, reset stats and print config
         run: |
           . $env:ccachebindir\ccache -s
@@ -143,6 +164,8 @@ jobs:
           -DFREECAD_USE_PCH=OFF
           -DFREECAD_RELEASE_PDB=OFF
           -DFREECAD_LIBPACK_DIR="${{ env.libpackdir }}"
+          -DCMAKE_C_COMPILER_LAUNCHER="${{ env.ccachebindir }}/ccache.exe"
+          -DCMAKE_CXX_COMPILER_LAUNCHER="${{ env.ccachebindir }}/ccache.exe"
           -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
           -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
           -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
@@ -177,6 +200,14 @@ jobs:
         with:
           path: ${{ env.CCACHE_DIR }}
           key: FC-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+
+      - name: Save incremental build tree
+        id: build-cache-save
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.builddir }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
 
 
       - name: Upload Windows build artifacts
