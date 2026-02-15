@@ -38,7 +38,6 @@ NewFileButton::NewFileButton(const NewButton& newButton)
     : mainLayout(new QHBoxLayout(this))
     , textLayout(new QVBoxLayout())
     , headingLabel(new QLabel())
-    , descriptionLabel(new QLabel())
 {
     setObjectName(QStringLiteral("newFileButton"));
     auto hGrp = App::GetApplication().GetParameterGroupByPath(
@@ -54,9 +53,9 @@ NewFileButton::NewFileButton(const NewButton& newButton)
     auto iconLabel = new QLabel(this);
     QIcon baseIcon(newButton.iconPath);
     iconLabel->setPixmap(baseIcon.pixmap(iconSize, iconSize));
+    iconLabel->setAlignment(Qt::AlignHCenter);
 
     textLayout->addWidget(headingLabel);
-    textLayout->addWidget(descriptionLabel);
     textLayout->setSpacing(0);
     textLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -65,13 +64,8 @@ NewFileButton::NewFileButton(const NewButton& newButton)
     font.setWeight(QFont::Bold);
     headingLabel->setFont(font);
 
-    descriptionLabel->setText(newButton.description);
-    descriptionLabel->setWordWrap(true);
-    descriptionLabel->setFixedWidth(labelWidth);
-    descriptionLabel->setAlignment(Qt::AlignTop);
-
-    mainLayout->setAlignment(Qt::AlignVCenter);
-    mainLayout->addWidget(iconLabel);
+    mainLayout->setAlignment(Qt::AlignCenter);
+    textLayout->insertWidget(0, iconLabel, 0, Qt::AlignHCenter);
     mainLayout->addLayout(textLayout);
     mainLayout->addStretch();
     QFontMetrics qfm(font);
@@ -80,6 +74,7 @@ NewFileButton::NewFileButton(const NewButton& newButton)
     mainLayout->setContentsMargins(margin, margin, 2 * margin, margin);
     setLayout(mainLayout);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    setToolTip(QStringLiteral("<b>%1</b><br/>%2").arg(newButton.heading, newButton.description));
 }
 
 QSize NewFileButton::minimumSizeHint() const
@@ -87,7 +82,7 @@ QSize NewFileButton::minimumSizeHint() const
     int minWidth = labelWidth + iconSize + mainLayout->contentsMargins().left()
         + mainLayout->contentsMargins().right() + mainLayout->spacing();
 
-    int textHeight = headingLabel->sizeHint().height() + descriptionLabel->sizeHint().height();
+    int textHeight = headingLabel->sizeHint().height();
 
     int minHeight = std::max(iconSize, textHeight) + mainLayout->contentsMargins().top()
         + mainLayout->contentsMargins().bottom();

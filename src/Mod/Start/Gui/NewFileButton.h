@@ -53,7 +53,6 @@ private:
     QHBoxLayout* mainLayout;
     QVBoxLayout* textLayout;
     QLabel* headingLabel;
-    QLabel* descriptionLabel;
 
 protected:
     QSize minimumSizeHint() const override;
