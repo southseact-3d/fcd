@@ -24,6 +24,9 @@
 
 name: Build Windows
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       artifactBasename:
@@ -52,7 +55,7 @@ on:
 jobs:
   Build:
     runs-on: windows-latest
-    continue-on-error: ${{ inputs.allowedToFail }}
+    continue-on-error: ${{ inputs.allowedToFail || false }}
     env:
       CCACHE_COMPILERCHECK: "%compiler%" # default:mtime
       CCACHE_COMPRESS: true
@@ -72,7 +75,7 @@ jobs:
       libpackdir: C:/FC/libpack/
       logdir: C:/logs/
       reportdir: C:/report/
-      reportfilename: ${{ inputs.artifactBasename }}-report.md
+      reportfilename: ${{ inputs.artifactBasename || 'FreeCAD' }}-report.md
     outputs:
       reportFile: ${{ steps.Init.outputs.reportFile }}
 
@@ -85,6 +88,7 @@ jobs:
       - name: Checking out source code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          fetch-depth: 2
           submodules: true
 
       - name: Make needed directories, files and initializations
@@ -174,10 +178,20 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           key: FC-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
 
+
+      - name: Upload Windows build artifacts
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Windows-Build
+          path: |
+            ${{ env.builddir }}\bin\
+            ${{ env.builddir }}\Mod\
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: ${{ inputs.artifactBasename }}-Logs
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Logs
           path: |
             ${{ env.logdir }}

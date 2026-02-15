@@ -38,10 +38,7 @@
 name: FreeCAD CI cleaner
 
 on:
-  workflow_run:
-    workflows: [FreeCAD master CI]
-    types:
-      - completed
+  workflow_dispatch:
 
 env:
   dryrun: false
