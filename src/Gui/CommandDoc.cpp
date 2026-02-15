@@ -218,7 +218,8 @@ void StdCmdImport::activated(int iMsg)
     std::map<std::string, std::string>::const_iterator jt;
     for (jt = FilterList.begin(); jt != FilterList.end(); ++jt) {
         // ignore the project file format
-        if (jt->first.find("(*.FCStd)") == std::string::npos) {
+        if (jt->first.find("(*.FCStd)") == std::string::npos
+            && jt->first.find("(*.tg3d)") == std::string::npos) {
             formatList += QLatin1String(jt->first.c_str());
             formatList += QLatin1String(";;");
         }
@@ -450,7 +451,8 @@ void StdCmdExport::activated(int iMsg)
     std::map<std::string, std::string> filterMap = App::GetApplication().getExportFilters();
     for (const auto& filter : filterMap) {
         // ignore the project file format
-        if (filter.first.find("(*.FCStd)") == std::string::npos) {
+        if (filter.first.find("(*.FCStd)") == std::string::npos
+            && filter.first.find("(*.tg3d)") == std::string::npos) {
             filterList << QString::fromStdString(filter.first);
         }
     }
@@ -583,7 +585,7 @@ void StdCmdMergeProjects::activated(int iMsg)
         Gui::getMainWindow(),
         QString::fromUtf8(QT_TR_NOOP("Merge Document")),
         FileDialog::getWorkingDirectory(),
-        QString::fromUtf8(QT_TR_NOOP("%1 document (*.FCStd)")).arg(exe)
+        QString::fromUtf8(QT_TR_NOOP("%1 document (*.FCStd *.tg3d)")).arg(exe)
     );
     if (!project.isEmpty()) {
         FileDialog::setWorkingDirectory(project);

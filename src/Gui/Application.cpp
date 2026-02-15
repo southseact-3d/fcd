@@ -2423,16 +2423,8 @@ bool onlySingleInstance(GUISingleApplication& mainApp)
 
 void setAppNameAndIcon()
 {
-    const std::map<std::string, std::string>& cfg = App::Application::Config();
-
     // set application icon and window title
-    auto it = cfg.find("Application");
-    if (it != cfg.end()) {
-        QApplication::setApplicationName(QString::fromUtf8(it->second.c_str()));
-    }
-    else {
-        QApplication::setApplicationName(QString::fromStdString(App::Application::getExecutableName()));
-    }
+    QApplication::setApplicationName(QStringLiteral("Tungsten CAD"));
 #ifndef Q_OS_MACOS
     QApplication::setWindowIcon(
         Gui::BitmapFactory().pixmap(App::Application::Config()["AppIcon"].c_str())
