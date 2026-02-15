@@ -12,12 +12,6 @@
 name: "CodeQL Advanced (c-cpp)"
 
 on:
-  # push:
-  #   branches: [ "main" ]
-  # pull_request:
-  #   branches: [ "main" ]
-  schedule:
-    - cron: '28 12 * * 6'
   workflow_dispatch:  # Allow manual triggers
 
 env:
