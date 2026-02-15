@@ -74,17 +74,17 @@ Currently installed workbenches:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <item>
          <widget class="QLabel" name="WorkbenchSelectorItemLabel">
-          <property name="text">
-           <string>Workbench selector items style</string>
-          </property>
-         </widget>
+           <property name="text">
+            <string>Modeling tabs style</string>
+           </property>
+          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="WorkbenchSelectorItem">
-          <property name="toolTip">
-           <string>Customizes how the items are displayed</string>
-          </property>
-         </widget>
+          <widget class="QComboBox" name="WorkbenchSelectorItem">
+           <property name="toolTip">
+            <string>Icons are shown with their name and detailed hover descriptions</string>
+           </property>
+          </widget>
         </item>
        </layout>
       </item>
@@ -107,17 +107,17 @@ Currently installed workbenches:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <item>
          <widget class="QLabel" name="WorkbenchSelectorTypeLabel">
-          <property name="text">
-           <string>Workbench selector type</string>
-          </property>
-         </widget>
+           <property name="text">
+            <string>Modeling interface</string>
+           </property>
+          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="WorkbenchSelectorType">
-          <property name="toolTip">
-           <string>Choose the workbench selector widget type (restart required)</string>
-          </property>
-         </widget>
+          <widget class="QComboBox" name="WorkbenchSelectorType">
+           <property name="toolTip">
+            <string>Uses the Fusion 360 style top tab selector (restart required)</string>
+           </property>
+          </widget>
         </item>
        </layout>
       </item>

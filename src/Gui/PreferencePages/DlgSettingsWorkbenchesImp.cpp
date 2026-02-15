@@ -518,7 +518,10 @@ QStringList DlgSettingsWorkbenchesImp::getDisabledWorkbenches()
     );
     disabled_wbs = QString::fromStdString(hGrp->GetASCII(
         "Disabled",
-        "NoneWorkbench,TestWorkbench,InspectionWorkbench,RobotWorkbench,OpenSCADWorkbench"
+        "NoneWorkbench,SketcherWorkbench,SpreadsheetWorkbench,SurfaceWorkbench,PointsWorkbench,"
+        "ReverseEngineeringWorkbench,FemWorkbench,CAMWorkbench,TechDrawWorkbench,MaterialWorkbench,"
+        "ImportWorkbench,CloudWorkbench,OpenSCADWorkbench,RobotWorkbench,InspectionWorkbench,"
+        "TestWorkbench,SandboxWorkbench,MeshPartWorkbench"
     ));
 
     unfiltered_disabled_wbs_list = disabled_wbs.split(QLatin1String(","), Qt::SkipEmptyParts);
@@ -563,18 +566,17 @@ void DlgSettingsWorkbenchesImp::saveWorkbenchSelector()
     hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Workbenches"
     );
-    int prevIndex = hGrp->GetInt("WorkbenchSelectorType", 0);
-    int index = ui->WorkbenchSelectorType->currentIndex();
-    if (prevIndex != index) {
-        hGrp->SetInt("WorkbenchSelectorType", index);
+    constexpr int fusionStyleSelectorType = 1;
+    int prevIndex = hGrp->GetInt("WorkbenchSelectorType", fusionStyleSelectorType);
+    if (prevIndex != fusionStyleSelectorType) {
+        hGrp->SetInt("WorkbenchSelectorType", fusionStyleSelectorType);
         requireRestart();
     }
 
     // save workbench selector items style
     prevIndex = hGrp->GetInt("WorkbenchSelectorItem", 0);
-    index = ui->WorkbenchSelectorItem->currentIndex();
-    if (prevIndex != index) {
-        hGrp->SetInt("WorkbenchSelectorItem", index);
+    if (prevIndex != 0) {
+        hGrp->SetInt("WorkbenchSelectorItem", 0);
         requireRestart();
     }
 }
@@ -586,29 +588,31 @@ void DlgSettingsWorkbenchesImp::loadWorkbenchSelector()
     hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Workbenches"
     );
-    int widgetTypeIndex = hGrp->GetInt("WorkbenchSelectorType", 0);
+    constexpr int fusionStyleSelectorType = 1;
+    int widgetTypeIndex = hGrp->GetInt("WorkbenchSelectorType", fusionStyleSelectorType);
+    if (widgetTypeIndex != fusionStyleSelectorType) {
+        hGrp->SetInt("WorkbenchSelectorType", fusionStyleSelectorType);
+    }
     ui->WorkbenchSelectorType->clear();
-    ui->WorkbenchSelectorType->addItem(tr("ComboBox"));
-    ui->WorkbenchSelectorType->addItem(tr("TabBar"));
-    ui->WorkbenchSelectorType->setCurrentIndex(widgetTypeIndex);
+    ui->WorkbenchSelectorType->addItem(tr("Fusion 360"));
+    ui->WorkbenchSelectorType->setCurrentIndex(0);
 
     // workbench selector items style
     int itemStyleIndex = hGrp->GetInt("WorkbenchSelectorItem", 0);
+    if (itemStyleIndex != 0) {
+        hGrp->SetInt("WorkbenchSelectorItem", 0);
+    }
     ui->WorkbenchSelectorItem->clear();
     ui->WorkbenchSelectorItem->addItem(tr("Icon and text"));
-    ui->WorkbenchSelectorItem->addItem(tr("Icon"));
-    ui->WorkbenchSelectorItem->addItem(tr("Text"));
-    ui->WorkbenchSelectorItem->setCurrentIndex(itemStyleIndex);
+    ui->WorkbenchSelectorItem->setCurrentIndex(0);
+    ui->WorkbenchSelectorItem->setEnabled(false);
 }
 
 void DlgSettingsWorkbenchesImp::translateWorkbenchSelector()
 {
-    ui->WorkbenchSelectorType->setItemText(0, tr("ComboBox"));
-    ui->WorkbenchSelectorType->setItemText(1, tr("TabBar"));
+    ui->WorkbenchSelectorType->setItemText(0, tr("Fusion 360"));
 
     ui->WorkbenchSelectorItem->setItemText(0, tr("Icon and text"));
-    ui->WorkbenchSelectorItem->setItemText(1, tr("Icon"));
-    ui->WorkbenchSelectorItem->setItemText(2, tr("Text"));
 }
 
 void DlgSettingsWorkbenchesImp::wbToggled(const QString& wbName, bool enabled)

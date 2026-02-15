@@ -660,13 +660,12 @@ void WorkbenchGroup::addTo(QWidget* widget)
             "User parameter:BaseApp/Preferences/Workbenches"
         );
 
-        QWidget* workbenchSelectorWidget;
-        if (hGrp->GetInt("WorkbenchSelectorType", 0) == 0) {
-            workbenchSelectorWidget = new WorkbenchComboBox(this, widget);
+        constexpr int fusionStyleSelectorType = 1;
+        if (hGrp->GetInt("WorkbenchSelectorType", fusionStyleSelectorType) != fusionStyleSelectorType) {
+            hGrp->SetInt("WorkbenchSelectorType", fusionStyleSelectorType);
         }
-        else {
-            workbenchSelectorWidget = new WorkbenchTabWidget(this, widget);
-        }
+
+        QWidget* workbenchSelectorWidget = new WorkbenchTabWidget(this, widget);
 
         static_cast<QToolBar*>(widget)->addWidget(workbenchSelectorWidget);
     }
@@ -712,7 +711,7 @@ void WorkbenchGroup::refreshWorkbenchList()
         action->setData(QVariant(index));  // set the index
         action->setObjectName(wbName);
         action->setIcon(px);
-        action->setToolTip(tip);
+        action->setToolTip(QStringLiteral("<b>%1</b><br/>%2").arg(name, tip));
         action->setStatusTip(tr("Selects the '%1' workbench").arg(name));
         if (index < 9) {
             action->setShortcut(QKeySequence(QStringLiteral("W,%1").arg(index + 1)));
