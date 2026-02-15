@@ -89,12 +89,13 @@ bool FirstStartWidget::eventFilter(QObject* object, QEvent* event)
 void FirstStartWidget::retranslateUi()
 {
     _doneButton->setText(tr("Done"));
-    QString application = QString::fromStdString(App::Application::getExecutableName());
     _welcomeLabel->setText(
-        QLatin1String("<h1>") + tr("Welcome to %1").arg(application) + QLatin1String("</h1>")
+        QLatin1String("<h1>") + tr("Welcome to %1").arg(QStringLiteral("Tungsten CAD"))
+        + QLatin1String("</h1>")
     );
     _descriptionLabel->setText(
-        tr("Set your basic configuration options below.") + QLatin1String(" ")
-        + tr("These options (and many more) can be changed later in the preferences.")
+        tr("Set your modeling preferences below to start with a focused Fusion 360 style workspace.")
+        + QLatin1String(" ")
+        + tr("You can update these options at any time in preferences.")
     );
 }
