@@ -1,9 +1,7 @@
 name: Weekly compare link to release notes
 
 on:
-  release:
-    types: [published]   # run automatically when a (pre-)release is published
-  workflow_dispatch:      # allow manual runs too
+  workflow_dispatch:      # manual only
     inputs:
       current_tag:
         description: "Weekly tag (e.g., weekly-2026.01.07). Leave empty to auto-detect latest weekly pre-release."
