@@ -1,9 +1,7 @@
 name: Backport merged pull request
 
 on:
-  pull_request_target:
-    types: [closed, labeled]
-    branches: [main, releases/*]
+  workflow_dispatch:
 
 permissions:
   contents: write
