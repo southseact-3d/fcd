@@ -1042,6 +1042,35 @@ void StdCmdAnnotationLabel::activated(int)
     commitCommand();
 }
 
+//===========================================================================
+// Std_Home
+//===========================================================================
+
+DEF_STD_CMD_A(StdCmdHome)
+
+StdCmdHome::StdCmdHome()
+    : Command("Std_Home")
+{
+    sGroup = "View";
+    sMenuText = QT_TR_NOOP("Home");
+    sToolTipText = QT_TR_NOOP("Go to the home/start page");
+    sWhatsThis = "Std_Home";
+    sStatusTip = sToolTipText;
+    sPixmap = "go-home";
+    eType = 0;
+}
+
+void StdCmdHome::activated(int)
+{
+    doCommand(Gui, "Gui.showMainWindow()");
+    Application::Instance->commandManager().runCommandByName("Std_New");
+}
+
+bool StdCmdHome::isActive()
+{
+    return true;
+}
+
 namespace Gui
 {
 
@@ -1059,6 +1088,7 @@ void CreateStdCommands()
     rcCmdMgr.addCommand(new StdCmdWorkbench());
     rcCmdMgr.addCommand(new StdCmdRecentFiles());
     rcCmdMgr.addCommand(new StdCmdRecentMacros());
+    rcCmdMgr.addCommand(new StdCmdHome());
     rcCmdMgr.addCommand(new StdCmdWhatsThis());
     rcCmdMgr.addCommand(new StdCmdRestartInSafeMode());
     rcCmdMgr.addCommand(new StdCmdPythonHelp());

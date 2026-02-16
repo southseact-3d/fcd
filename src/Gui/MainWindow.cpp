@@ -111,6 +111,7 @@
 #include "WaitCursor.h"
 #include "WorkbenchManager.h"
 #include "Workbench.h"
+#include "Timeline.h"
 
 #include "MergeDocuments.h"
 #include "ViewProviderExtern.h"
@@ -326,6 +327,9 @@ struct MainWindowP
     ParameterGrp::handle hGrp;
     bool _restoring = false;
     QTime _showNormal;
+    Timeline* timeline;
+    QWidget* centralContainer;
+    QVBoxLayout* centralLayout;
     void restoreWindowState(const QByteArray&);
 };
 
@@ -409,7 +413,19 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
     d->mdiArea->setActivationOrder(QMdiArea::ActivationHistoryOrder);
 #endif
     d->mdiArea->setBackground(QBrush(QColor(160, 160, 160)));
-    setCentralWidget(d->mdiArea);
+    
+    d->centralContainer = new QWidget(this);
+    d->centralLayout = new QVBoxLayout(d->centralContainer);
+    d->centralLayout->setContentsMargins(0, 0, 0, 0);
+    d->centralLayout->setSpacing(0);
+    
+    d->centralLayout->addWidget(d->mdiArea, 1);
+    
+    d->timeline = new Timeline(d->centralContainer);
+    d->timeline->setVisible(false);
+    d->centralLayout->addWidget(d->timeline);
+    
+    setCentralWidget(d->centralContainer);
 
     statusBar()->setObjectName(QStringLiteral("statusBar"));
     connect(statusBar(), &QStatusBar::messageChanged, this, &MainWindow::statusMessageChanged);

@@ -40,6 +40,10 @@ on:
         default: false
         type: boolean
         required: false
+      forceRebuild:
+        default: false
+        type: boolean
+        required: false
     outputs:
       reportFile:
         value: ${{ jobs.Build.outputs.reportFile }}
@@ -123,7 +127,7 @@ jobs:
 
     - name: Restore Compiler Cache
       id: cache-restore
-      if: always()
+      if: always() && inputs.forceRebuild != true
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ env.CCACHE_DIR }}
@@ -131,6 +135,27 @@ jobs:
         restore-keys: |
           FC-${{ env.cacheKey }}-${{ github.ref }}-
           FC-${{ env.cacheKey }}-
+
+    - name: Restore incremental build tree
+      id: build-cache-restore
+      if: always() && inputs.forceRebuild != true
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.builddir }}
+        key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+        restore-keys: |
+          FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-
+          FC-BUILD-${{ env.cacheKey }}-
+
+    - name: Print incremental build cache status
+      if: always()
+      run: |
+        if [ "${{ steps.build-cache-restore.outputs.cache-hit }}" == "true" ]; then
+          echo "Incremental build cache hit: restored previous build outputs."
+        else
+          echo "Incremental build cache miss: this run will prime the build cache."
+        fi
+      shell: bash
 
     - name: Print CCache statistics before build, reset stats and print config
       run: |
@@ -213,6 +238,14 @@ jobs:
       with:
         path: ${{ env.CCACHE_DIR }}
         key: FC-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+
+    - name: Save incremental build tree
+      id: build-cache-save
+      if: always()
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.builddir }}
+        key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
 
     - name: Upload logs
       if: always()

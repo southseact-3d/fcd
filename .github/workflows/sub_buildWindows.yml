@@ -27,6 +27,12 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '**.txt'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
   workflow_dispatch:
     inputs:
       artifactBasename:
@@ -39,12 +45,21 @@ on:
         required: false
         type: boolean
         default: false
+      forceRebuild:
+        description: "Force full rebuild ignoring cache"
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       artifactBasename:
         required: true
         type: string
       allowedToFail:
+        required: false
+        default: false
+        type: boolean
+      forceRebuild:
         required: false
         default: false
         type: boolean
@@ -210,14 +225,66 @@ jobs:
           key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
 
 
-      - name: Upload Windows build artifacts
+      - name: Install NSIS
+        run: |
+          choco install nsis -y
+          # Download nsProcess plugin for NSIS
+          Invoke-WebRequest -Uri "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip" -OutFile "nsProcess.zip"
+          Expand-Archive -Path "nsProcess.zip" -DestinationPath "nsProcess"
+          Copy-Item "nsProcess\Plugin\nsProcessW.dll" -Destination "C:\Program Files (x86)\NSIS\Plugins\x86-unicode\nsProcess.dll"
+          Copy-Item "nsProcess\Include\nsProcess.nsh" -Destination "C:\Program Files (x86)\NSIS\Include\"
+
+      - name: Create Windows Installer
+        run: |
+          $installDir = "${{ env.builddir }}".TrimEnd('\')
+          $installerDir = Join-Path $installDir "installer"
+          New-Item -ItemType Directory -Path $installerDir -Force
+          
+          # Copy build artifacts to installer staging directory
+          $stagingDir = Join-Path $installerDir "FreeCAD"
+          New-Item -ItemType Directory -Path $stagingDir -Force
+          
+          # Copy required directories
+          Copy-Item -Path "${{ env.builddir }}\bin" -Destination "$stagingDir\bin" -Recurse -Force
+          Copy-Item -Path "${{ env.builddir }}\Mod" -Destination "$stagingDir\Mod" -Recurse -Force
+          if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\doc") { Copy-Item -Path "${{ env.builddir }}\doc" -Destination "$stagingDir\doc" -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\Ext") { Copy-Item -Path "${{ env.builddir }}\Ext" -Destination "$stagingDir\Ext" -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\lib") { Copy-Item -Path "${{ env.builddir }}\lib" -Destination "$stagingDir\lib" -Recurse -Force }
+          
+          # Get version info
+          $version = "${{ env.builddir }}\bin\FreeCADCmd.exe"
+          $versionOutput = & $version --version 2>&1
+          $versionMatch = $versionOutput -match "(\d+\.\d+\.\d+)"
+          $appVersion = if ($versionMatch) { $Matches[1] } else { "1.2.0" }
+          
+          Write-Host "Detected version: $appVersion"
+          
+          # Run NSIS to create installer
+          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
+          $installerNsi = "${{ github.workspace }}\package\WindowsInstaller\FreeCAD-installer.nsi"
+          
+          # Set environment variables for NSIS
+          $env:FILES_FREECAD = $stagingDir
+          $env:FILES_THUMBS = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
+          
+          # Create the installer
+          & $nsisPath /D"FILES_FREECAD=$stagingDir" /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" $installerNsi
+          
+          # Find and move the generated installer
+          $generatedInstaller = Get-ChildItem -Path "${{ github.workspace }}\package\WindowsInstaller" -Filter "*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if ($generatedInstaller) {
+            Move-Item -Path $generatedInstaller.FullName -Destination "$installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe" -Force
+            Write-Host "Installer created: $installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
+          }
+
+      - name: Upload Windows Installer
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Windows-Build
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Windows-Installer
           path: |
-            ${{ env.builddir }}\bin\
-            ${{ env.builddir }}\Mod\
+            ${{ env.builddir }}\installer\*.exe
 
       - name: Upload logs
         if: always()
