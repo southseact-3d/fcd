@@ -1236,6 +1236,7 @@ SET(Widget_CPP_SRCS
     ElideCheckBox.cpp
     FontScaledSVG.cpp
     SplitButton.cpp
+    Timeline.cpp
 )
 SET(Widget_HPP_SRCS
     ComboLinks.h
@@ -1262,6 +1263,7 @@ SET(Widget_HPP_SRCS
     ElideCheckBox.h
     FontScaledSVG.h
     SplitButton.h
+    Timeline.h
 )
 SET(Widget_SRCS
     ${Widget_CPP_SRCS}
