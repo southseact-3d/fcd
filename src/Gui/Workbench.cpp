@@ -674,10 +674,12 @@ void StdWorkbench::createMainWindowPopupMenu(MenuItem* item) const
 
 MenuItem* StdWorkbench::setupMenuBar() const
 {
-    // Setup the default menu bar
     auto menuBar = new MenuItem;
 
-    // File
+    auto home = new MenuItem(menuBar);
+    home->setCommand("Home");
+    *home << "Std_Home";
+    
     auto file = new MenuItem(menuBar);
     file->setCommand("&File");
     *file << "Std_New" << "Std_Open" << "Std_RecentFiles" << "Separator" << "Std_CloseActiveWindow"
