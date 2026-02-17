@@ -117,26 +117,33 @@ jobs:
           compiler: ${{ env.CXX }}
           qt_major_version: 5
 
+      - name: Generate file hash for cache key
+        id: file-hash
+        run: |
+          # Hash files that affect build output
+          echo "deps_hash=${{ hashFiles('package/ubuntu/install-apt-packages.sh') }}" >> $GITHUB_OUTPUT
+          echo "cmake_hash=${{ hashFiles('CMakeLists.txt', 'src/**/CMakeLists.txt') }}" >> $GITHUB_OUTPUT
+
       - name: Restore Compiler Cache
         id: cache-restore
-        if: always() && inputs.forceRebuild != true
+        if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.deps_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ github.ref }}-
+            FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.deps_hash }}-
             FC-${{ steps.genCacheKey.outputs.cacheKey }}-
 
       - name: Restore incremental build tree
         id: build-cache-restore
-        if: always() && inputs.forceRebuild != true
+        if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ github.ref }}-
+            FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
             FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-
 
       - name: Print incremental build cache status
@@ -243,7 +250,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.deps_hash }}-${{ github.ref }}
 
       - name: Save incremental build tree
         id: build-cache-save
@@ -251,7 +258,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
 
       - name: Upload logs
         if: always()

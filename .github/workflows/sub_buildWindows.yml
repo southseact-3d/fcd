@@ -127,26 +127,34 @@ jobs:
         with:
           libpackdir: ${{ env.libpackdir }}
 
+      - name: Generate file hash for cache key
+        id: file-hash
+        run: |
+          # Use CMakeLists.txt hash for cache invalidation
+          $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+          echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
       - name: Restore compiler cache
         id: cache-restore
-        if: always()
+        if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-${{ env.cacheKey }}-${{ github.ref }}-
+            FC-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
             FC-${{ env.cacheKey }}-
 
       - name: Restore incremental build tree
         id: build-cache-restore
-        if: always()
+        if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-
+            FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
             FC-BUILD-${{ env.cacheKey }}-
 
       - name: Print incremental build cache status
@@ -214,7 +222,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
 
       - name: Save incremental build tree
         id: build-cache-save
@@ -222,7 +230,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
 
 
       - name: Install NSIS
