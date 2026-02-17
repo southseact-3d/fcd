@@ -26,7 +26,7 @@
 #include <App/Application.h>
 #include <App/Document.h>
 #include <App/DocumentObject.h>
-#include <App/Transaction.h>
+#include <App/Transactions.h>
 #include <Base/Console.h>
 
 #include <QContextMenuEvent>
