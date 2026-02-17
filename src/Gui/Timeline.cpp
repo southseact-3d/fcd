@@ -411,14 +411,17 @@ void Timeline::goToNext()
 
 void Timeline::onOperationEdited(const TimelineOperation& op)
 {
-    Base::Console().Message("Edit operation: %s\n", op.name.c_str());
+    Base::Console().log("Edit operation: %s\n", op.name.c_str());
     
     if (m_document) {
         App::DocumentObject* obj = m_document->getObject(op.objectName.c_str());
         if (obj) {
             Gui::Document* guiDoc = Gui::Application::Instance->getDocument(m_document);
             if (guiDoc) {
-                guiDoc->setEdit(obj);
+                Gui::ViewProvider* vp = Gui::Application::Instance->getViewProvider(obj);
+                if (vp) {
+                    guiDoc->setEdit(vp, Gui::ViewProvider::Transform);
+                }
             }
         }
     }
@@ -438,7 +441,7 @@ void Timeline::onOperationDeleted(const TimelineOperation& op)
             m_document->openTransaction("Delete timeline operation");
             App::DocumentObject* obj = m_document->getObject(op.objectName.c_str());
             if (obj) {
-                m_document->remObject(op.objectName.c_str());
+                m_document->removeObject(op.objectName.c_str());
             }
             m_document->commitTransaction();
             m_document->recompute();

@@ -152,9 +152,8 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ github.sha }}
           restore-keys: |
-            FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
             FC-BUILD-${{ env.cacheKey }}-
 
       - name: Print incremental build cache status
@@ -230,7 +229,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ github.sha }}
 
 
       - name: Install NSIS
