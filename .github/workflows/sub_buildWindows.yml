@@ -78,7 +78,7 @@ jobs:
       CCACHE_DIR: C:/FC/cache/
       CCACHE_LOGFILE: C:/logs/ccache.log
       CCACHE_MAXSIZE: 2G
-      CCACHE_NODIRECT: false
+      CCACHE_DIRECT: true
       CCACHE_NOHASHDIR: true
       CCACHE_NOINODECACHE: true
       CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,pch_defines,time_macros" # Can't get PCH to work on Windows
