@@ -29,7 +29,7 @@ This document describes the fixes applied to `.github/workflows/sub_buildWindows
 
 **Solution**:
 - Changed `CCACHE_COMPILERCHECK` from `"%compiler%"` to `"content"` for better cache hit rates
-- Changed `CCACHE_NODIRECT` from `true` to `false` to enable direct mode for faster compilation
+- Enabled direct mode by setting `CCACHE_DIRECT` to `true` (replaces `CCACHE_NODIRECT: false` which caused issues on Windows)
 - Increased `CCACHE_MAXSIZE` from `1G` to `2G` to store more compiled objects
 - Added job pooling with `-DCMAKE_JOB_POOLS=compile_jobs=4` for better parallelization
 
