@@ -72,13 +72,13 @@ jobs:
     runs-on: windows-latest
     continue-on-error: ${{ inputs.allowedToFail || false }}
     env:
-      CCACHE_COMPILERCHECK: "%compiler%" # default:mtime
+      CCACHE_COMPILERCHECK: "content" # Better cache hit rate than %compiler%
       CCACHE_COMPRESS: true
       CCACHE_COMPRESSLEVEL: 5
       CCACHE_DIR: C:/FC/cache/
       CCACHE_LOGFILE: C:/logs/ccache.log
-      CCACHE_MAXSIZE: 1G
-      CCACHE_NODIRECT: true
+      CCACHE_MAXSIZE: 2G
+      CCACHE_NODIRECT: false
       CCACHE_NOHASHDIR: true
       CCACHE_NOINODECACHE: true
       CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,pch_defines,time_macros" # Can't get PCH to work on Windows
@@ -104,7 +104,18 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 2
-          submodules: true
+          submodules: 'recursive'
+
+      - name: Verify submodule initialization
+        run: |
+          Write-Host "Checking submodule status..."
+          git submodule status
+          Write-Host "Verifying critical submodules..."
+          if (-not (Test-Path "src/Mod/AddonManager/CMakeLists.txt")) {
+            Write-Error "AddonManager submodule not properly initialized"
+            exit 1
+          }
+          Write-Host "Submodules verified successfully"
 
       - name: Make needed directories, files and initializations
         id: Init
@@ -130,9 +141,15 @@ jobs:
       - name: Generate file hash for cache key
         id: file-hash
         run: |
-          # Use CMakeLists.txt hash for cache invalidation
+          # Hash files that affect build configuration
           $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+          $presetsHash = Get-FileHash -Path CMakePresets.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+          $combinedHash = "$cmakeHash-$presetsHash"
           echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
+          echo "combined_hash=$combinedHash" >> $env:GITHUB_OUTPUT
+          Write-Host "CMakeLists.txt hash: $cmakeHash"
+          Write-Host "CMakePresets.json hash: $presetsHash"
+          Write-Host "Combined hash: $combinedHash"
         shell: pwsh
 
       - name: Restore compiler cache
@@ -141,10 +158,10 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
-            FC-${{ env.cacheKey }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
+            FC-CCACHE-${{ env.cacheKey }}-
 
       - name: Restore incremental build tree
         id: build-cache-restore
@@ -152,20 +169,23 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
+            FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
             FC-BUILD-${{ env.cacheKey }}-
 
       - name: Print incremental build cache status
         if: always()
         run: |
           if ("${{ steps.build-cache-restore.outputs.cache-hit }}" -eq "true") {
-            Write-Host "Incremental build cache hit: restored previous build outputs."
+            Write-Host "✓ Incremental build cache HIT: restored previous build outputs."
+            Write-Host "Build will be incremental - only changed files will be recompiled."
           }
           else {
-            Write-Host "Incremental build cache miss: this run will prime the build cache."
+            Write-Host "✗ Incremental build cache MISS: this run will prime the build cache."
+            Write-Host "Full build will be performed, then cached for future runs."
           }
+          Write-Host "Compiler cache hit: ${{ steps.cache-restore.outputs.cache-hit }}"
 
       - name: Print Ccache statistics before build, reset stats and print config
         run: |
@@ -192,6 +212,16 @@ jobs:
           -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
           -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
           -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
+          -DCMAKE_JOB_POOLS=compile_jobs=4
+
+      - name: Check CMake configuration
+        run: |
+          Write-Host "CMake configuration completed successfully"
+          if (-not (Test-Path "${{ env.builddir }}\ALL_BUILD.vcxproj")) {
+            Write-Error "CMake configuration failed - ALL_BUILD.vcxproj not found"
+            exit 1
+          }
+          Write-Host "Build project files found"
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
@@ -199,12 +229,31 @@ jobs:
       - name: Compiling sources
         run: |
           cd $env:builddir
-          msbuild ALL_BUILD.vcxproj /m /p:Configuration=Release /p:TrackFileAccess=false /p:CLToolPath=${{ env.ccachebindir }}
+          # Use /maxCpuCount for better parallelization
+          # /p:TrackFileAccess=false enables better ccache hit rate
+          # /p:UseMultiToolTask=true enables parallel compilation within single project
+          msbuild ALL_BUILD.vcxproj `
+            /maxCpuCount `
+            /p:Configuration=Release `
+            /p:TrackFileAccess=false `
+            /p:CLToolPath=${{ env.ccachebindir }} `
+            /p:UseMultiToolTask=true `
+            /p:MultiProcToolCount=4 `
+            /v:minimal `
+            /nologo
 
       - name: Print Ccache statistics after build
         if: always()
         run: |
+          Write-Host "=== CCache Statistics After Build ==="
           . $env:ccachebindir\ccache -s
+          Write-Host "====================================="
+          if ("${{ steps.build-cache-restore.outputs.cache-hit }}" -eq "true") {
+            Write-Host "✓ This was an incremental build - only changed files were recompiled"
+          }
+          else {
+            Write-Host "This was a full build - next run with same configuration will be incremental"
+          }
 
       - name: C++ unit tests
         if: false # Disabled because seems to not function on Windows build
@@ -222,7 +271,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
 
       - name: Save incremental build tree
         id: build-cache-save
@@ -230,7 +279,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
 
 
       - name: Install NSIS
