@@ -98,9 +98,9 @@ jobs:
       CCACHE_DIR: C:/FC/cache/
       CCACHE_LOGFILE: C:/logs/ccache.log
       CCACHE_MAXSIZE: 5G
-      CCACHE_DIRECT: false
+      CCACHE_NODIRECT: true        # disables direct mode (MSVC-incompatible); replaces CCACHE_DIRECT=false
       CCACHE_NOHASHDIR: true
-      CCACHE_NOINODECACHE: false
+      # CCACHE_NOINODECACHE intentionally omitted — absence = inode cache enabled
       CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,time_macros"
       ## Have to use C:\ because not enough space on workspace drive
       builddir: C:/FC/build/release/
@@ -425,6 +425,4 @@ jobs:
           if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
           if (Test-Path "${{ env.builddir }}\doc")  { Copy-Item -Path "${{ env.builddir }}\doc"  -Destination "$stagingDir\doc"  -Recurse -Force }
           if (Test-Path "${{ env.builddir }}\Ext")  { Copy-Item -Path "${{ env.builddir }}\Ext"  -Destination "$stagingDir\Ext"  -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\lib")  { Copy-Item -Path "${{ env.builddir }}\lib"  -Destination "$stagingDir\lib"  -Recurse -Force }
-
-          $version = "$
+          if (Test-Path "${{ env.builddir
