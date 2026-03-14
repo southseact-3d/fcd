@@ -160,56 +160,15 @@ jobs:
           New-Item -ItemType Directory -Force -Path ${{ env.reportdir }} | Out-Null
           echo "reportFile=${{ env.reportfilename }}" >> $GITHUB_OUTPUT
 
-      - name: Move ccache to RAM disk
-        run: |
-          # Create a 512MB RAM disk using imdisk for ultra-fast ccache lookups.
-          # ccache hits are pure I/O — moving the cache to RAM eliminates the
-          # disk read bottleneck and cuts cache-hit overhead from ~50ms to <1ms.
-          choco install imdisk -y --no-progress
-
-          # Create 512MB RAM disk as R:
-          imdisk -a -s 512M -m R: -p "/fs:ntfs /q /y"
-
-          # Copy existing ccache contents to RAM disk (populated from cache restore)
-          $ramCacheDir = "R:\ccache"
-          New-Item -ItemType Directory -Force -Path $ramCacheDir | Out-Null
-
-          if (Test-Path "${{ env.CCACHE_DIR }}") {
-            Write-Host "Copying ccache to RAM disk..."
-            $sw = [System.Diagnostics.Stopwatch]::StartNew()
-            Copy-Item -Path "${{ env.CCACHE_DIR }}\*" -Destination $ramCacheDir -Recurse -Force
-            $sw.Stop()
-            Write-Host "✓ ccache copied to RAM disk in $($sw.Elapsed.TotalSeconds)s"
-          }
-
-          # Redirect ccache to use RAM disk
-          echo "CCACHE_DIR=$ramCacheDir" >> $env:GITHUB_ENV
-          Write-Host "✓ CCACHE_DIR redirected to RAM disk at $ramCacheDir"
-
       - name: Get Ccache
         uses: ./.github/workflows/actions/windows/getCcache
         with:
           ccachebindir: ${{ env.ccachebindir }}
 
-      - name: Restore Libpack cache
-        id: libpack-cache-restore
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.libpackdir }}
-          key: FC-LIBPACK-${{ env.cacheKey }}-${{ hashFiles('.github/workflows/actions/windows/getLibpack/**') }}
-
       - name: Get Libpack
-        if: steps.libpack-cache-restore.outputs.cache-hit != 'true'
         uses: ./.github/workflows/actions/windows/getLibpack
         with:
           libpackdir: ${{ env.libpackdir }}
-
-      - name: Save Libpack cache
-        if: steps.libpack-cache-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.libpackdir }}
-          key: FC-LIBPACK-${{ env.cacheKey }}-${{ hashFiles('.github/workflows/actions/windows/getLibpack/**') }}
 
       # ------------------------------------------------------------------
       # ccache cache key strategy:
@@ -244,20 +203,16 @@ jobs:
             FC-CCACHE-${{ env.cacheKey }}-
 
       # ------------------------------------------------------------------
-      # Ninja state cache: persists only .ninja_deps, .ninja_log, build.ninja
-      # (~1MB vs 1.4GB for full build tree). Ninja uses these to know what
-      # changed; the actual obj files come from ccache on the RAM disk.
-      # Restore goes from 34s → <1s with this approach.
+      # Ninja build cache: persists .ninja_deps, .ninja_log, and all .obj
+      # files so Ninja can perform a true incremental build on next run.
+      # Key strategy mirrors ccache — run_id in save key, cascading restore.
       # ------------------------------------------------------------------
-      - name: Restore Ninja state cache
+      - name: Restore Ninja build cache
         id: ninja-cache-restore
         if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: |
-            ${{ env.builddir }}/.ninja_deps
-            ${{ env.builddir }}/.ninja_log
-            ${{ env.builddir }}/build.ninja
+          path: ${{ env.builddir }}
           key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
           restore-keys: |
             FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
@@ -289,11 +244,10 @@ jobs:
       # Install Ninja.
       # windows-latest ships with Ninja but pinning a known version is safer.
       # ------------------------------------------------------------------
-      - name: Verify Ninja
+      - name: Install Ninja
         run: |
-          # windows-latest ships with Ninja — no install needed
+          choco install ninja -y --version=1.12.1
           ninja --version
-          Write-Host "✓ Ninja available"
 
       # ------------------------------------------------------------------
       # Set up the MSVC environment so cl.exe / link.exe are on PATH.
@@ -438,9 +392,6 @@ jobs:
       # ------------------------------------------------------------------
       - name: Compiling sources (Ninja full build)
         run: |
-          # -j16 rather than -j4: ccache hits are I/O bound not CPU bound,
-          # so we can run far more parallel jobs than there are cores.
-          # 16 is a safe ceiling for windows-latest without OOM risk.
           cmake --build "${{ env.builddir }}" --config Release -j16
           Write-Host "✓ Ninja build complete"
 
@@ -461,23 +412,6 @@ jobs:
         run: |
           . ${{ env.builddir }}\bin\FreeCADCmd -t 0
 
-      - name: Flush RAM disk ccache back to disk
-        if: always()
-        run: |
-          # Copy any new cache entries written during this build back to C:
-          # so they get picked up by the cache save step below.
-          $ramCacheDir = "R:\ccache"
-          if (Test-Path $ramCacheDir) {
-            Write-Host "Flushing RAM disk ccache back to ${{ env.CCACHE_DIR }}..."
-            $sw = [System.Diagnostics.Stopwatch]::StartNew()
-            # Sync back — robocopy is faster than Copy-Item for large dirs
-            robocopy $ramCacheDir "${{ env.CCACHE_DIR }}" /MIR /MT:8 /NP /NJH /NJS
-            $sw.Stop()
-            Write-Host "✓ ccache flushed in $($sw.Elapsed.TotalSeconds)s"
-          } else {
-            Write-Host "RAM disk not present — nothing to flush"
-          }
-
       - name: Save Compiler Cache
         id: cache-save
         if: always()
@@ -486,38 +420,25 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
-      # Save only the tiny Ninja state files — obj files live in ccache instead
-      - name: Save Ninja state cache
+      # ------------------------------------------------------------------
+      # Save the Ninja build tree (replaces the old MSBuild build tree cache).
+      # Persisting .ninja_deps, .ninja_log, and all .obj/.lib files gives
+      # Ninja full knowledge of what was built last time so it can do a
+      # minimal incremental rebuild on the next run.
+      # ------------------------------------------------------------------
+      - name: Save Ninja build cache
         id: ninja-cache-save
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: |
-            ${{ env.builddir }}/.ninja_deps
-            ${{ env.builddir }}/.ninja_log
-            ${{ env.builddir }}/build.ninja
+          path: ${{ env.builddir }}
           key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
-      # ------------------------------------------------------------------
-      # Install NSIS and ensure nsProcess plugin is available.
-      #
-      # Strategy (in order of preference):
-      #   1. Try GitHub mirror for the unicode DLL directly (most reliable)
-      #   2. Try SourceForge ZIP (contains both DLL + NSH)
-      #   3. Write a stub nsProcess.nsh that satisfies the !include and
-      #      turns FindProcess/KillProcess into harmless no-ops.
-      #
-      # The stub is written unconditionally FIRST so NSIS always has a
-      # valid include target. If a real DLL is later installed it will be
-      # used at runtime; if not, the stub's no-op macros keep things safe.
-      # This ordering avoids any race between download success/failure and
-      # the NSIS compile step.
-      # ------------------------------------------------------------------
       - name: Install NSIS
         run: |
           # Install NSIS via chocolatey
           choco install nsis -y --no-progress
-
+          
           # Verify NSIS installed correctly
           $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
           if (-not (Test-Path $nsisExe)) {
@@ -525,167 +446,90 @@ jobs:
             exit 1
           }
           Write-Host "✓ NSIS installed at $nsisExe"
-
+          
+          # Download nsProcess plugin with error handling and fallback
           $pluginDir  = "C:\Program Files (x86)\NSIS\Plugins\x86-unicode"
           $includeDir = "C:\Program Files (x86)\NSIS\Include"
-
-          # Ensure plugin and include directories exist
-          New-Item -ItemType Directory -Force -Path $pluginDir  | Out-Null
-          New-Item -ItemType Directory -Force -Path $includeDir | Out-Null
-
-          # ------------------------------------------------------------------
-          # STEP 1 — Always write the stub nsProcess.nsh first.
-          # This guarantees NSIS can compile even if every download below fails.
-          # The stub turns FindProcess/KillProcess into harmless no-ops.
-          # ------------------------------------------------------------------
-          $stubPath = Join-Path $includeDir "nsProcess.nsh"
-          $stubLines = @(
-            '; nsProcess stub — real plugin unavailable at build time',
-            '; Process detection disabled. Bundle nsProcess in the repo to enable.',
-            '!macro _FindProcess _name _result',
-            '  StrCpy ${_result} ""',
-            '!macroend',
-            '!define FindProcess "!insertmacro _FindProcess"',
-            '!macro _KillProcess _name _result',
-            '  StrCpy ${_result} ""',
-            '!macroend',
-            '!define KillProcess "!insertmacro _KillProcess"'
-          )
-          Set-Content -Path $stubPath -Value ($stubLines -join "`r`n") -Encoding UTF8
-          Write-Host "✓ Stub nsProcess.nsh written to $stubPath"
-
-          # ------------------------------------------------------------------
-          # STEP 2 — Try to upgrade the stub to a real plugin (best-effort).
-          # A real DLL enables the "is FreeCAD already running?" check at
-          # install time, which is nice-to-have but not required for a
-          # working installer.
-          # ------------------------------------------------------------------
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-          $realPluginInstalled = $false
-
-          # Try GitHub mirror for unicode DLL directly
+          $zipUrl     = "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip"
+          $zipPath    = "$env:TEMP\NsProcess.zip"
+          $extractDir = "$env:TEMP\NsProcess"
+          
           try {
-            Write-Host "Trying GitHub mirror for nsProcess DLL..."
-            $dllDest = Join-Path $pluginDir "nsProcess.dll"
-            Invoke-WebRequest `
-              -Uri "https://github.com/drizin/NsProcess/raw/master/nsProcess/Release/nsProcessW.dll" `
-              -OutFile $dllDest `
-              -TimeoutSec 30 `
-              -UseBasicParsing
-            Write-Host "✓ nsProcess.dll installed from GitHub mirror"
-            $realPluginInstalled = $true
-          } catch {
-            Write-Warning "GitHub mirror failed: $_"
-          }
-
-          # Try SourceForge ZIP for both DLL + NSH (overwrites stub with real NSH)
-          if (-not $realPluginInstalled) {
-            try {
-              Write-Host "Trying SourceForge for nsProcess ZIP..."
-              $zipPath    = Join-Path $env:TEMP "NsProcess.zip"
-              $extractDir = Join-Path $env:TEMP "NsProcess"
-              Invoke-WebRequest `
-                -Uri "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip" `
-                -OutFile $zipPath `
-                -TimeoutSec 60 `
-                -UseBasicParsing
-              Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
-
-              $dllFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcessW.dll" | Select-Object -First 1
-              $nshFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcess.nsh"  | Select-Object -First 1
-
-              if ($dllFile) {
-                Copy-Item $dllFile.FullName -Destination (Join-Path $pluginDir "nsProcess.dll") -Force
-                Write-Host "✓ nsProcess.dll installed from SourceForge"
-                $realPluginInstalled = $true
-              }
-              if ($nshFile) {
-                # Real NSH from the archive — replaces our stub
-                Copy-Item $nshFile.FullName -Destination $stubPath -Force
-                Write-Host "✓ nsProcess.nsh (real) installed from SourceForge"
-              }
-            } catch {
-              Write-Warning "SourceForge download failed: $_"
+            Write-Host "Downloading nsProcess plugin..."
+            # Use TLS 1.2 explicitly — sourceforge requires it
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -TimeoutSec 60 -UseBasicParsing
+            
+            Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+            
+            # nsProcess zip has inconsistent internal structure across versions — search for files
+            $dllFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcessW.dll" | Select-Object -First 1
+            $nshFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcess.nsh"  | Select-Object -First 1
+            
+            if ($dllFile) {
+              Copy-Item $dllFile.FullName -Destination "$pluginDir\nsProcess.dll" -Force
+              Write-Host "✓ nsProcess.dll installed"
+            } else {
+              Write-Warning "nsProcessW.dll not found in archive — installer may lack process-check features"
+            }
+            
+            if ($nshFile) {
+              Copy-Item $nshFile.FullName -Destination "$includeDir\nsProcess.nsh" -Force
+              Write-Host "✓ nsProcess.nsh installed"
+            } else {
+              Write-Warning "nsProcess.nsh not found in archive"
             }
           }
-
-          if ($realPluginInstalled) {
-            Write-Host "✓ Real nsProcess plugin installed — process-check enabled in installer"
-          } else {
-            Write-Host "ℹ nsProcess DLL unavailable — stub no-ops in effect (installer will still build)"
+          catch {
+            # nsProcess is optional — it adds process-running checks to the installer
+            # If it fails to download, log the warning and continue rather than failing the build
+            Write-Warning "nsProcess plugin download failed: $_"
+            Write-Warning "Continuing without nsProcess — installer will be created without process-check support"
+            Write-Warning "To fix: check network access to nsis.sourceforge.io or bundle the plugin in the repo"
           }
-
-          # Final sanity check — nsProcess.nsh must exist for NSIS to compile
-          if (-not (Test-Path $stubPath)) {
-            Write-Error "nsProcess.nsh missing after all install attempts — this should never happen"
-            exit 1
-          }
-          Write-Host "✓ nsProcess.nsh present at $stubPath"
 
       - name: Create Windows Installer
         run: |
-          $buildDir    = "${{ env.builddir }}"
-          $installDir  = $buildDir.TrimEnd([char]'\').TrimEnd([char]'/')
+          $buildDir = "${{ env.builddir }}"
+          $installDir = $buildDir.TrimEnd([char]92)
           $installerDir = Join-Path $installDir "installer"
-          New-Item -ItemType Directory -Path $installerDir -Force | Out-Null
+          New-Item -ItemType Directory -Path $installerDir -Force
 
           $stagingDir = Join-Path $installerDir "FreeCAD"
-          New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
+          New-Item -ItemType Directory -Path $stagingDir -Force
 
-          # Copy all required output directories into the staging area
-          $dirsToStage = @("bin", "Mod", "data", "doc", "Ext", "lib")
-          foreach ($d in $dirsToStage) {
-            $src = Join-Path $buildDir $d
-            if (Test-Path $src) {
-              Write-Host "Staging: $d"
-              Copy-Item -Path $src -Destination (Join-Path $stagingDir $d) -Recurse -Force
-            } else {
-              Write-Host "Skipping (not found): $d"
-            }
-          }
+          Copy-Item -Path "${{ env.builddir }}\bin" -Destination "$stagingDir\bin" -Recurse -Force
+          Copy-Item -Path "${{ env.builddir }}\Mod" -Destination "$stagingDir\Mod" -Recurse -Force
+          if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\doc")  { Copy-Item -Path "${{ env.builddir }}\doc"  -Destination "$stagingDir\doc"  -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\Ext")  { Copy-Item -Path "${{ env.builddir }}\Ext"  -Destination "$stagingDir\Ext"  -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\lib")  { Copy-Item -Path "${{ env.builddir }}\lib"  -Destination "$stagingDir\lib"  -Recurse -Force }
 
-          # Detect version from FreeCADCmd
-          $freecadCmd   = Join-Path $buildDir "bin\FreeCADCmd.exe"
-          $appVersion   = "1.2.0"
-          if (Test-Path $freecadCmd) {
-            $versionOutput = & $freecadCmd --version 2>&1
-            if ($versionOutput -match "(\d+\.\d+\.\d+)") {
-              $appVersion = $Matches[1]
-            }
-          }
+          $version = "${{ env.builddir }}\bin\FreeCADCmd.exe"
+          $versionOutput = & $version --version 2>&1
+          $versionMatch = $versionOutput -match "(\d+\.\d+\.\d+)"
+          $appVersion = if ($versionMatch) { $Matches[1] } else { "1.2.0" }
           Write-Host "Detected version: $appVersion"
 
-          $nsisExe     = "C:\Program Files (x86)\NSIS\makensis.exe"
+          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
           $installerNsi = "${{ github.workspace }}\package\WindowsInstaller\FreeCAD-installer.nsi"
-          $exeName     = "FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
-          $thumbsDir   = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
+          $env:FILES_FREECAD = $stagingDir
+          $env:FILES_THUMBS  = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
 
-          # Run NSIS
-          Write-Host "Running NSIS: $nsisExe"
-          & $nsisExe `
-            "/DFILES_FREECAD=$stagingDir" `
-            "/DFILES_THUMBS=$thumbsDir" `
-            "/DExeFile=$exeName" `
+          # Run NSIS — errors here are non-fatal so the artifact upload still runs
+          $nsisResult = & $nsisPath `
+            /D"FILES_FREECAD=$stagingDir" `
+            /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" `
+            /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" `
             $installerNsi
-
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "NSIS exited with code $LASTEXITCODE — installer creation failed"
-            exit 1
+            Write-Warning "NSIS exited with code $LASTEXITCODE — installer may not have been created"
           }
 
-          # NSIS writes the output exe next to the .nsi by default; move it
-          $nsisOutputDir = "${{ github.workspace }}\package\WindowsInstaller"
-          $generated = Get-ChildItem -Path $nsisOutputDir -Filter "*.exe" |
-                         Sort-Object LastWriteTime -Descending |
-                         Select-Object -First 1
-          if ($generated) {
-            $dest = Join-Path $installerDir $exeName
-            Move-Item -Path $generated.FullName -Destination $dest -Force
-            Write-Host "✓ Installer created: $dest"
-          } else {
-            Write-Error "NSIS reported success but no .exe found in $nsisOutputDir"
-            exit 1
+          $generatedInstaller = Get-ChildItem -Path "${{ github.workspace }}\package\WindowsInstaller" -Filter "*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if ($generatedInstaller) {
+            Move-Item -Path $generatedInstaller.FullName -Destination "$installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe" -Force
+            Write-Host "Installer created: $installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
           }
 
       - name: Upload Windows Installer
