@@ -413,7 +413,8 @@ jobs:
 
       - name: Create Windows Installer
         run: |
-          $installDir = "${{ env.builddir }}".TrimEnd('\')
+          $buildDir = "${{ env.builddir }}"
+          $installDir = $buildDir.TrimEnd([char]92)
           $installerDir = Join-Path $installDir "installer"
           New-Item -ItemType Directory -Path $installerDir -Force
 
@@ -425,4 +426,4 @@ jobs:
           if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
           if (Test-Path "${{ env.builddir }}\doc")  { Copy-Item -Path "${{ env.builddir }}\doc"  -Destination "$stagingDir\doc"  -Recurse -Force }
           if (Test-Path "${{ env.builddir }}\Ext")  { Copy-Item -Path "${{ env.builddir }}\Ext"  -Destination "$stagingDir\Ext"  -Recurse -Force }
-          if (Test-Path "${{ env.builddir
+    
