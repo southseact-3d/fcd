@@ -256,6 +256,25 @@ jobs:
       #   CMAKE_C/CXX_COMPILER_LAUNCHER still used — correct way to wrap
       #   cl.exe with ccache under any generator
       # ------------------------------------------------------------------
+      - name: Clear stale CMake cache if generator changed
+        run: |
+          $cacheFile = "${{ env.builddir }}\CMakeCache.txt"
+          if (Test-Path $cacheFile) {
+            $cached = Select-String -Path $cacheFile -Pattern "CMAKE_GENERATOR:INTERNAL=" | Select-Object -First 1
+            if ($cached -and $cached.Line -notmatch "^CMAKE_GENERATOR:INTERNAL=Ninja$") {
+              Write-Host "Generator mismatch detected: $($cached.Line)"
+              Write-Host "Clearing CMakeCache.txt and CMakeFiles to allow reconfiguration..."
+              Remove-Item $cacheFile -Force
+              $cmakeFiles = "${{ env.builddir }}\CMakeFiles"
+              if (Test-Path $cmakeFiles) { Remove-Item $cmakeFiles -Recurse -Force }
+              Write-Host "Cache cleared."
+            } else {
+              Write-Host "Generator matches or no cache present — skipping clear."
+            }
+          } else {
+            Write-Host "No CMakeCache.txt found — fresh configure."
+          }
+
       - name: Configuring CMake
         run: >
           cmake -B"${{ env.builddir }}" .
