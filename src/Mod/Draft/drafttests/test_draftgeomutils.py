@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Antoine Lafr                                       *
 # *   Copyright (c) 2025 FreeCAD Project Association                        *

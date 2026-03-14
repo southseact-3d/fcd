@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # /**************************************************************************
 #                                                                           *
 #    Copyright (c) 2023 Ondsel <development@ondsel.com>                     *
@@ -35,7 +34,6 @@ if App.GuiUp:
 import UtilsAssembly
 import Preferences
 import CommandCreateJoint
-
 
 __title__ = "Assembly Command Insert Component"
 __author__ = "Ondsel"

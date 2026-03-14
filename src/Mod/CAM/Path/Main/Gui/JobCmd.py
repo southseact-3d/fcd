@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -31,7 +29,6 @@ import Path.Main.Job as PathJob
 import Path.Main.Stock as PathStock
 import json
 import os
-
 
 translate = FreeCAD.Qt.translate
 

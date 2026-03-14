@@ -1,10 +1,3 @@
-
-/*
-Development tools and related technology provided under license from 3Dconnexion.
-(c) 1992 - 2012 3Dconnexion. All rights reserved
-*/
-
-
 #ifndef T3D_MOUSE_PARAMS_H
 #define T3D_MOUSE_PARAMS_H
 

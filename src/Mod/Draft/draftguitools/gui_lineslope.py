@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -29,6 +27,7 @@
 It currently only works for a line in the XY plane, it changes the height
 of one of its points in the Z direction to create a sloped line.
 """
+
 ## @package gui_lineslope
 # \ingroup draftguitools
 # \brief Provides GUI tools to change the slope of a line.

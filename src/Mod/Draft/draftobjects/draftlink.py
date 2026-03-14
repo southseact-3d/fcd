@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 Zheng, Lei (realthunder)<realthunder.dev@gmail.com>*
 # *                                                                         *
@@ -32,6 +30,7 @@ NOTE: this class is a bit mysterious. We need more documentation
 on how the properties are being set, and how the code interacts with
 the arrays that use it.
 """
+
 ## @package draftlink
 # \ingroup draftobjects
 # \brief Provides the base class for Link objects used by other objects.

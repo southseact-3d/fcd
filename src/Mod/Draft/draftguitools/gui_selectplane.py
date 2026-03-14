@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 Yorik van Havre <yorik@uncreated.net>              *
 # *   Copyright (c) 2023 FreeCAD Project Association                        *
@@ -22,6 +20,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides GUI tools to set up the working plane and its grid."""
+
 ## @package gui_selectplane
 # \ingroup draftguitools
 # \brief Provides GUI tools to set up the working plane and its grid.

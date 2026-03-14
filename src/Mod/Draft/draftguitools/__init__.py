@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -62,6 +60,7 @@ so they are accessible at all times.
 These classes can be imported and initialized individually
 but it is easier to set them up just by importing `DraftTools`.
 """
+
 ## \defgroup draftguitools draftguitools
 # \ingroup DRAFT
 # \brief Modules that define the workbench GuiCommands to perform actions.

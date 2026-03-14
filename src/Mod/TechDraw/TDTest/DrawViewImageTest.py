@@ -1,5 +1,3 @@
-
-
 import FreeCAD
 import os
 import unittest

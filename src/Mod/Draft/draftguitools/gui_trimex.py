@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -33,6 +31,7 @@ Make sure the snapping is active so that the extrusion is done following
 the direction of a line, and up to the distance specified
 by the snapping point.
 """
+
 ## @package gui_trimex
 # \ingroup draftguitools
 # \brief Provides GUI tools to trim and extend lines.

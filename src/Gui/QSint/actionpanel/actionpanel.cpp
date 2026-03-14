@@ -1,11 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-only
-/***************************************************************************
- *                                                                         *
- *   Copyright: https://code.google.com/p/qsint/                           *
- *   License:   LGPL                                                       *
- *                                                                         *
- ***************************************************************************/
-
 #include "actionpanel.h"
 #include "actionpanelscheme.h"
 #include "actiongroup.h"

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009 Yorik van Havre <yorik@uncreated.net>              *
 # *                                                                         *
@@ -31,6 +29,7 @@ Currently it only reads the following entities:
 Currently unsupported:
 * use, image.
 """
+
 ## @package importSVG
 #  \ingroup DRAFT
 #  \brief SVG file importer and exporter

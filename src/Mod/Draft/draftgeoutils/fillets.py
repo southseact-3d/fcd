@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -24,6 +22,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides various functions to work with fillets."""
+
 ## @package fillets
 # \ingroup draftgeoutils
 # \brief Provides various functions to work with fillets.
@@ -247,7 +246,7 @@ def fillet(lEdges, r, chamfer=False):
 
     elif len(curveType["Arc"]) == 2:
         # Deals with lists of 2 arc-edges
-        (arcCenter, arcRadius, arcAxis, arcLength, toCenter, T, newRadius) = (
+        arcCenter, arcRadius, arcAxis, arcLength, toCenter, T, newRadius = (
             [],
             [],
             [],

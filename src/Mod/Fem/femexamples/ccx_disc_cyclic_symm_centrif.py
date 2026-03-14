@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Jakub Michalski <jakub.j.michalski[at]gmail.com>   *
 # *                                                                         *
@@ -45,9 +43,7 @@ def get_information():
 
 
 def get_explanation(header=""):
-    return (
-        header
-        + """
+    return header + """
 
 To run the example from Python console use:
 from femexamples.ccx_disc_cyclic_symm_centrif import setup
@@ -56,7 +52,6 @@ setup()
 Analytical solution - max von Mises stress 109.78 MPa = 1.0987e8 Pa
 
 """
-    )
 
 
 def setup(doc=None, solvertype="ccxtools"):
@@ -75,7 +70,6 @@ def setup(doc=None, solvertype="ccxtools"):
     cylinder1.Radius = "400 mm"
     cylinder1.Height = "50 mm"
     cylinder1.Angle = "45 deg"
-    
 
     cylinder2 = doc.addObject("Part::Cylinder", "Cylinder2")
     cylinder2.Placement = FreeCAD.Placement(Vector(0, 0, 0), Rotation(Vector(0, 0, 1), 0))
@@ -146,14 +140,14 @@ def setup(doc=None, solvertype="ccxtools"):
     con_tie.Sectors = 8
     con_tie.ConnectedSectors = 1
     analysis.addObject(con_tie)
-    
+
     # constraint centrif
     con_centrif = ObjectsFem.makeConstraintCentrif(doc, "ConstraintCentrif")
     con_centrif.References = [(geom_obj, "Solid1")]
     con_centrif.RotationFrequency = "50 Hz"
     con_centrif.RotationAxis = [(axis, "Edge1")]
     analysis.addObject(con_centrif)
-    
+
     # constraint displacement
     con_disp = ObjectsFem.makeConstraintDisplacement(doc, "ConstraintDisplacement")
     con_disp.References = [(geom_obj, ("Vertex8"))]
@@ -176,4 +170,3 @@ def setup(doc=None, solvertype="ccxtools"):
 
     doc.recompute()
     return doc
-

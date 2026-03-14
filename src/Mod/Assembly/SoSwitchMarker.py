@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # /**************************************************************************
 #                                                                           *
 #    Copyright (c) 2024 Ondsel <development@ondsel.com>                     *
@@ -24,7 +23,6 @@
 import math
 
 import FreeCAD as App
-
 
 if App.GuiUp:
     import FreeCADGui as Gui

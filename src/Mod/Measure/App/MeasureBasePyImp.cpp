@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-
 #include "MeasureBase.h"
 
 // Inclusion of the generated files (generated out of MeasureBasePy.xml)

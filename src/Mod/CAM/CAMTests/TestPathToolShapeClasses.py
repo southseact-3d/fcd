@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # Unit tests for the Path.Tool.Shape module and its utilities.
 
 from pathlib import Path

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 import os
 import sys
 from subprocess import check_call, check_output

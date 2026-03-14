@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # /******************************************************************************
 # *   Copyright (c) 2012 Jan Rheinländer <jrheinlaender@users.sourceforge.net> *
 # *                                                                            *
@@ -54,7 +52,7 @@ class Diagram:
         Plot.grid(True)
 
         # Calculate points
-        (self.xpoints, self.ypoints) = self.function.evaluate(self.xlength, self.numxpoints)
+        self.xpoints, self.ypoints = self.function.evaluate(self.xlength, self.numxpoints)
         # Create plot
         self.plot()
 
@@ -64,7 +62,7 @@ class Diagram:
         if xlength is not None:
             self.xlength = xlength
         # Calculate points
-        (self.xpoints, self.ypoints) = self.function.evaluate(self.xlength, self.numxpoints)
+        self.xpoints, self.ypoints = self.function.evaluate(self.xlength, self.numxpoints)
         # Create plot
         self.plot()
 

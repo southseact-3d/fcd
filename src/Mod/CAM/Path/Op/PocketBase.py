@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 sliptonic <shopinthewoods@gmail.com>               *
 # *   Copyright (c) 2020 russ4262 (Russell Johnson)                         *
@@ -28,7 +26,6 @@ import Path.Op.Area as PathAreaOp
 import Path.Op.Base as PathOp
 
 from PySide.QtCore import QT_TRANSLATE_NOOP
-
 
 __title__ = "Base CAM Pocket Operation"
 __author__ = "sliptonic (Brad Collette)"

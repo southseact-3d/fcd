@@ -1,11 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-only
-/***************************************************************************
- *                                                                         *
- *   Copyright: https://code.google.com/p/qsint/                           *
- *   License:   LGPL                                                       *
- *                                                                         *
- ***************************************************************************/
-
 #ifndef TASKHEADER_P_H
 #define TASKHEADER_P_H
 

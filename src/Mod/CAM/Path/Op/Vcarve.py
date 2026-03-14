@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -130,8 +128,8 @@ def _sortVoronoiWires(wires, start=FreeCAD.Vector(0, 0, 0)):
 
     result = []
     while begin:
-        (bIdx, bLen) = closestTo(start, begin)
-        (eIdx, eLen) = closestTo(start, end)
+        bIdx, bLen = closestTo(start, begin)
+        eIdx, eLen = closestTo(start, end)
         if bLen < eLen:
             result.append(wires[bIdx])
             start = end[bIdx]
@@ -479,7 +477,7 @@ class ObjectVcarve(PathEngraveBase.ObjectOp):
 
         def is_exterior(vertex, face):
             vector = FreeCAD.Vector(vertex.toPoint(face.BoundBox.ZMin))
-            (u, v) = face.Surface.parameter(vector)
+            u, v = face.Surface.parameter(vector)
             # isPartOfDomain is faster than face.IsInside(...)
             return not face.isPartOfDomain(u, v)
 

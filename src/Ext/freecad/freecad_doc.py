@@ -1,8 +1,4 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2024 Werner Mayer LGPL
-
-__title__="FreeCAD Python documentation"
+__title__ = "FreeCAD Python documentation"
 __author__ = "Werner Mayer"
 __url__ = "https://www.freecad.org"
 __doc__ = "Helper module to use pydoc"
@@ -10,19 +6,21 @@ __doc__ = "Helper module to use pydoc"
 
 import os, sys, pydoc, pkgutil
 
+
 class FreeCADDoc(pydoc.HTMLDoc):
     def index(self, dir, shadowed=None):
-        """ Generate an HTML index for a directory of modules."""
+        """Generate an HTML index for a directory of modules."""
         modpkgs = []
-        if shadowed is None: shadowed = {}
+        if shadowed is None:
+            shadowed = {}
         for importer, name, ispkg in pkgutil.iter_modules([dir]):
-            if name == 'Init':
+            if name == "Init":
                 continue
-            if name == 'InitGui':
+            if name == "InitGui":
                 continue
-            if name[-2:] == '_d':
+            if name[-2:] == "_d":
                 continue
-            modpkgs.append((name, '', ispkg, name in shadowed))
+            modpkgs.append((name, "", ispkg, name in shadowed))
             shadowed[name] = 1
 
         if len(modpkgs) == 0:
@@ -31,26 +29,32 @@ class FreeCADDoc(pydoc.HTMLDoc):
         modpkgs.sort()
         contents = self.multicolumn(modpkgs, self.modpkglink)
         try:
-            return self.bigsection(dir, '#ffffff', '#ee77aa', contents)
+            return self.bigsection(dir, "#ffffff", "#ee77aa", contents)
         except Exception as e:
-            return self.bigsection(dir, 'pkg-content', contents)
+            return self.bigsection(dir, "pkg-content", contents)
+
 
 def bltinlink(name):
-    return '<a href=\"%s.html\">%s</a>' % (name, name)
+    return '<a href="%s.html">%s</a>' % (name, name)
+
 
 def getIndexOld():
     pydoc.html = FreeCADDoc()
-    title = 'FreeCAD Python Modules Index'
+    title = "FreeCAD Python Modules Index"
 
-    heading = pydoc.html.heading('<big><big><strong>Python: Index of Modules</strong></big></big>','#ffffff', '#7799ee')
+    heading = pydoc.html.heading(
+        "<big><big><strong>Python: Index of Modules</strong></big></big>", "#ffffff", "#7799ee"
+    )
 
-    names = list(filter(lambda x: x != '__main__', sys.builtin_module_names))
+    names = list(filter(lambda x: x != "__main__", sys.builtin_module_names))
     contents = pydoc.html.multicolumn(names, bltinlink)
-    indices = ['<p>' + pydoc.html.bigsection('Built-in Modules', '#ffffff', '#ee77aa', contents)]
+    indices = ["<p>" + pydoc.html.bigsection("Built-in Modules", "#ffffff", "#ee77aa", contents)]
 
-    names = ['FreeCAD', 'FreeCADGui']
+    names = ["FreeCAD", "FreeCADGui"]
     contents = pydoc.html.multicolumn(names, bltinlink)
-    indices.append('<p>' + pydoc.html.bigsection('Built-in FreeCAD Modules', '#ffffff', '#ee77aa', contents))
+    indices.append(
+        "<p>" + pydoc.html.bigsection("Built-in FreeCAD Modules", "#ffffff", "#ee77aa", contents)
+    )
 
     seen = {}
     for dir in sys.path:
@@ -59,28 +63,27 @@ def getIndexOld():
         if ret != None:
             indices.append(ret)
 
-    contents = heading + ' '.join(indices) + '''<p align=right>
+    contents = heading + " ".join(indices) + """<p align=right>
 <font color=\"#909090\" face=\"helvetica, arial\"><strong>
-pydoc</strong> by Ka-Ping Yee &lt;ping@lfw.org&gt;</font>'''
+pydoc</strong> by Ka-Ping Yee &lt;ping@lfw.org&gt;</font>"""
 
     htmldocument = pydoc.html.page(title, contents)
     return htmldocument
+
 
 def getIndexNew():
     pydoc.html = FreeCADDoc()
-    title = 'FreeCAD Python Modules Index'
+    title = "FreeCAD Python Modules Index"
 
-    heading = pydoc.html.heading(
-        '<strong class="title">Index of Modules</strong>'
-    )
+    heading = pydoc.html.heading('<strong class="title">Index of Modules</strong>')
 
-    names = list(filter(lambda x: x != '__main__', sys.builtin_module_names))
+    names = list(filter(lambda x: x != "__main__", sys.builtin_module_names))
     contents = pydoc.html.multicolumn(names, bltinlink)
-    indices = ['<p>' + pydoc.html.bigsection('Built-in Modules', 'index', contents)]
+    indices = ["<p>" + pydoc.html.bigsection("Built-in Modules", "index", contents)]
 
-    names = ['FreeCAD', 'FreeCADGui']
+    names = ["FreeCAD", "FreeCADGui"]
     contents = pydoc.html.multicolumn(names, bltinlink)
-    indices.append('<p>' + pydoc.html.bigsection('Built-in FreeCAD Modules', 'index', contents))
+    indices.append("<p>" + pydoc.html.bigsection("Built-in FreeCAD Modules", "index", contents))
 
     seen = {}
     for dir in sys.path:
@@ -89,18 +92,20 @@ def getIndexNew():
         if ret != None:
             indices.append(ret)
 
-    contents = heading + ' '.join(indices) + '''<p align=right>
+    contents = heading + " ".join(indices) + """<p align=right>
 <font color=\"#909090\" face=\"helvetica, arial\"><strong>
-pydoc</strong> by Ka-Ping Yee &lt;ping@lfw.org&gt;</font>'''
+pydoc</strong> by Ka-Ping Yee &lt;ping@lfw.org&gt;</font>"""
 
     htmldocument = pydoc.html.page(title, contents)
     return htmldocument
+
 
 def getIndex():
     try:
         return getIndexOld()
     except Exception as e:
         return getIndexNew()
+
 
 def getPage(page):
     object, name = pydoc.resolve(page)

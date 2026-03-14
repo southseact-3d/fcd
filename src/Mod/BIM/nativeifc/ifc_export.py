@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2024 Yorik van Havre <yorik@uncreated.net>              *
@@ -35,7 +33,6 @@ from importers import importIFCHelper
 
 from . import ifc_tools
 from . import ifc_import
-
 
 PARAMS = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/NativeIFC")
 

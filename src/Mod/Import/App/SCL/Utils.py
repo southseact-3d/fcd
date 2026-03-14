@@ -1,6 +1,3 @@
-# SPDX-License-Identifier: BSD-3-Clause
-
-# Copyright (c) 2011, Thomas Paviot (tpaviot@gmail.com)
 # All rights reserved.
 
 # This file is part of the StepClassLibrary (SCL).
@@ -31,7 +28,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" This module provide string utils"""
+"""This module provide string utils"""
 
 
 def process_nested_parent_str(attr_str, idx=0):

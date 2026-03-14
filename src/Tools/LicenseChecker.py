@@ -1,7 +1,4 @@
 #! python
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2013 Werner Mayer LGPL
 #
 # Utility to search for source, header and Python files with a missing license text
 

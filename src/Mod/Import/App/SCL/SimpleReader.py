@@ -1,6 +1,3 @@
-# SPDX-License-Identifier: BSD-3-Clause
-
-# Copyright (c) 2014, Juergen Riegel (FreeCAD@juergen-riegel.net)
 # All rights reserved.
 
 # This file is part of the StepClassLibrary (SCL).
@@ -39,7 +36,6 @@ In addition it writes out a graphviz file with the entity graph.
 """
 
 import Part21, sys
-
 
 __title__ = "Simple Part21 STEP reader"
 __author__ = "Juergen Riegel"

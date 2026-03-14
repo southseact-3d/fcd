@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # /***************************************************************************
 #  *   Copyright (c) 2023 David Friedli <david[at]friedli-be.ch>             *
 #  *                                                                         *
@@ -31,7 +29,6 @@ import Measure
 import MeasureGui
 from MeasureCOM import makeMeasureCOM, MeasureCOM
 
-
 # Expose create functions
 Measure.makeMeasureCOM = makeMeasureCOM
 
@@ -39,7 +36,6 @@ Measure.makeMeasureCOM = makeMeasureCOM
 # Register python measure types
 import FreeCAD
 from PySide.QtCore import QT_TRANSLATE_NOOP
-
 
 FreeCAD.MeasureManager.addMeasureType(
     "CENTEROFMASS",

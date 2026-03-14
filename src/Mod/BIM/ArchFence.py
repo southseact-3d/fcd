@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # *****************************************************************************
 # *                                                                           *
 # *   Copyright (c) 2019 furti <daniel.furtlehner@gmx.net>                    *

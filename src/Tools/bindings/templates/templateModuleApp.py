@@ -1,8 +1,4 @@
 #! python
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2007 Juergen Riegel
-
 from . import template, templateModuleAppMain, templateModuleAppFeature
 import model.generateModel_Module
 import model.generateTools

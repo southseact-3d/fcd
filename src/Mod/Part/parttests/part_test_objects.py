@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -37,6 +35,7 @@ Or load it as a module and use the defined function.
 
 This test script is based on the one created for the Draft Workbench.
 """
+
 ## @package part_test_objects
 # \ingroup PART
 # \brief Run this file to create a standard test document for Part objects.

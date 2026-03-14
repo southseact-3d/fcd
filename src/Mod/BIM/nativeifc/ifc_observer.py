@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2022 Yorik van Havre <yorik@uncreated.net>              *
@@ -25,7 +23,6 @@
 """Document observer to act on documents containing NativeIFC objects"""
 
 import FreeCAD
-
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/NativeIFC")
 

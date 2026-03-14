@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # ***************************************************************************
 # *   Copyright (c) 2020 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -29,7 +28,6 @@ import Path.Base.Gui.PropertyEditor as PathPropertyEditor
 import Path.Base.PropertyBag as PathPropertyBag
 import Path.Base.Util as PathUtil
 import re
-
 
 __title__ = "Property Bag Editor"
 __author__ = "sliptonic (Brad Collette)"

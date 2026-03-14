@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009 Yorik van Havre <yorik@uncreated.net>                        *
 # *   (c) 2010 Ken Cline <cline@frii.com>                                   *
@@ -25,6 +23,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides GUI tools to apply styles to objects."""
+
 ## @package gui_styles
 # \ingroup draftguitools
 # \brief Provides GUI tools to apply styles to objects.

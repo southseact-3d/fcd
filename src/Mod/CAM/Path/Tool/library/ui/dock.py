@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 sliptonic <shopinthewoods@gmail.com>               *
 # *                 2020 Schildkroet                                        *
@@ -24,6 +22,7 @@
 # ***************************************************************************
 
 """ToolBit Library Dock Widget."""
+
 import FreeCAD
 import FreeCADGui
 import Path

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
 # *   Copyright (c) 2021 FreeCAD Developers                                 *
@@ -52,7 +50,6 @@ import Part
 import Draft
 from FreeCAD import Vector
 from draftutils.messages import _msg, _wrn
-
 
 if App.GuiUp:
     import FreeCADGui as Gui

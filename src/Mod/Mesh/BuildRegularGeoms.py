@@ -1,9 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# Copyright (c) 2005 Berthold Grupp
-# License: LGPL
-
-
 """Python Module for building solid regular geometric objects.
 
 Return value are list of vectors, 3 vectors define a facet.
@@ -13,7 +7,6 @@ Sample code for creating a mesh:
         m = Mesh.newMesh()
         m.addFacets(facets)
 """
-
 
 import math
 

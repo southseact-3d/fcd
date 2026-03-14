@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2024 Syres                                              *
@@ -25,7 +23,6 @@
 """Provide the grid observer for the Draft and BIM workbenches."""
 
 import FreeCAD
-
 
 # View observer code to update the Draft_ToggleGrid command button to reflect
 # the grid's visibility status.

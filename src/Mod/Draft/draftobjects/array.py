@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -29,6 +27,7 @@ The `Array` class currently handles three types of arrays,
 orthogonal, polar, and circular. In the future, probably they should be
 split in separate classes so that they are easier to manage.
 """
+
 ## @package array
 # \ingroup draftobjects
 # \brief Provides the object code for the Array object.

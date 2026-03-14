@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009 Yorik van Havre <yorik@uncreated.net>                        *
 # *   (c) 2010 Ken Cline <cline@frii.com>                                   *
@@ -29,6 +27,7 @@
 This class is used by Gui Commands to set up some properties
 of the DraftToolBar, the Snapper, and the working plane.
 """
+
 ## @package gui_base_original
 # \ingroup draftguitools
 # \brief Provides the base classes for most old Draft Gui Commands.

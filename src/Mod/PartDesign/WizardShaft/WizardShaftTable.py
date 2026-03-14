@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # /******************************************************************************
 # *   Copyright (c) 2012 Jan Rheinländer <jrheinlaender@users.sourceforge.net> *
 # *                                                                            *
@@ -216,7 +214,7 @@ class WizardShaftTable:
         widget.setEnabled(False)
 
     def slotValueChanged(self, value):
-        (self.editedRow, self.editedColumn) = self.getFocusedCell()
+        self.editedRow, self.editedColumn = self.getFocusedCell()
         self.editedValue = value
 
     def slotEditingFinished(self):
@@ -251,7 +249,7 @@ class WizardShaftTable:
             pass
 
     def slotEditConstraint(self):
-        (self.editedRow, self.editedColumn) = (
+        self.editedRow, self.editedColumn = (
             self.getFocusedCell()
         )  # Because finishEditConstraint() will trigger slotEditingFinished() which requires this information
         self.shaft.editConstraint(self.editedColumn)

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Jakub Michalski <jakub.j.michalski[at]gmail.com>         *
 # *                                                                         *
@@ -45,9 +43,7 @@ def get_information():
 
 
 def get_explanation(header=""):
-    return (
-        header
-        + """
+    return header + """
 
 To run the example from Python console use:
 from femexamples.ccx_rigid_body import setup
@@ -57,7 +53,6 @@ setup()
 Analytical solution - max xz stress = 2.547 MPa = 2.547e6 Pa
 
 """
-    )
 
 
 def setup(doc=None, solvertype="ccxtools"):

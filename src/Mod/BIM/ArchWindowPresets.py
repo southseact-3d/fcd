@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2020 Yorik van Havre <yorik@uncreated.net>              *
@@ -26,7 +24,6 @@ import FreeCAD
 
 from FreeCAD import Vector
 from draftutils.translate import translate
-
 
 WindowPresets = [
     "Fixed",

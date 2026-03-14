@@ -1,24 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/***************************************************************************** 
- *  \author 
- *  	Erwin Aertbelien, Div. PMA, Dep. of Mech. Eng., K.U.Leuven
- *
- *  \version 
- *		ORO_Geometry V0.2
- *
- *	\par History
- *		- $log$
- *
- *	\par Release
- *		$Id: utility_io.h,v 1.1.1.1.2.3 2003/06/26 15:23:59 psoetens Exp $
- *		$Name:  $ 
- *
- *  \file   utility_io.h
- *     Included by most lrl-files to provide some general
- *     functions and macro definitions related to file/stream I/O.
- */
-
 #ifndef KDL_UTILITY_IO_H_84822
 #define KDL_UTILITY_IO_H_84822
 

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2011 Yorik van Havre <yorik@uncreated.net>              *
@@ -1109,22 +1107,18 @@ def export(exportList, filename):
             FreeCAD.Console.PrintError(
                 translate("Arch", "Error: IfcOpenShell is not installed") + "\n"
             )
-            print(
-                """importIFC: ifcOpenShell is not installed. IFC export is unavailable.
+            print("""importIFC: ifcOpenShell is not installed. IFC export is unavailable.
                     Note: IFC export currently requires an experimental version of IfcOpenShell
-                    available from https://github.com/aothms/IfcOpenShell"""
-            )
+                    available from https://github.com/aothms/IfcOpenShell""")
             return
 
     if (not hasattr(ifcw, "IfcFile")) and (not hasattr(ifcw, "file")):
         FreeCAD.Console.PrintError(
             translate("Arch", "Error: your IfcOpenShell version is too old") + "\n"
         )
-        print(
-            """importIFC: The version of IfcOpenShell installed on this system does not
+        print("""importIFC: The version of IfcOpenShell installed on this system does not
                  have IFC export capabilities. IFC export currently requires an experimental
-                 version of IfcOpenShell available from https://github.com/aothms/IfcOpenShell"""
-        )
+                 version of IfcOpenShell available from https://github.com/aothms/IfcOpenShell""")
         return
     import Draft
     import Arch

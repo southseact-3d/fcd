@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
-// SPDX-FileCopyrightText: Copyright (c) Kitware, Inc.
-// SPDX-License-Identifier: BSD-3-Clause
 /**
  * @class   vtkCleanUnstructuredGrid
  * @brief   merge duplicate points
@@ -14,7 +11,6 @@
  * @sa
  * vtkCleanPolyData
  */
-
 
 #ifndef vtkCleanUnstructuredGrid_h
 # define vtkCleanUnstructuredGrid_h

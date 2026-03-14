@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2023 Yorik van Havre <yorik@uncreated.net>              *
@@ -29,7 +27,6 @@ import unittest
 import FreeCAD
 
 from . import ifc_import
-
 
 FILES = [
     "IfcOpenHouse_IFC4.ifc",

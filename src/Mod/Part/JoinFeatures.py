@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2016 Victor Titov (DeepSOIC) <vv.titov@gmail.com>       *
 # *                                                                         *
@@ -22,7 +20,6 @@
 # ***************************************************************************
 
 import FreeCAD, Part
-
 
 __title__ = "JoinFeatures module (legacy)"
 __author__ = "DeepSOIC"

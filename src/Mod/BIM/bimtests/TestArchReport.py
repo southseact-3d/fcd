@@ -1,8 +1,8 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 # Copyright (c) 2025 The FreeCAD Project
 
 """Unit tests for the ArchReport and ArchSql modules."""
+
 import FreeCAD
 import Arch
 import Draft

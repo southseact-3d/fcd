@@ -1,12 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/*
- * TreeIkSolverVel_wdls.hpp
- *
- *  Created on: Nov 28, 2008
- *      Author: rubensmits
- */
-
 #ifndef TREEIKSOLVERVEL_WDLS_HPP_
 #define TREEIKSOLVERVEL_WDLS_HPP_
 

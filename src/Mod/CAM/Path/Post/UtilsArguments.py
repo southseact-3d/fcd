@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
@@ -31,6 +29,7 @@
 """
 These are functions related to arguments and values for creating custom post processors.
 """
+
 import argparse
 import os
 import shlex

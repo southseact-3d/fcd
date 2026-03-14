@@ -1,24 +1,3 @@
-/******************************************************************************
-  This file is part of the FreeCAD CAx development system.
-
-  Copyright (c) 2014-2023 3Dconnexion.
-
-  This source code is released under the GNU Library General Public License, (see "LICENSE").
-******************************************************************************/
-
-/**
- * @file navlib_stub.c
- * @brief interface routines to the navlib library routines.
- */
-
-/*-----------------------------------------------------------------------------
- * The module contains interface routines to the navlib library routines
- * contained in the associated Dynamic Link Library.  The DLL is loaded
- * explicitly when NlLoadLibrary is invoked.  When the DLL is loaded, the
- * initialization routine finds the addresses of the routines that it exposes
- * and allows them to be used in this code.
- */
-
 #if _WIN32
 
 // windows

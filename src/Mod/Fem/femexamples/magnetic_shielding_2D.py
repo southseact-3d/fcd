@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Mario Passaglia <mpassaglia[at]cbc.uba.ar>         *
 # *                                                                         *
@@ -27,7 +25,6 @@ from femexamples.magnetic_shielding_2D import setup
 setup()
 """
 
-
 import sys
 import FreeCAD
 
@@ -51,9 +48,7 @@ def get_information():
 
 
 def get_explanation(header=""):
-    return (
-        header
-        + """
+    return header + """
 
 To run the example from Python console use:
 from femexamples.magnetic_shielding_2D import setup
@@ -62,7 +57,6 @@ setup()
 Magnetostatic equation - Elmer solver
 
 """
-    )
 
 
 def setup(doc=None, solvertype="elmer"):
@@ -124,7 +118,7 @@ def setup(doc=None, solvertype="elmer"):
     iron_obj.UUID = "1826c364-d26a-43fb-8f61-288281236836"
     iron_obj.Material = iron.Properties
 
-    air_obj.References = [(shell, ("Face1","Face3"))]
+    air_obj.References = [(shell, ("Face1", "Face3"))]
     iron_obj.References = [(shell, ("Face2",))]
     analysis.addObject(air_obj)
     analysis.addObject(iron_obj)

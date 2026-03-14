@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: BSL-1.0
 // Copyright 2020 Andy Maloney <asmaloney@gmail.com>
 
 #include <sstream>

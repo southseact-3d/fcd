@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
 #include "MillPathLine.h"
 #include "OpenGlWrapper.h"
 #include "GlUtils.h"

@@ -1,29 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/*****************************************************************************
- * \file  
- *      class for automatic differentiation on scalar values and 1st 
- *      derivatives and 2nd derivative.
- *       
- *  \author 
- *      Erwin Aertbelien, Div. PMA, Dep. of Mech. Eng., K.U.Leuven
- *
- *  \version 
- *      ORO_Geometry V0.2
- *
- *  \par Note
- *      VC6++ contains a bug, concerning the use of inlined friend functions 
- *      in combination with namespaces.  So, try to avoid inlined friend 
- *      functions !  
- *
- *  \par History
- *      - $log$ 
- *
- *  \par Release
- *      $Id: rall2d.h,v 1.1.1.1 2002/08/26 14:14:21 rmoreas Exp $
- *      $Name:  $ 
- ****************************************************************************/
-
 #ifndef Rall2D_H
 #define Rall2D_H
 

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
@@ -24,6 +22,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides the object code for the Layer object."""
+
 ## @package layer
 # \ingroup draftobjects
 # \brief Provides the object code for the Layer object.

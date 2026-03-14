@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: BSD-3-Clause
-
 // ***************************************************************************************************************************************
 //                    Point, CLine & Circle classes part of geometry.lib
 //                    g.j.hawkesford August 2006 for Camtek Gmbh

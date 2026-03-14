@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 import re
 import math
 from FreeCAD import Vector, Matrix
@@ -566,7 +564,7 @@ class SvgPathElement:
                     # Calculate the possible centers for an arc
                     # in 'endpoint parameterization'.
                     _x_rot = math.radians(-x_rotation)
-                    (solution, (rx, ry)) = _arc_end_to_center(
+                    solution, (rx, ry) = _arc_end_to_center(
                         last_v, next_v, rx, ry, _x_rot, correction=True
                     )
                     # Choose one of the two solutions

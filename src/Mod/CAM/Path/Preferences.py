@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *                                                                         *
@@ -28,7 +26,6 @@ import os
 import pathlib
 from collections import defaultdict
 from typing import Optional
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

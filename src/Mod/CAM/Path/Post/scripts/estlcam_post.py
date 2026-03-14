@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
 # *   Copyright (c) 2018, 2019 Gauthier Briere                              *
@@ -37,7 +35,6 @@ import datetime
 import shlex
 import re
 from builtins import open as pyopen
-
 
 TOOLTIP = """
 Generate G-code from a Path that is compatible with the Estlcam CNC controller.

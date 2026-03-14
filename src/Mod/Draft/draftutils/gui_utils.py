@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010                                                        *
 # *   Yorik van Havre <yorik@uncreated.net>, Ken Cline <cline@frii.com>     *
@@ -32,6 +30,7 @@ in other modules of the workbench, and which require
 the graphical user interface (GUI), as they access the view providers
 of the objects or the 3D view.
 """
+
 ## @package gui_utils
 # \ingroup draftutils
 # \brief Provides utility functions that deal with GUI interactions.

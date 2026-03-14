@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2016 Werner Mayer <wmayer[at]users.sourceforge.net>     *
 # *   Copyright (c) 2016 Eivind Kvedalen <eivind@kvedalen.name>             *

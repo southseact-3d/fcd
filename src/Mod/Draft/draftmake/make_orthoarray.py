@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -23,6 +21,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides functions to create orthogonal 2D and 3D Array objects."""
+
 ## @package make_orthoarray
 # \ingroup draftmake
 # \brief Provides functions to create orthogonal 2D and 3D Arrays.

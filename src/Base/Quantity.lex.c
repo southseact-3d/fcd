@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-// clang-format off
 #line 1 "Quantity.lex.c"
 
 #line 3 "Quantity.lex.c"

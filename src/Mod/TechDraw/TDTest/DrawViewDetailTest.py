@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # test script for DrawViewDetail
 # creates a page, a view and a detail view
 
@@ -8,6 +7,7 @@ import FreeCAD
 import unittest
 from .TechDrawTestUtilities import createPageWithSVGTemplate
 from PySide import QtCore
+
 
 class DrawViewDetailTest(unittest.TestCase):
     def setUp(self):
@@ -28,14 +28,14 @@ class DrawViewDetailTest(unittest.TestCase):
         FreeCAD.ActiveDocument.View.Source = [FreeCAD.ActiveDocument.Box]
         FreeCAD.ActiveDocument.recompute()
 
-        #wait for threads to complete before checking result
+        # wait for threads to complete before checking result
         loop = QtCore.QEventLoop()
 
         timer = QtCore.QTimer()
         timer.setSingleShot(True)
         timer.timeout.connect(loop.quit)
 
-        timer.start(2000)   #2 second delay
+        timer.start(2000)  # 2 second delay
         loop.exec_()
         print("DrawViewDetail test: view created")
 
@@ -47,9 +47,7 @@ class DrawViewDetailTest(unittest.TestCase):
         """Tests if a view can be added to page"""
         print("testing DrawViewDetail")
 
-        detail = FreeCAD.ActiveDocument.addObject(
-            "TechDraw::DrawViewDetail", "Detail"
-        )
+        detail = FreeCAD.ActiveDocument.addObject("TechDraw::DrawViewDetail", "Detail")
         detail.BaseView = self.view
         detail.Direction = self.view.Direction
         detail.XDirection = self.view.XDirection
@@ -57,20 +55,21 @@ class DrawViewDetailTest(unittest.TestCase):
         FreeCAD.ActiveDocument.recompute()
         print("DrawViewDetail test: Detail created")
 
-        #wait for threads to complete before checking result
+        # wait for threads to complete before checking result
         loop = QtCore.QEventLoop()
 
         timer = QtCore.QTimer()
         timer.setSingleShot(True)
         timer.timeout.connect(loop.quit)
 
-        timer.start(2000)   #2 second delay
+        timer.start(2000)  # 2 second delay
         loop.exec_()
 
         edges = detail.getVisibleEdges()
 
         self.assertEqual(len(edges), 4, "DrawViewDetail has wrong number of edges")
         self.assertTrue("Up-to-date" in detail.State, "DrawViewDetail is not Up-to-date")
+
 
 if __name__ == "__main__":
     unittest.main()

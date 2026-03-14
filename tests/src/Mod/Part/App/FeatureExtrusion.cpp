@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
 #include <cmath>
 #include <Base/Tools.h>
 #include "Mod/Part/App/FeatureExtrusion.h"

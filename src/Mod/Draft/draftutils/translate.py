@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009 Yorik van Havre <yorik@uncreated.net>                        *
 # *   (c) 2019 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
@@ -28,6 +26,7 @@
 This module contains auxiliary functions to translate strings
 using the QtCore module.
 """
+
 ## @package translate
 # \ingroup draftutils
 # \brief Provides utility functions that wrap around the Qt translate function.

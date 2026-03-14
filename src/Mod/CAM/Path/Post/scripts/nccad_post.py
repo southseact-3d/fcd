@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # *****************************************************************************
 # *   Copyright (c) 2020 Rene Bartsch, B.Sc. Informatics <rene@bartschnet.de> *
 # *                                                                           *
@@ -23,11 +21,11 @@
 # *                                                                           *
 # ****************************************************************************/
 """Postprocessor to output real GCode for Max Computer GmbH nccad9."""
+
 import FreeCAD
 import Path.Post.Utils as PostUtils
 import PathScripts.PathUtils as PathUtils
 import datetime
-
 
 TOOLTIP = """
 This is a postprocessor file for the Path workbench. It is used to take
@@ -73,9 +71,7 @@ HEADER = """;Exported by FreeCAD
 ;Post Processor: {}
 ;CAM file: {}
 ;Output Time: {}
-""".format(
-    __name__, cam_file, str(datetime.datetime.now())
-)
+""".format(__name__, cam_file, str(datetime.datetime.now()))
 
 
 def export(objectslist, filename, argstring):

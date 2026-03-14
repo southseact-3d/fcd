@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -30,6 +28,7 @@ A facebinder is a surface or shell created from the face of a solid object.
 This tool allows extracting such faces to be used for other purposes
 including extruding solids from faces.
 """
+
 ## @package gui_facebinders
 # \ingroup draftguitools
 # \brief Provides GUI tools to create Facebinder objects.

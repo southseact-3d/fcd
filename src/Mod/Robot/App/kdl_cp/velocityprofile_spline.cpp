@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-#include <limits>
-
 #include "velocityprofile_spline.hpp"
 
 namespace KDL {

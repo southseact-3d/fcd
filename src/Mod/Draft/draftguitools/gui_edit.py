@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -23,6 +21,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides GUI tools to start the edit mode of different objects."""
+
 ## @package gui_edit
 # \ingroup draftguitools
 # \brief Provides GUI tools to start the edit mode of different objects.
@@ -54,7 +53,6 @@ from draftguitools import gui_edit_part_objects as edit_part
 from draftguitools import gui_edit_sketcher_objects as edit_sketcher
 from draftguitools import gui_tool_utils
 from draftguitools import gui_trackers as trackers
-
 
 COLORS = {
     "default": utils.get_rgba_tuple(params.get_param("snapcolor"))[:3],

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Carlo Pavan <carlopav@gmail.com>                   *
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
@@ -33,6 +31,7 @@ through Coin (pivy).
 - Label
 - Text
 """
+
 ## @package draft_annotation
 # \ingroup draftobjects
 # \brief Provides the object code for all annotation type objects.

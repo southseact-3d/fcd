@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -23,6 +21,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides functions to create Arc objects by using 3 points."""
+
 ## @package make_arc_3points
 # \ingroup draftmake
 # \brief Provides functions to create Arc objects by using 3 points.

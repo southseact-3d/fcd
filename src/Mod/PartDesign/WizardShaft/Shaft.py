@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # /******************************************************************************
 # *   Copyright (c) 2012 Jan Rheinländer <jrheinlaender@users.sourceforge.net> *
 # *                                                                            *

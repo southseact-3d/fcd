@@ -1,12 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/*
- * treeiksolver.hpp
- *
- *  Created on: Nov 28, 2008
- *      Author: rubensmits
- */
-
 #ifndef TREEIKSOLVER_HPP_
 #define TREEIKSOLVER_HPP_
 

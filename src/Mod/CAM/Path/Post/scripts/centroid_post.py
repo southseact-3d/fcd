@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
 # *   Copyright (c) 2022 - 2025 Larry Woestman <LarryWoestman2@gmail.com>   *
@@ -160,9 +158,7 @@ class Centroid(PostProcessor):
         # spindle off, height offset canceled, spindle retracted
         # (M25 is a centroid command to retract spindle)
         #
-        values[
-            "TOOLRETURN"
-        ] = """M5
+        values["TOOLRETURN"] = """M5
 M25
 G49 H0"""
         #

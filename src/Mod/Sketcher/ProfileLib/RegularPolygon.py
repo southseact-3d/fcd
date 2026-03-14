@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Johan Kristensen                                   *
 # *   Copyright (c) 2014 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
@@ -23,7 +21,6 @@
 # ***************************************************************************
 
 import FreeCAD, FreeCADGui, Sketcher, Part, math
-
 
 __title__ = "Regular polygon profile lib"
 __author__ = "Johan Kristensen"

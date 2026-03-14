@@ -1,6 +1,4 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-#**************************************************************************
+# **************************************************************************
 #   Copyright (c) 2023 David Carter <dcarter@davidcarter.ca>              *
 #                                                                         *
 #   This file is part of the FreeCAD CAx development system.              *
@@ -20,7 +18,7 @@
 #   License along with FreeCAD; if not, write to the Free Software        *
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  *
 #   USA                                                                   *
-#**************************************************************************
+# **************************************************************************
 
 """
 Test module for FreeCAD material models
@@ -32,22 +30,24 @@ import Materials
 
 parseQuantity = FreeCAD.Units.parseQuantity
 
+
 class ModelTestCases(unittest.TestCase):
     """
     Test class for FreeCAD material models
     """
+
     def setUp(self):
-        """ Setup function to initialize test data """
+        """Setup function to initialize test data"""
         self.ModelManager = Materials.ModelManager()
         self.uuids = Materials.UUIDs()
 
     def testModelManager(self):
-        """ Ensure we can access ModelManager member functions """
+        """Ensure we can access ModelManager member functions"""
         self.assertIn("ModelLibraries", dir(self.ModelManager))
         self.assertIn("Models", dir(self.ModelManager))
 
     def testUUIDs(self):
-        """ Verify the common UUIDs are defined and correct """
+        """Verify the common UUIDs are defined and correct"""
         self.assertTrue(self.uuids.Father, "9cdda8b6-b606-4778-8f13-3934d8668e67")
         self.assertTrue(self.uuids.MaterialStandard, "1e2c0088-904a-4537-925f-64064c07d700")
 
@@ -55,7 +55,7 @@ class ModelTestCases(unittest.TestCase):
         self.assertTrue(self.uuids.Density, "454661e5-265b-4320-8e6f-fcf6223ac3af")
         self.assertTrue(self.uuids.Hardness, "3d1a6141-d032-4d82-8bb5-a8f339fff8ad")
         self.assertTrue(self.uuids.IsotropicLinearElastic, "f6f9e48c-b116-4e82-ad7f-3659a9219c50")
-        self.assertTrue(self.uuids.LinearElastic,"7b561d1d-fb9b-44f6-9da9-56a4f74d7536")
+        self.assertTrue(self.uuids.LinearElastic, "7b561d1d-fb9b-44f6-9da9-56a4f74d7536")
         self.assertTrue(self.uuids.MooneyRivlin, "beeed169-7770-4da0-ab67-c9172cf7d23d")
         self.assertTrue(self.uuids.NeoHooke, "569ebc58-ef29-434a-83be-555a0980d505")
         self.assertTrue(self.uuids.OgdenN1, "a2634a2c-412f-468d-9bec-74ae5d87a9c0")
@@ -107,7 +107,7 @@ class ModelTestCases(unittest.TestCase):
         self.assertTrue(self.uuids.TestModel, "34d0583d-f999-49ba-99e6-aa40bd5c3a6b")
 
     def testModelLoad(self):
-        """ Test that the Density model has been loaded correctly """
+        """Test that the Density model has been loaded correctly"""
         density = self.ModelManager.getModel(self.uuids.Density)
         self.assertIsNotNone(density)
         self.assertEqual(density.Name, "Density")
@@ -122,7 +122,7 @@ class ModelTestCases(unittest.TestCase):
         self.assertEqual(prop.Name, "Density")
 
     def testTestModelCompleteness(self):
-        """ Test that the Test model has been loaded correctly """
+        """Test that the Test model has been loaded correctly"""
         model = self.ModelManager.getModel(self.uuids.TestModel)
         self.assertIsNotNone(model)
         self.assertEqual(model.Name, "Test Model")
@@ -249,7 +249,10 @@ class ModelTestCases(unittest.TestCase):
         self.assertEqual(prop.Type, "2DArray")
         self.assertEqual(prop.URL, "")
         self.assertEqual(prop.Units, "")
-        self.assertEqual(prop.Description, "2 Dimensional array showing density and initial yield stress with temperature\n")
+        self.assertEqual(
+            prop.Description,
+            "2 Dimensional array showing density and initial yield stress with temperature\n",
+        )
         self.assertEqual(len(prop.Columns), 3)
         col = prop.Columns[0]
         self.assertEqual(col.Name, "Temperature")
@@ -268,14 +271,20 @@ class ModelTestCases(unittest.TestCase):
         self.assertEqual(col.Type, "Quantity")
         self.assertEqual(col.URL, "")
         self.assertEqual(col.Units, "kPa")
-        self.assertEqual(col.Description, "Saturation stress for Voce isotropic hardening [FreeCAD Pressure unit]\n")
+        self.assertEqual(
+            col.Description,
+            "Saturation stress for Voce isotropic hardening [FreeCAD Pressure unit]\n",
+        )
 
         prop = model.Properties["TestArray3D"]
         self.assertEqual(prop.Name, "TestArray3D")
         self.assertEqual(prop.Type, "3DArray")
         self.assertEqual(prop.URL, "")
         self.assertEqual(prop.Units, "")
-        self.assertEqual(prop.Description, "3 Dimensional array showing stress and strain as a function of temperature\n")
+        self.assertEqual(
+            prop.Description,
+            "3 Dimensional array showing stress and strain as a function of temperature\n",
+        )
         self.assertEqual(len(prop.Columns), 3)
         col = prop.Columns[0]
         self.assertEqual(col.Name, "Temperature")
@@ -297,7 +306,7 @@ class ModelTestCases(unittest.TestCase):
         self.assertEqual(col.Description, "Strain")
 
     def testModelInheritance(self):
-        """ Test that the inherited models have been loaded correctly """
+        """Test that the inherited models have been loaded correctly"""
         model = self.ModelManager.getModel(self.uuids.LinearElastic)
         self.assertIsNotNone(model)
         self.assertEqual(model.Name, "Linear Elastic")
@@ -336,4 +345,6 @@ class ModelTestCases(unittest.TestCase):
         self.assertEqual(prop.Type, "Quantity")
         self.assertEqual(prop.URL, "https://en.wikipedia.org/wiki/Young%27s_modulus")
         self.assertEqual(prop.Units, "kPa")
-        self.assertEqual(prop.Description, "Young's modulus (or E-Module) in [FreeCAD Pressure unit]")
+        self.assertEqual(
+            prop.Description, "Young's modulus (or E-Module) in [FreeCAD Pressure unit]"
+        )

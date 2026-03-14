@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -30,6 +28,7 @@
 
 The copies will be created at the points of a point object.
 """
+
 ## @package make_pointarray
 # \ingroup draftmake
 # \brief Provides functions to create PointArray objects.

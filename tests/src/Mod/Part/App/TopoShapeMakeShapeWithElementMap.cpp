@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
 // Tests for the makeShapeWithElementMap method, extracted from the main set of tests for TopoShape
 // due to length and complexity.
 

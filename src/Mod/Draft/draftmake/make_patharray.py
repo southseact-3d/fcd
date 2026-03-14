@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -32,6 +30,7 @@
 The copies will be placed along a path like a polyline, spline, or bezier
 curve.
 """
+
 ## @package make_patharray
 # \ingroup draftmake
 # \brief Provides functions to create PathArray objects.

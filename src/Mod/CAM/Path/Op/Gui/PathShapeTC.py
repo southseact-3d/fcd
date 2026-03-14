@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2022 FreeCAD Project Association                        *
@@ -164,7 +163,7 @@ class ObjectPartShape:
     def execute(self, obj):
         edges = []
         if obj.Base:
-            (base, subNames) = obj.Base[0]
+            base, subNames = obj.Base[0]
             edges = [
                 base.Shape.getElement(sub).copy() for sub in subNames if sub.startswith("Edge")
             ]

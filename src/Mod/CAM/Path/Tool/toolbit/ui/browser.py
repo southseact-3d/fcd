@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # flake8: noqa E731
 # ***************************************************************************
 # *   Copyright (c) 2025 Samuel Abels <knipknap@gmail.com>                  *
@@ -37,7 +35,6 @@ from ..serializers.yaml import YamlToolBitSerializer
 from .toollist import ToolBitListWidget, CompactToolBitListWidget, ToolBitUriRole
 from .editor import ToolBitEditor
 from .util import natural_sort_key
-
 
 Path.Log.setLevel(Path.Log.Level.INFO, Path.Log.thisModule())
 Path.Log.trackModule(Path.Log.thisModule())

@@ -1,7 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# FreeCAD MakeNewBuildNbr script
-# (c) 2003 Werner Mayer
 #
 # Creates a new application
 

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2018 Yorik van Havre <yorik@uncreated.net>              *
@@ -30,7 +28,6 @@ import os
 from urllib.request import urlopen
 import xml.sax
 from zipfile import ZipFile
-
 
 URL = "https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/annex-a-psd.zip"
 

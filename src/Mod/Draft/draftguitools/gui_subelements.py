@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009 Yorik van Havre <yorik@uncreated.net>                        *
 # *   (c) 2010 Ken Cline <cline@frii.com>                                   *
@@ -29,6 +27,7 @@
 The highlighting can be used to manipulate shapes with other tools
 such as Move, Rotate, and Scale.
 """
+
 ## @package gui_subelements
 # \ingroup draftguitools
 # \brief Provides GUI tools to highlight subelements of objects.

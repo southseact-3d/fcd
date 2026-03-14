@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2019 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -41,6 +39,7 @@ on how to write unit tests.
         def test_new_tool(self):
             pass
 """
+
 ## \defgroup drafttests drafttests
 # \ingroup DRAFT
 # \brief Modules that define classes used for unit testing the workbench.

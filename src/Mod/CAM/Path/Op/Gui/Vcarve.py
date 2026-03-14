@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -31,7 +29,6 @@ import Path.Base.Gui.Util as PathGuiUtil
 import PathGui
 import PathScripts.PathUtils as PathUtils
 from PySide import QtCore, QtGui
-
 
 __title__ = "CAM Vcarve Operation UI"
 __author__ = "sliptonic (Brad Collette)"

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 ################################################################################
 #                                                                              #
 #   © 2026 Billy Huddleston <billy@ivdc.com>                                   #

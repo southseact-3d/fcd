@@ -1,32 +1,3 @@
-/*=========================================================================
-
-  Program:   Visualization Toolkit
-  Module:    vtkSMPTools.h
-
-  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
-  All rights reserved.
-  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
-
-     This software is distributed WITHOUT ANY WARRANTY; without even
-     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-     PURPOSE.  See the above copyright notice for more information.
-
-=========================================================================*/
-/**
- * @class   vtkSMPTools
- * @brief   A set of parallel (multi-threaded) utility functions.
- *
- * vtkSMPTools provides a set of utility functions that can
- * be used to parallelize parts of VTK code using multiple threads.
- * There are several back-end implementations of parallel functionality
- * (currently Sequential, TBB, OpenMP and STDThread) that actual execution is
- * delegated to.
- *
- * @sa
- * vtkSMPThreadLocal
- * vtkSMPThreadLocalObject
- */
-
 #ifndef vtkSMPTools_h
 # define vtkSMPTools_h
 

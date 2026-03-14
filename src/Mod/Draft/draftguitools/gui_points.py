@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -31,6 +29,7 @@ A point is just a simple vertex with a position in 3D space.
 Its visual properties can be changed, like display size on screen
 and color.
 """
+
 ## @package gui_points
 # \ingroup draftguitools
 # \brief Provides GUI tools to create simple Point objects.

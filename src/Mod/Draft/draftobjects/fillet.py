@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
 # *                                                                         *
@@ -21,6 +19,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides the object code for the Fillet object."""
+
 ## @package fillet
 # \ingroup draftobjects
 # \brief Provides the object code for the Fillet object.

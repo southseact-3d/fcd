@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # **************************************************************************
 #   Copyright (c) 2023 David Carter <dcarter@davidcarter.ca>              *
 #                                                                         *
@@ -25,6 +23,7 @@
 """
 Test module for FreeCAD material cards and APIs
 """
+
 import os
 
 import unittest
@@ -59,7 +58,9 @@ class MaterialFilterTestCases(unittest.TestCase):
         self.useUserDir = param.GetBool("UseMaterialsFromConfigDir", True)
         self.useCustomDir = param.GetBool("UseMaterialsFromCustomDir", False)
 
-        paramExternal = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Material/ExternalInterface")
+        paramExternal = FreeCAD.ParamGet(
+            "User parameter:BaseApp/Preferences/Mod/Material/ExternalInterface"
+        )
         self.useExternal = paramExternal.GetBool("UseExternal", False)
 
         filePath = os.path.dirname(__file__) + os.sep
@@ -84,7 +85,9 @@ class MaterialFilterTestCases(unittest.TestCase):
         param.SetBool("UseMaterialsFromConfigDir", self.useUserDir)
         param.SetBool("UseMaterialsFromCustomDir", self.useCustomDir)
 
-        paramExternal = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Material/ExternalInterface")
+        paramExternal = FreeCAD.ParamGet(
+            "User parameter:BaseApp/Preferences/Mod/Material/ExternalInterface"
+        )
         paramExternal.SetBool("UseExternal", self.useExternal)
 
         self.MaterialManager.refresh()
@@ -134,7 +137,7 @@ class MaterialFilterTestCases(unittest.TestCase):
         self.assertEqual(len(filtered), 3)
 
         # Create an advanced rendering filter
-        filter= Materials.MaterialFilter()
+        filter = Materials.MaterialFilter()
         filter.Name = "Advanced Appearance"
         filter.RequiredCompleteModels = [self.uuids.AdvancedRendering]
 
@@ -145,7 +148,7 @@ class MaterialFilterTestCases(unittest.TestCase):
         self.assertEqual(len(filtered), 0)
 
         # Create a Density filter
-        filter= Materials.MaterialFilter()
+        filter = Materials.MaterialFilter()
         filter.Name = "Density"
         filter.RequiredCompleteModels = [self.uuids.Density]
 
@@ -156,7 +159,7 @@ class MaterialFilterTestCases(unittest.TestCase):
         self.assertEqual(len(filtered), 3)
 
         # Create a Hardness filter
-        filter= Materials.MaterialFilter()
+        filter = Materials.MaterialFilter()
         filter.Name = "Hardness"
         filter.RequiredCompleteModels = [self.uuids.Hardness]
 
@@ -167,7 +170,7 @@ class MaterialFilterTestCases(unittest.TestCase):
         self.assertEqual(len(filtered), 0)
 
         # Create a Density and Basic Rendering filter
-        filter= Materials.MaterialFilter()
+        filter = Materials.MaterialFilter()
         filter.Name = "Density and Basic Rendering"
         filter.RequiredCompleteModels = [self.uuids.Density, self.uuids.BasicRendering]
 
@@ -178,7 +181,7 @@ class MaterialFilterTestCases(unittest.TestCase):
         self.assertEqual(len(filtered), 1)
 
         # Create a Linear Elastic filter
-        filter= Materials.MaterialFilter()
+        filter = Materials.MaterialFilter()
         filter.Name = "Linear Elastic"
         filter.RequiredCompleteModels = [self.uuids.LinearElastic]
 
@@ -188,7 +191,7 @@ class MaterialFilterTestCases(unittest.TestCase):
         filtered = self.MaterialManager.filterMaterials(filter, includeLegacy=True)
         self.assertEqual(len(filtered), 0)
 
-        filter= Materials.MaterialFilter()
+        filter = Materials.MaterialFilter()
         filter.Name = "Linear Elastic - incomplete"
         filter.RequiredModels = [self.uuids.LinearElastic]
 

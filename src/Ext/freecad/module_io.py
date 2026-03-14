@@ -1,9 +1,8 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 from FreeCAD import Base
 import importlib
 
-def OpenInsertObject(importerName, objectPath, importMethod, docName = ""):
+
+def OpenInsertObject(importerName, objectPath, importMethod, docName=""):
     try:
         importArgs = []
         importKwargs = {}

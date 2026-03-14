@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -26,7 +24,6 @@ import FreeCAD
 import Path
 import Path.Op.Base as PathOp
 import Path.Op.PocketBase as PathPocketBase
-
 
 # lazily loaded modules
 from lazy_loader.lazy_loader import LazyLoader

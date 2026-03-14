@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
 // Wild Magic Source Code
 // David Eberly
 // http://www.geometrictools.com

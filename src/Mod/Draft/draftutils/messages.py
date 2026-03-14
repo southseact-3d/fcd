@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -29,6 +27,7 @@ that are suitable for use in every workbench. These shorthands also include
 a newline character at the end of the string, so it doesn't have to be
 added manually.
 """
+
 ## @package messages
 # \ingroup draftutils
 # \brief Provides utility functions that wrap around the Console methods.

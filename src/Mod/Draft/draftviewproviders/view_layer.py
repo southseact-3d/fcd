@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
@@ -25,6 +23,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides the viewprovider code for the Layer object."""
+
 ## @package view_layer
 # \ingroup draftviewproviders
 # \brief Provides the viewprovider code for the Layer object.

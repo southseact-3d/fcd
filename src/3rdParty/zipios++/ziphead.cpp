@@ -1,4 +1,3 @@
-
 #include "zipios-config.h"
 
 #include "meta-iostreams.h"

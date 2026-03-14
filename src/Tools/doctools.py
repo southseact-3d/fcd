@@ -1,9 +1,4 @@
 #! python
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2010 Werner Mayer LGPL
-# FreeCAD Python script to work with the FCStd file format.
-
 import os
 from defusedxml import sax as defused_sax
 from xml.sax.handler import ContentHandler

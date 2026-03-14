@@ -1,8 +1,4 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2023 Werner Mayer LGPL
-
-__title__="Document handling module"
+__title__ = "Document handling module"
 __author__ = "Werner Mayer"
 __url__ = "https://www.freecad.org"
 __doc__ = "Tools for extracting or creating project files"
@@ -14,11 +10,13 @@ import xml.sax.handler
 import xml.sax.xmlreader
 import zipfile
 
+
 # SAX handler to parse the Document.xml
 class DocumentHandler(xml.sax.handler.ContentHandler):
-    """ Parse content of Document.xml or GuiDocument.xml """
+    """Parse content of Document.xml or GuiDocument.xml"""
+
     def __init__(self, dirname):
-        """ Init parser """
+        """Init parser"""
         super().__init__()
         self.files = []
         self.dirname = dirname
@@ -34,8 +32,9 @@ class DocumentHandler(xml.sax.handler.ContentHandler):
     def endElement(self, name):
         return
 
+
 def extractDocument(filename, outpath):
-    """ Extract files from project archive """
+    """Extract files from project archive"""
     zfile = zipfile.ZipFile(filename)
     files = zfile.namelist()
 
@@ -48,26 +47,28 @@ def extractDocument(filename, outpath):
             for j in dirs:
                 curpath = curpath + "/" + j
                 os.mkdir(curpath)
-        output = open(outpath + "/"+i, 'wb')
+        output = open(outpath + "/" + i, "wb")
         output.write(data)
         output.close()
 
+
 def createDocument(filename, outpath):
-    """ Create project archive """
+    """Create project archive"""
     files = getFilesList(filename)
     dirname = os.path.dirname(filename)
     guixml = os.path.join(dirname, "GuiDocument.xml")
     if os.path.exists(guixml):
         files.extend(getFilesList(guixml))
-    compress = zipfile.ZipFile(outpath, 'w', zipfile.ZIP_DEFLATED)
+    compress = zipfile.ZipFile(outpath, "w", zipfile.ZIP_DEFLATED)
     for file in files:
         if os.path.isfile(file):
             path_in_archive = os.path.relpath(path=file, start=dirname)
             compress.write(file, path_in_archive, zipfile.ZIP_DEFLATED)
     compress.close()
 
+
 def getFilesList(filename):
-    """ Determine list of files referenced in a Document.xml or GuiDocument.xml """
+    """Determine list of files referenced in a Document.xml or GuiDocument.xml"""
     dirname = os.path.dirname(filename)
     handler = DocumentHandler(dirname)
     parser = xml.sax.make_parser()

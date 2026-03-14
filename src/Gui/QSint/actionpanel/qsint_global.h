@@ -1,11 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-only
-/***************************************************************************
- *                                                                         *
- *   Copyright: https://code.google.com/p/qsint/                           *
- *   License:   LGPL                                                       *
- *                                                                         *
- ***************************************************************************/
-
 #ifndef QSINT_GLOBAL_H
 #define QSINT_GLOBAL_H
 

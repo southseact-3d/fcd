@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -30,6 +28,7 @@ Labels are similar to text annotations but include a leader line
 and an arrow in order to point to an object and indicate some of its
 properties.
 """
+
 ## @package gui_labels
 # \ingroup draftguitools
 # \brief Provides GUI tools to create Label objects.

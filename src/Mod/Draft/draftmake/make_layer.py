@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
@@ -24,6 +22,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides functions to create Layer objects."""
+
 ## @package make_layer
 # \ingroup draftmake
 # \brief Provides functions to create Layer objects.

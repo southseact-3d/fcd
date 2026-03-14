@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2021 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -25,7 +23,6 @@ import FreeCAD as App
 import Path
 import Path.Base.Drillable as Drillable
 import CAMTests.PathTestUtils as PathTestUtils
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

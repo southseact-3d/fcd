@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *                                                                         *
@@ -29,7 +27,6 @@ import json
 
 from FreeCAD import Units
 from PySide import QtCore, QtGui
-
 
 Path.Log.setLevel(Path.Log.Level.INFO, Path.Log.thisModule())
 

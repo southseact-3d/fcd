@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2015 Dan Falck <ddfalck@gmail.com>                      *
 # *                 2025 Samuel Abels <knipknap@gmail.com>                  *
@@ -30,7 +28,6 @@ import Path
 from Path.Tool.toolbit import ToolBit
 import Path.Base.Generator.toolchange as toolchange
 import Path.Dressup.Utils as PathDressup
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

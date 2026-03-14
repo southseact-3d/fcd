@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
@@ -60,7 +58,7 @@ def check_for_an_adaptive_op(
     opHorizRapid: float
     opVertRapid: float
 
-    (adaptiveOp, opHorizRapid, opVertRapid) = adaptive_op_variables
+    adaptiveOp, opHorizRapid, opVertRapid = adaptive_op_variables
     if values["OUTPUT_ADAPTIVE"] and adaptiveOp and command in values["RAPID_MOVES"]:
         if opHorizRapid and opVertRapid:
             return "G1"
@@ -810,7 +808,7 @@ def set_adaptive_op_speed(
     opVertRapid: float
     param_num: str
 
-    (adaptiveOp, opHorizRapid, opVertRapid) = adaptive_op_variables
+    adaptiveOp, opHorizRapid, opVertRapid = adaptive_op_variables
     if (
         values["OUTPUT_ADAPTIVE"]
         and adaptiveOp
