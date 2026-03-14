@@ -436,11 +436,57 @@ jobs:
 
       - name: Install NSIS
         run: |
-          choco install nsis -y
-          Invoke-WebRequest -Uri "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip" -OutFile "nsProcess.zip"
-          Expand-Archive -Path "nsProcess.zip" -DestinationPath "nsProcess"
-          Copy-Item "nsProcess\Plugin\nsProcessW.dll" -Destination "C:\Program Files (x86)\NSIS\Plugins\x86-unicode\nsProcess.dll"
-          Copy-Item "nsProcess\Include\nsProcess.nsh" -Destination "C:\Program Files (x86)\NSIS\Include\"
+          # Install NSIS via chocolatey
+          choco install nsis -y --no-progress
+          
+          # Verify NSIS installed correctly
+          $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (-not (Test-Path $nsisExe)) {
+            Write-Error "NSIS installation failed - makensis.exe not found"
+            exit 1
+          }
+          Write-Host "✓ NSIS installed at $nsisExe"
+          
+          # Download nsProcess plugin with error handling and fallback
+          $pluginDir  = "C:\Program Files (x86)\NSIS\Plugins\x86-unicode"
+          $includeDir = "C:\Program Files (x86)\NSIS\Include"
+          $zipUrl     = "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip"
+          $zipPath    = "$env:TEMP\NsProcess.zip"
+          $extractDir = "$env:TEMP\NsProcess"
+          
+          try {
+            Write-Host "Downloading nsProcess plugin..."
+            # Use TLS 1.2 explicitly — sourceforge requires it
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -TimeoutSec 60 -UseBasicParsing
+            
+            Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+            
+            # nsProcess zip has inconsistent internal structure across versions — search for files
+            $dllFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcessW.dll" | Select-Object -First 1
+            $nshFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcess.nsh"  | Select-Object -First 1
+            
+            if ($dllFile) {
+              Copy-Item $dllFile.FullName -Destination "$pluginDir\nsProcess.dll" -Force
+              Write-Host "✓ nsProcess.dll installed"
+            } else {
+              Write-Warning "nsProcessW.dll not found in archive — installer may lack process-check features"
+            }
+            
+            if ($nshFile) {
+              Copy-Item $nshFile.FullName -Destination "$includeDir\nsProcess.nsh" -Force
+              Write-Host "✓ nsProcess.nsh installed"
+            } else {
+              Write-Warning "nsProcess.nsh not found in archive"
+            }
+          }
+          catch {
+            # nsProcess is optional — it adds process-running checks to the installer
+            # If it fails to download, log the warning and continue rather than failing the build
+            Write-Warning "nsProcess plugin download failed: $_"
+            Write-Warning "Continuing without nsProcess — installer will be created without process-check support"
+            Write-Warning "To fix: check network access to nsis.sourceforge.io or bundle the plugin in the repo"
+          }
 
       - name: Create Windows Installer
         run: |
@@ -470,7 +516,15 @@ jobs:
           $env:FILES_FREECAD = $stagingDir
           $env:FILES_THUMBS  = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
 
-          & $nsisPath /D"FILES_FREECAD=$stagingDir" /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" $installerNsi
+          # Run NSIS — errors here are non-fatal so the artifact upload still runs
+          $nsisResult = & $nsisPath `
+            /D"FILES_FREECAD=$stagingDir" `
+            /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" `
+            /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" `
+            $installerNsi
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "NSIS exited with code $LASTEXITCODE — installer may not have been created"
+          }
 
           $generatedInstaller = Get-ChildItem -Path "${{ github.workspace }}\package\WindowsInstaller" -Filter "*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if ($generatedInstaller) {
