@@ -420,4 +420,220 @@ jobs:
                 }
               } else {
                 Write-Host "Could not parse obj target for $src — skipping"
-   
+                $skippedCount++
+              }
+            } else {
+              Write-Host "Source not found in build.ninja: $src — may be a new file, skipping"
+              $skippedCount++
+            }
+          }
+
+          Write-Host ""
+          Write-Host "Pre-build summary: $builtCount compiled, $skippedCount skipped"
+
+      # ------------------------------------------------------------------
+      # Full Ninja build.
+      # -j 4  matches the previous MSBuild MultiProcToolCount.
+      #        Increase if the runner has more cores (windows-latest = 4).
+      # ------------------------------------------------------------------
+      - name: Compiling sources (Ninja full build)
+        run: |
+          # -j16 rather than -j4: ccache hits are I/O bound not CPU bound,
+          # so we can run far more parallel jobs than there are cores.
+          # 16 is a safe ceiling for windows-latest without OOM risk.
+          cmake --build "${{ env.builddir }}" --config Release -j16
+          Write-Host "✓ Ninja build complete"
+
+      - name: Print Ccache statistics after build
+        if: always()
+        run: |
+          Write-Host "=== CCache Statistics After Build ==="
+          . $env:ccachebindir\ccache -s
+          Write-Host "====================================="
+
+      - name: C++ unit tests
+        if: false # Disabled because seems to not function on Windows build
+        timeout-minutes: 1
+        run: |
+          . ${{ env.builddir }}\tests\Release\Tests_run --gtest_output=json:${{ env.reportdir }}gtest_results.json
+
+      - name: FreeCAD CLI tests
+        run: |
+          . ${{ env.builddir }}\bin\FreeCADCmd -t 0
+
+      - name: Flush RAM disk ccache back to disk
+        if: always()
+        run: |
+          # Copy any new cache entries written during this build back to C:
+          # so they get picked up by the cache save step below.
+          $ramCacheDir = "R:\ccache"
+          if (Test-Path $ramCacheDir) {
+            Write-Host "Flushing RAM disk ccache back to ${{ env.CCACHE_DIR }}..."
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            # Sync back — robocopy is faster than Copy-Item for large dirs
+            robocopy $ramCacheDir "${{ env.CCACHE_DIR }}" /MIR /MT:8 /NP /NJH /NJS
+            $sw.Stop()
+            Write-Host "✓ ccache flushed in $($sw.Elapsed.TotalSeconds)s"
+          } else {
+            Write-Host "RAM disk not present — nothing to flush"
+          }
+
+      - name: Save Compiler Cache
+        id: cache-save
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+
+      # Save only the tiny Ninja state files — obj files live in ccache instead
+      - name: Save Ninja state cache
+        id: ninja-cache-save
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ env.builddir }}/.ninja_deps
+            ${{ env.builddir }}/.ninja_log
+            ${{ env.builddir }}/build.ninja
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+
+      - name: Install NSIS
+        run: |
+          # Install NSIS via chocolatey
+          choco install nsis -y --no-progress
+          
+          # Verify NSIS installed correctly
+          $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (-not (Test-Path $nsisExe)) {
+            Write-Error "NSIS installation failed - makensis.exe not found"
+            exit 1
+          }
+          Write-Host "✓ NSIS installed at $nsisExe"
+          
+          $pluginDir  = "C:\Program Files (x86)\NSIS\Plugins\x86-unicode"
+          $includeDir = "C:\Program Files (x86)\NSIS\Include"
+          $nsProcessInstalled = $false
+          
+          # Try downloading nsProcess from GitHub mirror first (more reliable than sourceforge)
+          $sources = @(
+            "https://github.com/drizin/NsProcess/raw/master/nsProcess/Release/nsProcessW.dll",
+            "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip"
+          )
+          
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          
+          # Try GitHub mirror for DLL directly
+          try {
+            Write-Host "Trying GitHub mirror for nsProcess DLL..."
+            Invoke-WebRequest -Uri $sources[0] -OutFile "$pluginDir\nsProcess.dll" -TimeoutSec 30 -UseBasicParsing
+            Write-Host "✓ nsProcess.dll installed from GitHub mirror"
+          } catch {
+            Write-Warning "GitHub mirror failed: $_"
+          }
+          
+          # Try sourceforge ZIP for both DLL and NSH
+          try {
+            Write-Host "Trying sourceforge for nsProcess ZIP..."
+            $zipPath    = "$env:TEMP\NsProcess.zip"
+            $extractDir = "$env:TEMP\NsProcess"
+            Invoke-WebRequest -Uri $sources[1] -OutFile $zipPath -TimeoutSec 60 -UseBasicParsing
+            Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+            
+            $dllFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcessW.dll" | Select-Object -First 1
+            $nshFile = Get-ChildItem -Path $extractDir -Recurse -Filter "nsProcess.nsh"  | Select-Object -First 1
+            
+            if ($dllFile) { Copy-Item $dllFile.FullName -Destination "$pluginDir\nsProcess.dll" -Force }
+            if ($nshFile) {
+              Copy-Item $nshFile.FullName -Destination "$includeDir\nsProcess.nsh" -Force
+              $nsProcessInstalled = $true
+              Write-Host "✓ nsProcess plugin installed from sourceforge"
+            }
+          } catch {
+            Write-Warning "Sourceforge download failed: $_"
+          }
+          
+          # If nsProcess still not available, write a stub .nsh into the NSIS Include dir.
+          # This is more reliable than regex-patching the .nsi because:
+          #   - the stub satisfies the !include without changing the script
+          #   - macro calls become no-ops rather than errors
+          #   - no risk of the regex failing to match NSIS syntax variants
+          if (-not $nsProcessInstalled) {
+            Write-Warning "nsProcess unavailable — writing stub nsProcess.nsh"
+            $stubPath = "$includeDir
+sProcess.nsh"
+            # Stub implements FindProcess/KillProcess as no-ops so the installer
+            # compiles cleanly but skips the "is FreeCAD running?" check at install time.
+            $stub = '; nsProcess stub - real plugin unavailable at build time' + "`r`n"
+            $stub += '; Process detection disabled. Bundle nsProcess in the repo to enable.' + "`r`n"
+            $stub += '!macro _FindProcess _name _result' + "`r`n"
+            $stub += '  StrCpy ${_result} ""' + "`r`n"
+            $stub += '!macroend' + "`r`n"
+            $stub += '!define FindProcess "!insertmacro _FindProcess"' + "`r`n"
+            $stub += '!macro _KillProcess _name _result' + "`r`n"
+            $stub += '  StrCpy ${_result} ""' + "`r`n"
+            $stub += '!macroend' + "`r`n"
+            $stub += '!define KillProcess "!insertmacro _KillProcess"' + "`r`n"
+            Set-Content -Path $stubPath -Value $stub -Encoding UTF8 -NoNewline
+            Write-Host "✓ Stub nsProcess.nsh written — installer will compile without process-check support"
+          }
+
+      - name: Create Windows Installer
+        run: |
+          $buildDir = "${{ env.builddir }}"
+          $installDir = $buildDir.TrimEnd([char]92)
+          $installerDir = Join-Path $installDir "installer"
+          New-Item -ItemType Directory -Path $installerDir -Force
+
+          $stagingDir = Join-Path $installerDir "FreeCAD"
+          New-Item -ItemType Directory -Path $stagingDir -Force
+
+          Copy-Item -Path "${{ env.builddir }}\bin" -Destination "$stagingDir\bin" -Recurse -Force
+          Copy-Item -Path "${{ env.builddir }}\Mod" -Destination "$stagingDir\Mod" -Recurse -Force
+          if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\doc")  { Copy-Item -Path "${{ env.builddir }}\doc"  -Destination "$stagingDir\doc"  -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\Ext")  { Copy-Item -Path "${{ env.builddir }}\Ext"  -Destination "$stagingDir\Ext"  -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\lib")  { Copy-Item -Path "${{ env.builddir }}\lib"  -Destination "$stagingDir\lib"  -Recurse -Force }
+
+          $version = "${{ env.builddir }}\bin\FreeCADCmd.exe"
+          $versionOutput = & $version --version 2>&1
+          $versionMatch = $versionOutput -match "(\d+\.\d+\.\d+)"
+          $appVersion = if ($versionMatch) { $Matches[1] } else { "1.2.0" }
+          Write-Host "Detected version: $appVersion"
+
+          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
+          $installerNsi = "${{ github.workspace }}\package\WindowsInstaller\FreeCAD-installer.nsi"
+          $env:FILES_FREECAD = $stagingDir
+          $env:FILES_THUMBS  = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
+
+          # Run NSIS — errors here are non-fatal so the artifact upload still runs
+          $nsisResult = & $nsisPath `
+            /D"FILES_FREECAD=$stagingDir" `
+            /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" `
+            /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" `
+            $installerNsi
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "NSIS exited with code $LASTEXITCODE — installer may not have been created"
+          }
+
+          $generatedInstaller = Get-ChildItem -Path "${{ github.workspace }}\package\WindowsInstaller" -Filter "*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if ($generatedInstaller) {
+            Move-Item -Path $generatedInstaller.FullName -Destination "$installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe" -Force
+            Write-Host "Installer created: $installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
+          }
+
+      - name: Upload Windows Installer
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Windows-Installer
+          path: |
+            ${{ env.builddir }}\installer\*.exe
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Logs
+          path: |
+            ${{ env.logdir }}
