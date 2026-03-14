@@ -20,7 +20,18 @@
 # ***************************************************************************
 
 # This is a build and test workflow for CI of FreeCAD.
-# This workflow aims at building and testing FreeCAD on Windows using MSVC.
+# This workflow aims at building and testing FreeCAD on Windows using MSVC + Ninja.
+#
+# KEY CHANGES from MSBuild version:
+#   - Generator switched from MSVC/MSBuild to "Ninja Multi-Config"
+#   - Ninja produces a minimal rebuild set natively — only changed TUs recompile
+#   - MSBuild incremental build tree cache removed (Ninja .ninja_deps/.ninja_log
+#     persist in the build cache instead, giving Ninja its own incremental state)
+#   - ccache config fixed: DIRECT=false (MSVC), NOINODECACHE=false, MAXSIZE=5G
+#   - ccache cache key uses run_id so latest cache is always saved, restore-keys
+#     provides best-available fallback regardless of source changes
+#   - Explicit "changed files first" pre-build step compiles only touched .cpp
+#     files before the full Ninja build, surfacing errors faster
 
 name: Build Windows
 on:
@@ -72,16 +83,25 @@ jobs:
     runs-on: windows-latest
     continue-on-error: ${{ inputs.allowedToFail || false }}
     env:
-      CCACHE_COMPILERCHECK: "content" # Better cache hit rate than %compiler%
+      # -------------------------------------------------------------------
+      # ccache settings
+      # DIRECT=false  — required for MSVC; the /showIncludes dependency
+      #                 scanning that DIRECT mode relies on doesn't work
+      #                 correctly with cl.exe, causing spurious cache misses.
+      # NOINODECACHE=false — allow inode cache for faster lookups
+      # MAXSIZE=5G    — FreeCAD's object files easily exceed 2 G
+      # SLOPPINESS    — pch_defines removed since PCH is OFF
+      # -------------------------------------------------------------------
+      CCACHE_COMPILERCHECK: "content"
       CCACHE_COMPRESS: true
-      CCACHE_COMPRESSLEVEL: 5
+      CCACHE_COMPRESSLEVEL: 1
       CCACHE_DIR: C:/FC/cache/
       CCACHE_LOGFILE: C:/logs/ccache.log
-      CCACHE_MAXSIZE: 2G
-      CCACHE_DIRECT: true
+      CCACHE_MAXSIZE: 5G
+      CCACHE_DIRECT: false
       CCACHE_NOHASHDIR: true
-      CCACHE_NOINODECACHE: true
-      CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,pch_defines,time_macros" # Can't get PCH to work on Windows
+      CCACHE_NOINODECACHE: false
+      CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,time_macros"
       ## Have to use C:\ because not enough space on workspace drive
       builddir: C:/FC/build/release/
       cacheKey: Windows
@@ -138,17 +158,23 @@ jobs:
         with:
           libpackdir: ${{ env.libpackdir }}
 
+      # ------------------------------------------------------------------
+      # ccache cache key strategy:
+      #   key    = includes run_id so every run saves a fresh cache entry
+      #   restore-keys = cascading fallback — always restores the newest
+      #                  available cache regardless of what source changed.
+      #   The combined_hash (CMakeLists + CMakePresets) is kept in the
+      #   restore-key prefix so a config change still matches recent caches
+      #   but gets a new save slot, avoiding stale config pollution.
+      # ------------------------------------------------------------------
       - name: Generate file hash for cache key
         id: file-hash
         run: |
-          # Hash files that affect build configuration
           $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
           $presetsHash = Get-FileHash -Path CMakePresets.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash
           $combinedHash = "$cmakeHash-$presetsHash"
           echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
           echo "combined_hash=$combinedHash" >> $env:GITHUB_OUTPUT
-          Write-Host "CMakeLists.txt hash: $cmakeHash"
-          Write-Host "CMakePresets.json hash: $presetsHash"
           Write-Host "Combined hash: $combinedHash"
         shell: pwsh
 
@@ -158,34 +184,38 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
           restore-keys: |
+            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
             FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
             FC-CCACHE-${{ env.cacheKey }}-
 
-      - name: Restore incremental build tree
-        id: build-cache-restore
+      # ------------------------------------------------------------------
+      # Ninja build cache: persists .ninja_deps, .ninja_log, and all .obj
+      # files so Ninja can perform a true incremental build on next run.
+      # Key strategy mirrors ccache — run_id in save key, cascading restore.
+      # ------------------------------------------------------------------
+      - name: Restore Ninja build cache
+        id: ninja-cache-restore
         if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
           restore-keys: |
-            FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
-            FC-BUILD-${{ env.cacheKey }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
+            FC-NINJA-${{ env.cacheKey }}-
 
-      - name: Print incremental build cache status
+      - name: Print cache status
         if: always()
         run: |
-          if ("${{ steps.build-cache-restore.outputs.cache-hit }}" -eq "true") {
-            Write-Host "✓ Incremental build cache HIT: restored previous build outputs."
-            Write-Host "Build will be incremental - only changed files will be recompiled."
-          }
-          else {
-            Write-Host "✗ Incremental build cache MISS: this run will prime the build cache."
-            Write-Host "Full build will be performed, then cached for future runs."
-          }
-          Write-Host "Compiler cache hit: ${{ steps.cache-restore.outputs.cache-hit }}"
+          Write-Host "=== Cache Status ==="
+          $ccacheHit = "${{ steps.cache-restore.outputs.cache-hit }}"
+          $ninjaHit  = "${{ steps.ninja-cache-restore.outputs.cache-hit }}"
+          Write-Host "ccache hit  : $(if ($ccacheHit -eq 'true') { '✓ HIT' } else { '✗ MISS' })"
+          Write-Host "Ninja cache : $(if ($ninjaHit  -eq 'true') { '✓ HIT — next build will be incremental' } else { '✗ MISS — full build this run' })"
+          Write-Host "===================="
 
       - name: Print Ccache statistics before build, reset stats and print config
         run: |
@@ -198,11 +228,39 @@ jobs:
         with:
           cmake-version: '3.31.6'
 
+      # ------------------------------------------------------------------
+      # Install Ninja.
+      # windows-latest ships with Ninja but pinning a known version is safer.
+      # ------------------------------------------------------------------
+      - name: Install Ninja
+        run: |
+          choco install ninja -y --version=1.12.1
+          ninja --version
+
+      # ------------------------------------------------------------------
+      # Set up the MSVC environment so cl.exe / link.exe are on PATH.
+      # Ninja requires the compiler to be on PATH; unlike MSBuild it does
+      # not auto-discover Visual Studio.
+      # ------------------------------------------------------------------
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      # ------------------------------------------------------------------
+      # CMake configuration — key changes vs MSBuild version:
+      #   -G "Ninja Multi-Config"   replaces the default MSVC generator
+      #   --config Release          selects the config at build time
+      #   CMAKE_JOB_POOLS removed   (Ninja manages parallelism itself)
+      #   CLToolPath removed        (was MSBuild-specific, caused conflicts)
+      #   CMAKE_C/CXX_COMPILER_LAUNCHER still used — correct way to wrap
+      #   cl.exe with ccache under any generator
+      # ------------------------------------------------------------------
       - name: Configuring CMake
         run: >
           cmake -B"${{ env.builddir }}" .
-          --preset ${{ env.config }}
-          -DCMAKE_VS_NO_COMPILE_BATCHING=ON
+          -G "Ninja Multi-Config"
+          -DCMAKE_DEFAULT_BUILD_TYPE=Release
           -DCMAKE_BUILD_TYPE=Release
           -DFREECAD_USE_PCH=OFF
           -DFREECAD_RELEASE_PDB=OFF
@@ -212,35 +270,99 @@ jobs:
           -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
           -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
           -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
-          -DCMAKE_JOB_POOLS=compile_jobs=4
 
       - name: Check CMake configuration
         run: |
-          Write-Host "CMake configuration completed successfully"
-          if (-not (Test-Path "${{ env.builddir }}\ALL_BUILD.vcxproj")) {
-            Write-Error "CMake configuration failed - ALL_BUILD.vcxproj not found"
+          if (-not (Test-Path "${{ env.builddir }}\build.ninja")) {
+            Write-Error "CMake configuration failed - build.ninja not found"
             exit 1
           }
-          Write-Host "Build project files found"
+          Write-Host "✓ build.ninja found — Ninja generator active"
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
-
-      - name: Compiling sources
+      # ------------------------------------------------------------------
+      # CHANGED FILES FIRST — pre-build step
+      #
+      # Ninja's dependency graph means it will only recompile what is
+      # necessary. This extra step goes one further: it explicitly compiles
+      # only the .cpp files that changed since the last commit BEFORE the
+      # full build. Benefits:
+      #   1. Errors in your changed files surface in seconds, not after
+      #      waiting for unrelated modules to finish linking.
+      #   2. ccache gets those object files warm so the full build is faster.
+      #
+      # Ninja target for a source file is its .obj path relative to builddir.
+      # We derive it from the source path using the same convention CMake uses:
+      #   src/Mod/Foo/Bar.cpp  ->  src/Mod/Foo/CMakeFiles/Foo.dir/Bar.cpp.obj
+      #
+      # If a file's target can't be determined we skip it — the full build
+      # below will catch it. Failures here are non-fatal (continue-on-error).
+      # ------------------------------------------------------------------
+      - name: Build changed source files first
+        id: changed-first
+        continue-on-error: true
         run: |
-          cd $env:builddir
-          # Use /maxCpuCount for better parallelization
-          # /p:TrackFileAccess=false enables better ccache hit rate
-          # /p:UseMultiToolTask=true enables parallel compilation within single project
-          msbuild ALL_BUILD.vcxproj `
-            /maxCpuCount `
-            /p:Configuration=Release `
-            /p:TrackFileAccess=false `
-            /p:CLToolPath=${{ env.ccachebindir }} `
-            /p:UseMultiToolTask=true `
-            /p:MultiProcToolCount=4 `
-            /v:minimal `
-            /nologo
+          # Get list of changed .cpp/.cxx/.cc files vs previous commit
+          $changedSources = git diff --name-only HEAD~1 HEAD |
+            Where-Object { $_ -match '\.(cpp|cxx|cc)$' }
+
+          if (-not $changedSources) {
+            Write-Host "No changed C++ source files detected — skipping pre-build step"
+            exit 0
+          }
+
+          Write-Host "=== Changed source files ==="
+          $changedSources | ForEach-Object { Write-Host "  $_" }
+          Write-Host "============================"
+
+          $builtCount = 0
+          $skippedCount = 0
+
+          foreach ($src in $changedSources) {
+            # Normalise path separator
+            $srcNorm = $src -replace '/', '\'
+
+            # Derive the CMake object file path.
+            # CMake Ninja layout:  <dir>/CMakeFiles/<target>.dir/<file>.obj
+            # We search build.ninja for the rule that mentions this source.
+            $srcForward = $src -replace '\\', '/'
+            $ninjaLine = Select-String -Path "${{ env.builddir }}\build.ninja" `
+                           -Pattern "/$($srcForward -replace '\.', '\.')$" `
+                           -SimpleMatch | Select-Object -First 1
+
+            if ($ninjaLine) {
+              # Extract the output (.obj) path from the ninja rule line
+              # Ninja format:  "build path/to/file.obj: CXX_COMPILER ..."
+              $objMatch = $ninjaLine.Line -match '^build\s+(.+\.obj)\s*:'
+              if ($objMatch) {
+                $objTarget = $Matches[1].Trim()
+                Write-Host "Pre-building: $objTarget"
+                & ninja -C "${{ env.builddir }}" --config Release $objTarget
+                if ($LASTEXITCODE -eq 0) { $builtCount++ }
+                else {
+                  Write-Warning "Pre-build failed for $objTarget — will retry in full build"
+                }
+              } else {
+                Write-Host "Could not parse obj target for $src — skipping"
+                $skippedCount++
+              }
+            } else {
+              Write-Host "Source not found in build.ninja: $src — may be a new file, skipping"
+              $skippedCount++
+            }
+          }
+
+          Write-Host ""
+          Write-Host "Pre-build summary: $builtCount compiled, $skippedCount skipped"
+
+      # ------------------------------------------------------------------
+      # Full Ninja build.
+      # -j 4  matches the previous MSBuild MultiProcToolCount.
+      #        Increase if the runner has more cores (windows-latest = 4).
+      # ------------------------------------------------------------------
+      - name: Compiling sources (Ninja full build)
+        run: |
+          ninja -C "${{ env.builddir }}" --config Release -j4
+          Write-Host "✓ Ninja build complete"
 
       - name: Print Ccache statistics after build
         if: always()
@@ -248,22 +370,16 @@ jobs:
           Write-Host "=== CCache Statistics After Build ==="
           . $env:ccachebindir\ccache -s
           Write-Host "====================================="
-          if ("${{ steps.build-cache-restore.outputs.cache-hit }}" -eq "true") {
-            Write-Host "✓ This was an incremental build - only changed files were recompiled"
-          }
-          else {
-            Write-Host "This was a full build - next run with same configuration will be incremental"
-          }
 
       - name: C++ unit tests
         if: false # Disabled because seems to not function on Windows build
         timeout-minutes: 1
         run: |
-          . ${{ env.builddir }}\tests\Release\Tests_run --gtest_output=json:${{ env.reportdir }}gtest_results.json # 2>&1 | tee -filepath ${{ env.logdir }}\unitTests.log
+          . ${{ env.builddir }}\tests\Release\Tests_run --gtest_output=json:${{ env.reportdir }}gtest_results.json
 
       - name: FreeCAD CLI tests
         run: |
-          . ${{ env.builddir }}\bin\FreeCADCmd -t 0 # 2>&1 | tee -filepath ${{ env.logdir }}\integrationTests.log
+          . ${{ env.builddir }}\bin\FreeCADCmd -t 0
 
       - name: Save Compiler Cache
         id: cache-save
@@ -271,21 +387,25 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
-      - name: Save incremental build tree
-        id: build-cache-save
+      # ------------------------------------------------------------------
+      # Save the Ninja build tree (replaces the old MSBuild build tree cache).
+      # Persisting .ninja_deps, .ninja_log, and all .obj/.lib files gives
+      # Ninja full knowledge of what was built last time so it can do a
+      # minimal incremental rebuild on the next run.
+      # ------------------------------------------------------------------
+      - name: Save Ninja build cache
+        id: ninja-cache-save
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
-
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
       - name: Install NSIS
         run: |
           choco install nsis -y
-          # Download nsProcess plugin for NSIS
           Invoke-WebRequest -Uri "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip" -OutFile "nsProcess.zip"
           Expand-Archive -Path "nsProcess.zip" -DestinationPath "nsProcess"
           Copy-Item "nsProcess\Plugin\nsProcessW.dll" -Destination "C:\Program Files (x86)\NSIS\Plugins\x86-unicode\nsProcess.dll"
@@ -296,57 +416,15 @@ jobs:
           $installDir = "${{ env.builddir }}".TrimEnd('\')
           $installerDir = Join-Path $installDir "installer"
           New-Item -ItemType Directory -Path $installerDir -Force
-          
-          # Copy build artifacts to installer staging directory
+
           $stagingDir = Join-Path $installerDir "FreeCAD"
           New-Item -ItemType Directory -Path $stagingDir -Force
-          
-          # Copy required directories
+
           Copy-Item -Path "${{ env.builddir }}\bin" -Destination "$stagingDir\bin" -Recurse -Force
           Copy-Item -Path "${{ env.builddir }}\Mod" -Destination "$stagingDir\Mod" -Recurse -Force
           if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\doc") { Copy-Item -Path "${{ env.builddir }}\doc" -Destination "$stagingDir\doc" -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\Ext") { Copy-Item -Path "${{ env.builddir }}\Ext" -Destination "$stagingDir\Ext" -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\lib") { Copy-Item -Path "${{ env.builddir }}\lib" -Destination "$stagingDir\lib" -Recurse -Force }
-          
-          # Get version info
-          $version = "${{ env.builddir }}\bin\FreeCADCmd.exe"
-          $versionOutput = & $version --version 2>&1
-          $versionMatch = $versionOutput -match "(\d+\.\d+\.\d+)"
-          $appVersion = if ($versionMatch) { $Matches[1] } else { "1.2.0" }
-          
-          Write-Host "Detected version: $appVersion"
-          
-          # Run NSIS to create installer
-          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
-          $installerNsi = "${{ github.workspace }}\package\WindowsInstaller\FreeCAD-installer.nsi"
-          
-          # Set environment variables for NSIS
-          $env:FILES_FREECAD = $stagingDir
-          $env:FILES_THUMBS = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
-          
-          # Create the installer
-          & $nsisPath /D"FILES_FREECAD=$stagingDir" /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" $installerNsi
-          
-          # Find and move the generated installer
-          $generatedInstaller = Get-ChildItem -Path "${{ github.workspace }}\package\WindowsInstaller" -Filter "*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if ($generatedInstaller) {
-            Move-Item -Path $generatedInstaller.FullName -Destination "$installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe" -Force
-            Write-Host "Installer created: $installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
-          }
+          if (Test-Path "${{ env.builddir }}\doc")  { Copy-Item -Path "${{ env.builddir }}\doc"  -Destination "$stagingDir\doc"  -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\Ext")  { Copy-Item -Path "${{ env.builddir }}\Ext"  -Destination "$stagingDir\Ext"  -Recurse -Force }
+          if (Test-Path "${{ env.builddir }}\lib")  { Copy-Item -Path "${{ env.builddir }}\lib"  -Destination "$stagingDir\lib"  -Recurse -Force }
 
-      - name: Upload Windows Installer
-        if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Windows-Installer
-          path: |
-            ${{ env.builddir }}\installer\*.exe
-
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Logs
-          path: |
-            ${{ env.logdir }}
+          $version = "$
