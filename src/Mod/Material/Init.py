@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2013 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
 # *                                                                         *
@@ -26,4 +24,4 @@ import FreeCAD
 # import for the FreeCAD Material card
 FreeCAD.addImportType("FreeCAD Material Card (*.FCMat)", "importFCMat")
 
-FreeCAD.__unit_test__ += [ "TestMaterialsApp" ]
+FreeCAD.__unit_test__ += ["TestMaterialsApp"]

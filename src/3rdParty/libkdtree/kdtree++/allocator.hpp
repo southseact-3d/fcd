@@ -1,9 +1,3 @@
-/** \file
- * Defines the allocator interface as used by the KDTree class.
- *
- * \author Martin F. Krafft <libkdtree@pobox.madduck.net>
- */
-
 #ifndef INCLUDE_KDTREE_ALLOCATOR_HPP
 #define INCLUDE_KDTREE_ALLOCATOR_HPP
 

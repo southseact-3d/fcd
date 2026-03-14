@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2024 Ondsel <development@ondsel.com>                    *
 # *   Copyright (c) 2025 Billy Huddleston <billy@ivdc.com>                  *
@@ -30,7 +28,6 @@ import FreeCADGui
 import Path.Log
 import os
 import tempfile
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

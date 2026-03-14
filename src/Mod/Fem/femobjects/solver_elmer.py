@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 Markus Hovorka <m.hovorka@live.de>                 *
 # *   Copyright (c) 2025 Mario Passaglia <mpassaglia[at]cbc.uba.ar>         *

@@ -1,12 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/*
- * TreeJntToJacSolver.cpp
- *
- *  Created on: Nov 27, 2008
- *      Author: rubensmits
- */
-
 #include "treejnttojacsolver.hpp"
 #include <iostream>
 #include "kinfam_io.hpp"

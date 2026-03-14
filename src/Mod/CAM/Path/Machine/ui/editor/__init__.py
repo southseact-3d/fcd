@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2025 Billy Huddleston <billy@ivdc.com>                  *
@@ -21,6 +20,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Machine editor package."""
+
 from .machine_editor import MachineEditorDialog
 
 __all__ = ["MachineEditorDialog"]

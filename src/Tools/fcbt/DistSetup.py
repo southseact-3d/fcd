@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 from . import DistTools, FileTools
 
 DistName = DistTools.BuildDistName()

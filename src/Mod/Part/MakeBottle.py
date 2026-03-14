@@ -1,8 +1,4 @@
 #! python
-# SPDX-License-Identifier: LGPL-2.1-or-later
-# (c) 2008 Werner Mayer LGPL
-
-
 import Part, math
 import FreeCAD, FreeCADGui
 

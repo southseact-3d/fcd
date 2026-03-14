@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2016 Christoph Blaue <blaue@fh-westkueste.de>           *
 # *                                                                         *

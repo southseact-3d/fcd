@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
 //==============================================================================
 //
 //	DO NO MODIFY THE CONTENT OF THIS FILE

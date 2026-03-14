@@ -1,5 +1,3 @@
-
-
 #include <SMESHDS_Mesh.hxx>
 #include <SMESH_Mesh.hxx>
 

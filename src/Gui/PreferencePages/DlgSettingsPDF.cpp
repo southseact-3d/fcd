@@ -1,4 +1,3 @@
-
 #include <App/Application.h>
 #include <Base/Console.h>
 

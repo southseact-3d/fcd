@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -32,6 +30,7 @@ Essentially, the points of the original object are extracted
 and passed to the `make_wire` or `make_bspline` functions,
 depending on the desired result.
 """
+
 ## @package gui_wire2spline
 # \ingroup draftguitools
 # \brief Provides GUI tools to convert polylines to B-splines and back.

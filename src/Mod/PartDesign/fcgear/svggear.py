@@ -1,6 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2014 David Douard <david.douard@gmail.com>
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU Lesser General Public License (LGPL)

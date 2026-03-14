@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2019 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
 # *                                                                         *
@@ -23,6 +21,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides the task panel code for the Draft CircularArray tool."""
+
 ## @package task_circulararray
 # \ingroup drafttaskpanels
 # \brief Provides the task panel code for the Draft CircularArray tool.
@@ -149,9 +148,9 @@ class TaskPanelCircularArray:
         """Execute when clicking the OK button or Enter key."""
         self.selection = Gui.Selection.getSelection()
 
-        (self.r_distance, self.tan_distance) = self.get_distances()
+        self.r_distance, self.tan_distance = self.get_distances()
 
-        (self.number, self.symmetry) = self.get_number_symmetry()
+        self.number, self.symmetry = self.get_number_symmetry()
 
         self.axis = self.get_axis()
         self.center = self.get_center()

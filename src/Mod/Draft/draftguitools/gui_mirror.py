@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -31,6 +29,7 @@ as the one created by the Part module.
 
 Perhaps in the future a specific Draft `Mirror` object can be defined.
 """
+
 ## @package gui_mirror
 # \ingroup draftguitools
 # \brief Provides GUI tools to create mirrored objects.

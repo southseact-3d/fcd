@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 #
 # Generated Wed Sep 27 11:00:46 2023 by generateDS.py.
 # Update it with: python generateDS.py -o generateModel_Module.py generateMetaModel_Module.xsd

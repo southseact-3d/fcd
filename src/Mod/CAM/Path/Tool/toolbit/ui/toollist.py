@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Samuel Abels <knipknap@gmail.com>                  *
 # *                                                                         *
@@ -31,7 +29,6 @@ from PySide.QtGui import QDrag
 from PySide.QtCore import QMimeData
 from ..models.base import ToolBit
 from .tablecell import TwoLineTableCell, CompactTwoLineTableCell
-
 
 # Role for storing the ToolBit URI string
 ToolBitUriRole = QtCore.Qt.UserRole + 1

@@ -1,13 +1,10 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# (c) 2024 Werner Mayer LGPL
-
 __author__ = "Werner Mayer"
 __url__ = "https://www.freecad.org"
 __doc__ = "Helper module to convert zip files"
 
 
 import zipfile
+
 
 def rewrite(source: str, target: str):
     source_zip = zipfile.ZipFile(source, "r")

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -33,6 +31,7 @@ and circular arcs.
 And it can also be an angular dimension measuring the angle between
 two straight lines.
 """
+
 ## @package gui_dimensions
 # \ingroup draftguitools
 # \brief Provides GUI tools to create dimension objects.
@@ -332,7 +331,7 @@ class Dimension(gui_base_original.Creator):
             shift = gui_tool_utils.hasMod(arg, gui_tool_utils.get_mod_constrain_key())
             if self.arcmode or self.point2:
                 gui_tool_utils.setMod(arg, gui_tool_utils.get_mod_constrain_key(), False)
-            (self.point, ctrlPoint, self.info) = gui_tool_utils.getPoint(
+            self.point, ctrlPoint, self.info = gui_tool_utils.getPoint(
                 self, arg, noTracker=(len(self.node) > 0)
             )
             if (

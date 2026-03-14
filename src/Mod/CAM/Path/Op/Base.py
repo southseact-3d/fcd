@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -29,7 +27,6 @@ import Path.Base.Util as PathUtil
 import PathScripts.PathUtils as PathUtils
 import math
 import time
-
 
 # lazily loaded modules
 from lazy_loader.lazy_loader import LazyLoader

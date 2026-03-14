@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -30,6 +28,7 @@ Downgrades 2D objects to simpler objects until it reaches
 simple Edge primitives. For example, a Draft Line to wire, and then
 to a series of edges.
 """
+
 ## @package gui_downgrade
 # \ingroup draftguitools
 # \brief Provides GUI tools to downgrade objects.

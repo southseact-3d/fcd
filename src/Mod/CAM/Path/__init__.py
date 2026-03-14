@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 from PathApp import *
 
 import Path.Log as Log

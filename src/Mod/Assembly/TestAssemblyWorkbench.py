@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # /**************************************************************************
 #                                                                           *
 #    Copyright (c) 2023 Ondsel <development@ondsel.com>                     *
@@ -25,7 +24,6 @@ import TestApp
 
 from AssemblyTests.TestCore import TestCore
 from AssemblyTests.TestCommandInsertLink import TestCommandInsertLink
-
 
 # Use the modules so that code checkers don't complain (flake8)
 True if TestCore else False

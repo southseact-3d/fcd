@@ -1,7 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# Persistent toolbars for FreeCAD.
-# Copyright (C) 2016, 2017 triplus @ FreeCAD
 #
 #
 # This library is free software; you can redistribute it and/or

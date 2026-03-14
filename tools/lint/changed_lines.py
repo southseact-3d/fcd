@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Modified to generate output compatible with `clang-tidy`'s `--line-filter` option
 #
 # Based on https://github.com/hestonhoffman/changed-lines/blob/main/main.py
@@ -153,9 +152,7 @@ def main():
     filename_list = []
     line_filter = []
     for filename, _ in added_lines.items():
-        if (not args.file_filter) or (
-            os.path.splitext(filename)[1] in args.file_filter
-        ):
+        if (not args.file_filter) or (os.path.splitext(filename)[1] in args.file_filter):
             filename_list.append(filename)
             lines_modified = {}
             lines_modified["name"] = filename

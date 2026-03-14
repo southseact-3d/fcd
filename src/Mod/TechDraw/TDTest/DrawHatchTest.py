@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-
 import FreeCAD
 import os
 import unittest
@@ -45,9 +43,7 @@ class DrawHatchTest(unittest.TestCase):
         hatch.Source = (self.view, ["Face0"])
         hatchFileSpec = self.path + "/TestHatch.svg"
         # comment out to use default from preferences
-        hatch.HatchPattern = (
-            hatchFileSpec
-        )
+        hatch.HatchPattern = hatchFileSpec
         print("finished hatch")
         FreeCAD.ActiveDocument.recompute()
 

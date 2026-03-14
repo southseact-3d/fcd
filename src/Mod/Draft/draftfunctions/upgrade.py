@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -27,6 +25,7 @@
 
 See also the `downgrade` function.
 """
+
 ## @package downgrade
 # \ingroup draftfunctions
 # \brief Provides functions to upgrade objects by different methods.

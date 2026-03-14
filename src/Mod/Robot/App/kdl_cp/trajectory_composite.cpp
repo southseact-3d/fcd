@@ -1,20 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/*****************************************************************************
- *  \author
- *  	Erwin Aertbelien, Div. PMA, Dep. of Mech. Eng., K.U.Leuven
- *
- *  \version
- *		LRL V0.2
- *
- *	\par History
- *		- $log$
- *
- *	\par Release
- *		$Id: trajectory_composite.cpp 22 2004-09-21 08:58:54Z eaertbellocal $
- *		$Name:  $
- ****************************************************************************/
-
 #include "trajectory_composite.hpp"
 #include "path_composite.hpp"
 

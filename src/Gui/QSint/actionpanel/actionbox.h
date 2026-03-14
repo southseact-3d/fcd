@@ -1,11 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-only
-/***************************************************************************
- *                                                                         *
- *   Copyright: https://code.google.com/p/qsint/                           *
- *   License:   LGPL                                                       *
- *                                                                         *
- ***************************************************************************/
-
 #ifndef ACTIONBOX_H
 #define ACTIONBOX_H
 

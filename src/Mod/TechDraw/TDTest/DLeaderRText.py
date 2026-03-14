@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # test script for TechDraw module
 # creates a page and a view
 # adds 1 leader to view1
@@ -45,9 +44,7 @@ p, li { white-space: pre-wrap; }
 
     # make leader
     print("making leader")
-    leaderObj = FreeCAD.ActiveDocument.addObject(
-        "TechDraw::DrawLeaderLine", "DrawLeaderLine"
-    )
+    leaderObj = FreeCAD.ActiveDocument.addObject("TechDraw::DrawLeaderLine", "DrawLeaderLine")
     leaderObj.LeaderParent = view1
     p0 = FreeCAD.Vector(0.0, 0.0, 0.0)
     p1 = FreeCAD.Vector(100.0, -100.0, 0.0)
@@ -63,9 +60,7 @@ p, li { white-space: pre-wrap; }
 
     # make RTA
     print("making RTA")
-    blockObj = FreeCAD.ActiveDocument.addObject(
-        "TechDraw::DrawRichAnno", "DrawRichAnno"
-    )
+    blockObj = FreeCAD.ActiveDocument.addObject("TechDraw::DrawRichAnno", "DrawRichAnno")
     page.addView(blockObj)
     blockObj.AnnoParent = leaderObj
     blockObj.X = 5

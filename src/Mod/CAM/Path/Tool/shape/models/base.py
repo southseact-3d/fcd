@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Samuel Abels <knipknap@gmail.com>                  *
 # *                                                                         *
@@ -40,7 +38,6 @@ from ..doc import (
     ShapeDocFromBytes,
 )
 from .icon import ToolBitShapeIcon
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

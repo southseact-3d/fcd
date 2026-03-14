@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2023 Yorik van Havre <yorik@uncreated.net>              *
@@ -44,7 +42,6 @@ from . import ifc_layers
 from . import ifc_psets
 from . import ifc_objects
 from . import ifc_generator
-
 
 IFC_FILE_PATH = None  # downloaded IFC file path
 FCSTD_FILE_PATH = None  # saved FreeCAD file

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -31,7 +29,6 @@ import Path.Base.Gui.GetPoint as PathGetPoint
 import Path.Dressup.Tags as PathDressupTag
 import PathScripts.PathUtils as PathUtils
 import Path.Dressup.Utils as PathDressup
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, Yorik van Havre <yorik@uncreated.net>                       *
 # *   (c) 2019 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de>           *
@@ -32,6 +30,7 @@ in such a way that a callback would crash `Coin`.
 The `ToDo` class essentially calls `QtCore.QTimer.singleShot`
 to execute the instructions stored in internal lists.
 """
+
 ## @package todo
 # \ingroup draftutils
 # \brief Provides the ToDo static class to run commands with a time delay.

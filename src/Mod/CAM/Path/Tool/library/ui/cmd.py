@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -27,7 +25,6 @@ import FreeCADGui
 import Path
 from Path.Tool.library.ui.dock import ToolBitLibraryDock
 from Path.Tool.library.ui.editor import LibraryEditor
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

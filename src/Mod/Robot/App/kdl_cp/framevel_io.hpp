@@ -1,22 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-/*****************************************************************************
- * \file
- *      provides I/O operations on FrameVels classes
- *
- *  \author
- *      Erwin Aertbelien, Div. PMA, Dep. of Mech. Eng., K.U.Leuven
- *
- *  \version
- *      ORO_Geometry V2
- *
- *  \par History
- *      - $log$
- *
- *  \par Release
- *      $Id: rframes_io.h,v 1.1.1.1 2002/08/26 14:14:21 rmoreas Exp $
- *      $Name:  $
- ****************************************************************************/
 #ifndef KDL_FRAMESVEL_IO
 #define KDL_FRAMESVEL_IO
 

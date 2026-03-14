@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -33,6 +31,7 @@ The subelements operations only really work with polylines (Wires)
 because internally the functions `scale_vertex` and `scale_edge`
 only work with polylines that have a `Points` property.
 """
+
 ## @package gui_scale
 # \ingroup draftguitools
 # \brief Provides GUI tools to scale objects in the 3D space.

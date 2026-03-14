@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2016 Yorik van Havre <yorik@uncreated.net>              *
@@ -37,7 +35,6 @@ import zipfile
 
 import FreeCAD
 from FreeCAD import Base
-
 
 DEBUG = True
 

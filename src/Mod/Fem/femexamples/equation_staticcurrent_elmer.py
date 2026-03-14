@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Jakub Michalski <jakub.j.michalski[at]gmail.com>         *
 # *                                                                         *
@@ -27,7 +25,6 @@ setup()
 
 """
 
-
 import sys
 import FreeCAD
 
@@ -53,9 +50,7 @@ def get_information():
 
 
 def get_explanation(header=""):
-    return (
-        header
-        + """
+    return header + """
 
 To run the example from Python console use:
 from femexamples.equation_staticcurrent_elmer import setup
@@ -66,7 +61,6 @@ Static current equation - Elmer solver
 analytical solution - temperature 351.09 K at 50 s
 
 """
-    )
 
 
 def setup(doc=None, solvertype="elmer"):

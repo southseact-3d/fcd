@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 import FreeCAD
 import FreeCADGui
 from PySide import QtGui

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # -*- coding: utf8 -*-
 # Check code with
 # flake8 --ignore=E226,E266,E401,W503

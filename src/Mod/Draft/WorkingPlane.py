@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
 # *   Copyright (c) 2023 FreeCAD Project Association                        *
@@ -29,6 +27,7 @@ The working plane is mostly intended to be used in the Draft Workbench
 to draw 2D objects in various orientations, not only in the standard XY,
 YZ, and XZ planes.
 """
+
 ## @package WorkingPlane
 #  \ingroup DRAFT
 #  \brief This module handles the Working Plane and grid of the Draft module.

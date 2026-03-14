@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2025 Billy Huddleston <billy@ivdc.com>                  *
@@ -28,7 +27,6 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple, Callable
 from collections import namedtuple
 from enum import Enum
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

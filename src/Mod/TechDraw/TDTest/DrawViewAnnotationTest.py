@@ -1,5 +1,3 @@
-
-
 import FreeCAD
 import unittest
 from .TechDrawTestUtilities import createPageWithSVGTemplate
@@ -18,9 +16,7 @@ class DrawViewAnnotationTest(unittest.TestCase):
 
     def testMakeAnnotation(self):
         """Tests if an annotation can be added to page"""
-        anno = FreeCAD.ActiveDocument.addObject(
-            "TechDraw::DrawViewAnnotation", "TestAnno"
-        )
+        anno = FreeCAD.ActiveDocument.addObject("TechDraw::DrawViewAnnotation", "TestAnno")
         s = "Different Text"
         sl = list()
         sl.append(s)

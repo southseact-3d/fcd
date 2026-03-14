@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: BSL-1.0
 // Copyright (c) 2020 PTC Inc.
 
 #include "Common.h"

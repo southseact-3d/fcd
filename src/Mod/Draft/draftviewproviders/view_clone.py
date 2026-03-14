@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -24,6 +22,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides the viewprovider code for the Clone object."""
+
 ## @package view_clone
 # \ingroup draftviewproviders
 # \brief Provides the viewprovider code for the Clone object.

@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: BSD-3-Clause
-
-// clang-format off
 // NOLINTBEGIN
 #ifndef __STACKWALKER_H__
 #define __STACKWALKER_H__

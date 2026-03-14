@@ -1,6 +1,3 @@
-# SPDX-License-Identifier: BSD-3-Clause
-
-# Copyright (c) 2011-2012, Thomas Paviot (tpaviot@gmail.com)
 # All rights reserved.
 
 # This file is part of the StepClassLibrary (SCL).
@@ -101,6 +98,7 @@ TRUE = True
 # The prototype for each of the built-in functions is given to show the type of the formal parameters
 # and the result.
 #
+
 
 # EXPRESS definition:
 # ===================

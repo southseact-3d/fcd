@@ -1,13 +1,12 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# TemplatePyMod gui init module  
+# TemplatePyMod gui init module
 # (c) 2007 Juergen Riegel LGPL
 #
 
 
-class TemplatePyModWorkbench ( Workbench ):
-	"Test workbench object"
-	Icon = """
+class TemplatePyModWorkbench(Workbench):
+    "Test workbench object"
+
+    Icon = """
 			/* XPM */
 			static const char *test_icon[]={
 			"16 16 2 1",
@@ -30,23 +29,41 @@ class TemplatePyModWorkbench ( Workbench ):
 			"................",
 			"................"};
 			"""
-	MenuText = "Python sandbox"
-	ToolTip = "Python template workbench"
-	
-	def Initialize(self):
-		import Commands
+    MenuText = "Python sandbox"
+    ToolTip = "Python template workbench"
 
-		self.appendToolbar("TemplateTools",["TemplatePyMod_Cmd1","TemplatePyMod_Cmd2","TemplatePyMod_Cmd3","TemplatePyMod_Cmd4","TemplatePyMod_Cmd5"])
+    def Initialize(self):
+        import Commands
 
-		menu = ["ModulePy &Commands","PyModuleCommands"]
-		list = ["TemplatePyMod_Cmd1","TemplatePyMod_Cmd2","TemplatePyMod_Cmd3","TemplatePyMod_Cmd5","TemplatePyMod_Cmd6"]
-		self.appendCommandbar("PyModuleCommands",list)
-		self.appendMenu(menu,list)
+        self.appendToolbar(
+            "TemplateTools",
+            [
+                "TemplatePyMod_Cmd1",
+                "TemplatePyMod_Cmd2",
+                "TemplatePyMod_Cmd3",
+                "TemplatePyMod_Cmd4",
+                "TemplatePyMod_Cmd5",
+            ],
+        )
 
-		Log ('Loading TemplatePyMod module... done\n')
-	def Activated(self):
-		Msg("TemplatePyModWorkbench::Activated()\n")
-	def Deactivated(self):
-		Msg("TemplatePyModWorkbench::Deactivated()\n")
+        menu = ["ModulePy &Commands", "PyModuleCommands"]
+        list = [
+            "TemplatePyMod_Cmd1",
+            "TemplatePyMod_Cmd2",
+            "TemplatePyMod_Cmd3",
+            "TemplatePyMod_Cmd5",
+            "TemplatePyMod_Cmd6",
+        ]
+        self.appendCommandbar("PyModuleCommands", list)
+        self.appendMenu(menu, list)
+
+        Log("Loading TemplatePyMod module... done\n")
+
+    def Activated(self):
+        Msg("TemplatePyModWorkbench::Activated()\n")
+
+    def Deactivated(self):
+        Msg("TemplatePyModWorkbench::Deactivated()\n")
+
 
 Gui.addWorkbench(TemplatePyModWorkbench)

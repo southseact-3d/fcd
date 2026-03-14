@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -29,6 +27,7 @@
 It mostly works on lines, polylines, and similar objects with
 regular geometrical shapes, like rectangles.
 """
+
 ## @package gui_offset
 # \ingroup draftguitools
 # \brief Provides GUI tools to create offsets from objects.

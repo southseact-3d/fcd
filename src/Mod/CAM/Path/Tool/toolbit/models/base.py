@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 sliptonic <shopinthewoods@gmail.com>               *
 # *                 2025 Samuel Abels <knipknap@gmail.com>                  *
@@ -40,7 +38,6 @@ from ...camassets import cam_assets
 from ...shape import ToolBitShape, ToolBitShapeCustom, ToolBitShapeIcon
 from ..util import to_json, format_value
 from ..migration import ParameterAccessor, migrate_parameters
-
 
 ToolBitView = LazyLoader("Path.Tool.toolbit.ui.view", globals(), "Path.Tool.toolbit.ui.view")
 

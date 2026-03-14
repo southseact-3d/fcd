@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 sliptonic <shopinthewoods@gmail.com>               *
 # *                 2020 Schildkroet                                        *
@@ -51,7 +49,6 @@ from ..serializers import all_serializers as library_serializers
 from ..models import Library
 from .browser import LibraryBrowserWidget
 from .properties import LibraryPropertyDialog
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

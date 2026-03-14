@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-
-// clang-format off
 #line 1 "Expression.lex.c"
 
 #line 3 "Expression.lex.c"

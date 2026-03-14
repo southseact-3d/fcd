@@ -1,9 +1,7 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # Ensure default values are set in defines if they are not already provided
-defines.setdefault('containing_folder', '.')
-defines.setdefault('app_name', 'FreeCAD.app')
-defines.setdefault('icon_path', 'Contents/Resources/freecad.icns')
+defines.setdefault("containing_folder", ".")
+defines.setdefault("app_name", "FreeCAD.app")
+defines.setdefault("icon_path", "Contents/Resources/freecad.icns")
 
 
 files = [f"{defines['containing_folder']}/{defines['app_name']}"]

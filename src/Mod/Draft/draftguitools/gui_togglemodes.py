@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -29,6 +27,7 @@
 For example, a construction mode, a continue mode to repeat commands,
 and to toggle the appearance of certain shapes to wireframe.
 """
+
 ## @package gui_togglemodes
 # \ingroup draftguitools
 # \brief Provides GUI tools to set different modes of other tools.

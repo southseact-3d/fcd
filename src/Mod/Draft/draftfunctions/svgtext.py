@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # -*- coding: utf8 -*-
 # ***************************************************************************
 # *   Copyright (c) 2009 Yorik van Havre <yorik@uncreated.net>              *
@@ -24,6 +22,7 @@
 # *                                                                         *
 # ***************************************************************************
 """Provides functions to return the SVG representation of text elements."""
+
 ## @package svgtext
 # \ingroup draftfunctions
 # \brief Provides functions to return the SVG representation of text elements.

@@ -1,10 +1,3 @@
-/** \file
- * Defines the various functors and interfaces used for KDTree.
- *
- * \author Martin F. Krafft <libkdtree@pobox.madduck.net>
- * \author Sylvain Bougerel <sylvain.bougerel.devel@gmail.com>
- */
-
 #ifndef INCLUDE_KDTREE_ACCESSOR_HPP
 #define INCLUDE_KDTREE_ACCESSOR_HPP
 

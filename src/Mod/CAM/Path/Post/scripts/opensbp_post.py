@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
 # *                                                                         *
@@ -27,7 +25,6 @@ import datetime
 import Path.Post.Utils as PostUtils
 import PathScripts.PathUtils as PathUtils
 from builtins import open as pyopen
-
 
 TOOLTIP = """
 This is an postprocessor file for the Path workbench. It will output path data

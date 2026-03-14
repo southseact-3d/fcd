@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # ***************************************************************************
 # *   Copyright (c) 2021 Chris Hennes <chennes@pioneerlibrarysystem.org>    *
 # *                                                                         *
@@ -24,7 +23,6 @@
 
 # Gui Unit tests for the FEM module
 from OpenSCADTest.gui.test_dummy import TestDummy as OpenSCADGuiTestDummy
-
 
 # dummy usage to get flake8 and lgtm quiet
 False if OpenSCADGuiTestDummy.__name__ else True

@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-
-# SPDX-License-Identifier: LGPL-2.1-or-later
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2010 Werner Mayer <wmayer@users.sourceforge.net>        *

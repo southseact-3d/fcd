@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2025 Jakub Michalski <jakub.j.michalski[at]gmail.com>         *
 # *                                                                         *
@@ -44,9 +42,7 @@ def get_information():
 
 
 def get_explanation(header=""):
-    return (
-        header
-        + """
+    return header + """
 
 To run the example from Python console use:
 from femexamples.ccx_pipe_pressure_2D import setup
@@ -56,7 +52,6 @@ setup()
 Analytical solution - max von mises stress (at the inner surface) = 2.764 MPa = 2.764e6 Pa
 
 """
-    )
 
 
 def setup(doc=None, solvertype="ccxtools"):
@@ -72,9 +67,9 @@ def setup(doc=None, solvertype="ccxtools"):
     # geometric objects
     arc1 = Part.makeCircle(30, App.Vector(0, 0, 0), App.Vector(0, 0, 1), 0, 90)
     arc2 = Part.makeCircle(50, App.Vector(0, 0, 0), App.Vector(0, 0, 1), 0, 90)
-    line1 = Part.makeLine((30,0,0),(50,0,0))
-    line2 = Part.makeLine((0,30,0),(0,50,0))
-    wire = Part.Wire([arc1,line1,arc2,line2])
+    line1 = Part.makeLine((30, 0, 0), (50, 0, 0))
+    line2 = Part.makeLine((0, 30, 0), (0, 50, 0))
+    wire = Part.Wire([arc1, line1, arc2, line2])
     Part.show(wire)
     face = Part.Face(wire)
     faceo = Part.show(face)
@@ -129,7 +124,7 @@ def setup(doc=None, solvertype="ccxtools"):
     con_disp2.xFree = False
     con_disp2.xDisplacement = "0.0 mm"
     analysis.addObject(con_disp2)
-    
+
     # constraint pressure
     con_press = ObjectsFem.makeConstraintPressure(doc, "ConstraintPressure")
     con_press.References = [(faceobj, "Edge1")]
@@ -151,5 +146,3 @@ def setup(doc=None, solvertype="ccxtools"):
 
     doc.recompute()
     return doc
-
-

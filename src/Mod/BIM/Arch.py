@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2011 Yorik van Havre <yorik@uncreated.net>              *
@@ -47,6 +45,7 @@ wall = Arch.makeWall(length=5000, width=200, height=3000)  # mm units
 wall.recompute()
 ```
 """
+
 __title__ = "FreeCAD Arch API"
 __author__ = "Yorik van Havre"
 __url__ = "https://www.freecad.org"
@@ -72,7 +71,6 @@ from ArchSql import *
 # TODO: migrate this one
 # Currently makeStructure, makeStructuralSystem need migration
 from ArchStructure import *
-
 
 # make functions
 

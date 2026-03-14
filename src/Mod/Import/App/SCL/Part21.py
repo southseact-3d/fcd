@@ -1,6 +1,3 @@
-# SPDX-License-Identifier: BSD-3-Clause
-
-# Copyright (c) 2011, Thomas Paviot (tpaviot@gmail.com)
 # All rights reserved.
 
 # This file is part of the StepClassLibrary (SCL).
@@ -34,7 +31,6 @@
 import re
 from . import Utils
 import time
-
 
 INSTANCE_DEFINITION_RE = re.compile(r"#(\d+)[^\S\n]?=[^\S\n]?(.*?)\((.*)\)[^\S\n]?;[\\r]?$")
 

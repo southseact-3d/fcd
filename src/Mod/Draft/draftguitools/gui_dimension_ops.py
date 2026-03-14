@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -29,6 +27,7 @@
 For example, a tool to flip the direction of the text in the dimension
 as the normal is sometimes not correctly calculated automatically.
 """
+
 ## @package gui_dimension_ops
 # \ingroup draftguitools
 # \brief Provides GUI tools to modify dimension objects.

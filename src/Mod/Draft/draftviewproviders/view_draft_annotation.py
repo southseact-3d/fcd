@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Carlo Pavan <carlopav@gmail.com>                   *
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
@@ -36,6 +34,7 @@ and text created on screen through Coin (pivy).
 
 Its edit mode launches the `Draft_Edit` command.
 """
+
 ## @package view_draft_annotation
 # \ingroup draftviewproviders
 # \brief Provides the viewprovider code for all annotation type objects.

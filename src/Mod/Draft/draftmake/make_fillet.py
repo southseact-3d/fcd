@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2019 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
 # *   Copyright (c) 2024 FreeCAD Project Association                        *
@@ -26,6 +24,7 @@
 This creates a `Part::Part2DObjectPython`, and then assigns the Proxy class
 `Fillet`, and the `ViewProviderFillet` for the view provider.
 """
+
 ## @package make_fillet
 # \ingroup draftmake
 # \brief Provides functions to create Fillet objects between two lines.

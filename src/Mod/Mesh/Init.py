@@ -1,8 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-# FreeCAD init script of the Mesh module
-# (c) 2004 Werner Mayer LGPL
-
 import FreeCAD
 
 # Append the open handler

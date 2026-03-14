@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2015 Dan Falck <ddfalck@gmail.com>                      *
 # *                                                                         *
@@ -23,7 +21,6 @@
 
 """Post Process command that will make use of the Output File and Post
 Processor entries in PathJob"""
-
 
 import FreeCAD
 import FreeCADGui

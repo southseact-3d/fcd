@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
 # *                                                                         *
@@ -27,6 +25,7 @@
 The copies will be created along a path, like a polyline, B-spline,
 or Bezier curve.
 """
+
 ## @package gui_pathtwistedarray
 # \ingroup draftguitools
 # \brief Provides GUI tools to create PathTwistedArray objects.

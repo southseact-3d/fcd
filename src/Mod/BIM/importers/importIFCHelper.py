@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2019 Yorik van Havre <yorik@uncreated.net>              *
@@ -23,6 +21,7 @@
 # ***************************************************************************
 
 """Helper functions that are used by IFC importer and exporter."""
+
 import math
 
 import FreeCAD

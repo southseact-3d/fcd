@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   based upon linuxcnc_post.py (c) sliptonic (shopinthewoods@gmail.com)  *

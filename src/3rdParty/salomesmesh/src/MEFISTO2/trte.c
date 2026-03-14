@@ -1,30 +1,3 @@
-/* trte.f -- translated by f2c (version 20100827).
-   You must link the resulting object file with libf2c:
-	on Microsoft Windows system, link with libf2c.lib;
-	on Linux or Unix systems, link with .../path/to/libf2c.a -lm
-	or, if you install libf2c.a in a standard place, with -lf2c -lm
-	-- in that order, at the end of the command line, as in
-		cc *.o -lf2c -lm
-	Source for libf2c is in /netlib/f2c/libf2c.zip, e.g.,
-
-		http://www.netlib.org/f2c/libf2c.zip
-*/
-
-/*
- Since Mefisto is using very little real fortran API calls only the definition 
- portion of the f2c header is used and the fortran write() calls are commented out:
-
- 	//io___187.ciunit = unites_2.imprim;
-	//s_wsle(&io___187);
-	//do_lio(&c__9, &c__1, "pas de triangle d'abscisse minimale", (ftnlen)
-	//	35);
-	//e_wsle();
-
-This calls print out error information and are not needed in FreeCAD....
-
-JR 2014
-*/
-
 // start F2c.h content
 typedef long int integer;
 typedef unsigned long int uinteger;
@@ -1208,7 +1181,7 @@ integer nosstr_(doublereal *p, doublereal *pxyd, integer *nt, integer *letree)
 /*      si letree(0,.)>0 alors */
 /*         letree(0:3,j) : no (>0) letree des 4 sous-triangles du triangle j */
 /*      sinon */
-/*         letree(0:3,j) :-no pxyd des 1 …a 4 points internes au triangle j */
+/*         letree(0:3,j) :-no pxyd des 1 a 4 points internes au triangle j */
 /*                         0  si pas de point */
 /*                       ( j est alors une feuille de l'arbre ) */
 /*      letree(4,j) : no letree du sur-triangle du triangle j */
@@ -1291,7 +1264,7 @@ integer notrpt_(doublereal *p, doublereal *pxyd, integer *notrde, integer *
 /*      si letree(0,.)>0 alors */
 /*         letree(0:3,j) : no (>0) letree des 4 sous-triangles du triangle j */
 /*      sinon */
-/*         letree(0:3,j) :-no pxyd des 1 … 4 points internes au triangle j */
+/*         letree(0:3,j) :-no pxyd des 1  4 points internes au triangle j */
 /*                         0  si pas de point */
 /*                        ( j est alors une feuille de l'arbre ) */
 /*      letree(4,j) : no letree du sur-triangle du triangle j */
@@ -1359,7 +1332,7 @@ L10:
 /*      si letree(0,.)>0 alors */
 /*         letree(0:3,j) : no (>0) letree des 4 sous-triangles du triangle j */
 /*      sinon */
-/*         letree(0:3,j) :-no pxyd des 1 …a 4 points internes au triangle j */
+/*         letree(0:3,j) :-no pxyd des 1 a 4 points internes au triangle j */
 /*                         0  si pas de point */
 /*                        ( j est alors une feuille de l'arbre ) */
 /*      letree(4,j) : no letree du sur-triangle du triangle j */

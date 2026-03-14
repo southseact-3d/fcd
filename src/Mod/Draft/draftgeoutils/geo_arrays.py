@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 three_d                                            *
 # *   Copyright (c) 2020 Eliud Cabrera Castillo <e.cabrera-castillo@tum.de> *
@@ -32,6 +30,7 @@ This array was developed in order to build a `twisted bridge` object.
 
 See https://forum.freecad.org/viewtopic.php?f=23&t=49617
 """
+
 ## @package geo_arrays
 # \ingroup draftgeoutils
 # \brief Provides various functions to work with arrays.
@@ -89,7 +88,7 @@ def get_twisted_placements(path, count=15, rot_factor=0.25):
     """Get the placements of the twisted array elements."""
     count = max(count, 1)
 
-    (norm, edge, step, inc) = get_init_values(path, count)
+    norm, edge, step, inc = get_init_values(path, count)
 
     increment = 0
     places = []

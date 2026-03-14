@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2011 Yorik van Havre <yorik@uncreated.net>              *
 # *                                                                         *
@@ -27,6 +25,7 @@ everything that goes with it (toolbar buttons, cursor icons, etc.).
 It also creates the Draft grid, which is actually a tracker
 defined by `gui_trackers.gridTracker`.
 """
+
 ## @package gui_snapper
 #  \ingroup draftguitools
 #  \brief Provides the Snapper class to define the snapping tools and modes.

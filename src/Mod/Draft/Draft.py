@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -30,6 +28,7 @@ graphical user interface.
 These functions can be used as the backend for the graphical commands
 defined in `DraftTools.py`.
 """
+
 ## \addtogroup DRAFT
 #  @{
 
@@ -163,7 +162,6 @@ from draftfunctions.mirror import mirror
 
 from draftfunctions.upgrade import upgrade
 
-
 # ---------------------------------------------------------------------------
 # Draft objects
 # ---------------------------------------------------------------------------
@@ -191,7 +189,6 @@ from draftmake.make_circle import make_circle, makeCircle
 
 # arcs
 from draftmake.make_arc_3points import make_arc_3points
-
 
 # ellipse
 from draftobjects.ellipse import Ellipse, _Ellipse

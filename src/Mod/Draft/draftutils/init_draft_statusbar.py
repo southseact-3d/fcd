@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2020 Carlo Pavan <carlopav@gmail.com>                   *
 # *                                                                         *
@@ -27,6 +25,7 @@
 The status bar is activated by `InitGui.py` when the workbench is started,
 and is populated by various widgets, buttons and menus.
 """
+
 ## @package init_draft_statusbar
 # \ingroup draftutils
 # \brief Provides the initialization code for the workbench's status bar.

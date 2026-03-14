@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2024 David Carter <dcarter@davidcarter.ca>              *
 # *                                                                         *
@@ -29,11 +27,13 @@ from dataclasses import dataclass
 
 import Materials
 
+
 @dataclass
 class MaterialLibraryType:
     name: str
     icon: bytes
     readOnly: bool
+
 
 @dataclass
 class MaterialLibraryObjectType:
@@ -41,15 +41,18 @@ class MaterialLibraryObjectType:
     path: str
     name: str
 
+
 @dataclass
 class ModelObjectType:
     libraryName: str
     model: Materials.Model
 
+
 @dataclass
 class MaterialObjectType:
     libraryName: str
     material: Materials.Material
+
 
 class MaterialManagerExternal(ABC):
     """Abstract base class for all external material managers
@@ -135,10 +138,12 @@ class MaterialManagerExternal(ABC):
         Each list entry is a tuple containing the UUID, path, and name of the model"""
 
     @abstractmethod
-    def libraryMaterials(self, libraryName: str,
-                         materialFilter: Materials.MaterialFilter = None,
-                         options: Materials.MaterialFilterOptions = None) -> \
-                                list[MaterialLibraryObjectType]:
+    def libraryMaterials(
+        self,
+        libraryName: str,
+        materialFilter: Materials.MaterialFilter = None,
+        options: Materials.MaterialFilterOptions = None,
+    ) -> list[MaterialLibraryObjectType]:
         """Returns a list of materials managed by this library
 
         Each list entry is a tuple containing the UUID, path, and name of the material"""
@@ -216,7 +221,7 @@ class MaterialManagerExternal(ABC):
 
     @abstractmethod
     def getMaterial(self, uuid: str) -> MaterialObjectType:
-        """ Retrieve a material given its UUID """
+        """Retrieve a material given its UUID"""
 
     @abstractmethod
     def addMaterial(self, libraryName: str, path: str, material: Materials.Material) -> None:

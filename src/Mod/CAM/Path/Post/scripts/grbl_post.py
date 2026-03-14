@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 sliptonic <shopinthewoods@gmail.com>               *
 # *   Copyright (c) 2022 - 2025 Larry Woestman <LarryWoestman2@gmail.com>   *
@@ -124,9 +122,7 @@ class Grbl(PostProcessor):
         #
         # Any commands in this value will be output as the last commands in the G-code file.
         #
-        values[
-            "POSTAMBLE"
-        ] = """M5
+        values["POSTAMBLE"] = """M5
 G17 G90
 M2"""
         values["POSTPROCESSOR_FILE_NAME"] = __name__

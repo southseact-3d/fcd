@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2015 Dan Falck <ddfalck@gmail.com>                      *
 # *   Copyright (c) 2021 Schildkroet                                        *
@@ -29,7 +27,6 @@ import FreeCADGui
 import Path
 import Path.Base.Drillable as Drillable
 import math
-
 
 if False:
     Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())

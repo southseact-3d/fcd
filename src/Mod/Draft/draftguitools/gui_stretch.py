@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>                  *
 # *   (c) 2009, 2010 Ken Cline <cline@frii.com>                             *
@@ -31,6 +29,7 @@ It essentially moves the points that are located within a selection area,
 while keeping other points intact. This means the lines tied by the points
 that were moved are 'stretched'.
 """
+
 ## @package gui_stretch
 # \ingroup draftguitools
 # \brief Provides GUI tools to stretch Draft objects.

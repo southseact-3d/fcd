@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -27,6 +25,7 @@
 This viewprovider is also used by simple lines, B-splines, bezier curves,
 and similar objects.
 """
+
 ## @package view_wire
 # \ingroup draftviewproviders
 # \brief Provides the viewprovider code for the Wire (polyline) object.

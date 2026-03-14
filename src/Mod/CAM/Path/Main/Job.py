@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
 # *                                                                         *
@@ -32,7 +30,6 @@ import Path.Main.Stock as PathStock
 import Path.Tool.Controller as PathToolController
 import json
 import time
-
 
 # lazily loaded modules
 from lazy_loader.lazy_loader import LazyLoader

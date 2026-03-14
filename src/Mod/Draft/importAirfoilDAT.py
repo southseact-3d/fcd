@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 ## @package importAirfoilDAT
 #  \ingroup DRAFT
 #  \brief Airfoil (.dat) file importer
@@ -10,6 +8,7 @@ Airfoil (.dat) file importer
 
 This module provides support for importing airfoil .dat files.
 """
+
 # Check code with
 # flake8 --ignore=E226,E266,E401,W503
 

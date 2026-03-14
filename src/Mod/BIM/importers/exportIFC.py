@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *                                                                         *
 # *   Copyright (c) 2014 Yorik van Havre <yorik@uncreated.net>              *
@@ -58,7 +56,6 @@ from draftutils.messages import _msg, _err
 from importers import exportIFCHelper
 from importers import exportIFCStructuralTools
 from importers.importIFCHelper import dd2dms
-
 
 PARAMS = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/BIM")
 

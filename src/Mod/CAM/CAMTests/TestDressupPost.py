@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2022 sliptonic <shopinthewoods@gmail.com>               *
 # *   Copyright (c) 2022-2025 Larry Woestman <LarryWoestman2@gmail.com>     *
@@ -28,7 +26,6 @@ import Path
 import CAMTests.PathTestUtils as PathTestUtils
 from Path.Post.Processor import PostProcessorFactory
 import Path.Dressup.Utils as PathDressup
-
 
 Path.Log.setLevel(Path.Log.Level.DEBUG, Path.Log.thisModule())
 Path.Log.trackModule(Path.Log.thisModule())

@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2017 Pekka Roivainen <pekkaroi@gmail.com>               *
 # *                                                                         *
@@ -28,7 +26,6 @@ import FreeCAD
 import Path
 import Path.Dressup.Utils as PathDressup
 import math
-
 
 # lazily loaded modules
 from lazy_loader.lazy_loader import LazyLoader

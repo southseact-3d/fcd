@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
 # ***************************************************************************
 # *   Copyright (c) 2009, 2010 Yorik van Havre <yorik@uncreated.net>        *
 # *   Copyright (c) 2009, 2010 Ken Cline <cline@frii.com>                   *
@@ -37,6 +35,7 @@ In many cases using `App::Link` makes more sense, as this object is
 more memory efficient as it reuses the same internal `Shape`
 instead of creating a copy of it.
 """
+
 ## @package gui_clone
 # \ingroup draftguitools
 # \brief Provides GUI tools to create Clone objects.

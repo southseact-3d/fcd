@@ -1,9 +1,3 @@
-/** \file
- * Defines the interface of the _Region class.
- *
- * \author Martin F. Krafft <libkdtree@pobox.madduck.net>
- */
-
 #ifndef INCLUDE_KDTREE_REGION_HPP
 #define INCLUDE_KDTREE_REGION_HPP
 
