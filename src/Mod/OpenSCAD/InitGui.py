@@ -166,7 +166,7 @@ class OpenSCADWorkbench(Workbench):
         return "Gui::PythonWorkbench"
 
 
-Gui.addWorkbench(OpenSCADWorkbench())
+# Gui.addWorkbench(OpenSCADWorkbench())
 
 # Not all of the GUI tests will require an OpenSCAD binary (CSG import and export don't)
 FreeCAD.__unit_test__ += ["TestOpenSCADGui"]
