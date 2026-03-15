@@ -64,6 +64,14 @@ namespace sp = std::placeholders;
     qApp->translate("Workbench", "Toggle 3D");
     qApp->translate("Workbench", "Part Design Helper");
     qApp->translate("Workbench", "Part Design Modeling");
+    qApp->translate("Workbench", "Part Primitives");
+    qApp->translate("Workbench", "Part Boolean");
+    qApp->translate("Workbench", "Part Join");
+    qApp->translate("Workbench", "Part Split");
+    qApp->translate("Workbench", "Part Compound");
+    qApp->translate("Workbench", "Part Copy");
+    qApp->translate("Workbench", "Part Design Part Tools");
+    qApp->translate("Workbench", "Migration");
 #endif
 
 /// @namespace PartDesignGui @class Workbench
@@ -496,6 +504,55 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     root->insertItem(item, part);
     part->setCommand("&Part Design");
 
+    Gui::MenuItem* partPrimitives = new Gui::MenuItem;
+    partPrimitives->setCommand("Part Primitives");
+    *partPrimitives << "PartDesign_PartBox"
+                    << "PartDesign_PartCylinder"
+                    << "PartDesign_PartSphere"
+                    << "PartDesign_PartCone"
+                    << "PartDesign_PartTorus"
+                    << "PartDesign_PartTube"
+                    << "PartDesign_PartPrimitives";
+
+    Gui::MenuItem* partBoolean = new Gui::MenuItem;
+    partBoolean->setCommand("Part Boolean");
+    *partBoolean << "PartDesign_PartBoolean"
+                 << "PartDesign_PartCut"
+                 << "PartDesign_PartFuse"
+                 << "PartDesign_PartCommon"
+                 << "PartDesign_PartSection";
+
+    Gui::MenuItem* partJoin = new Gui::MenuItem;
+    partJoin->setCommand("Part Join");
+    *partJoin << "PartDesign_PartJoinConnect"
+              << "PartDesign_PartJoinEmbed"
+              << "PartDesign_PartJoinCutout";
+
+    Gui::MenuItem* partSplit = new Gui::MenuItem;
+    partSplit->setCommand("Part Split");
+    *partSplit << "PartDesign_PartBooleanFragments"
+               << "PartDesign_PartSliceApart"
+               << "PartDesign_PartSlice"
+               << "PartDesign_PartXor";
+
+    Gui::MenuItem* partCompound = new Gui::MenuItem;
+    partCompound->setCommand("Part Compound");
+    *partCompound << "PartDesign_PartCompound"
+                  << "PartDesign_PartExplodeCompound"
+                  << "PartDesign_PartCompoundFilter"
+                  << "PartDesign_PartToleranceSet";
+
+    Gui::MenuItem* partCopy = new Gui::MenuItem;
+    partCopy->setCommand("Part Copy");
+    *partCopy << "PartDesign_PartSimpleCopy"
+              << "PartDesign_PartTransformedCopy"
+              << "PartDesign_PartElementCopy"
+              << "PartDesign_PartRefineShape";
+
+    Gui::MenuItem* migration = new Gui::MenuItem;
+    migration->setCommand("Migration");
+    *migration << "PartDesign_MigratePartMacros";
+
     // additives
     Gui::MenuItem* additives = new Gui::MenuItem;
     additives->setCommand("Additive Features");
@@ -544,11 +601,35 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "Separator" << subtractives << "PartDesign_CompPrimitiveSubtractive"
           << "Separator" << dressups << "Separator" << transformations << "Separator"
           << "PartDesign_Boolean"
+          << "Separator" << partPrimitives
+          << "PartDesign_PartBuilder"
+          << partBoolean
+          << partJoin
+          << partSplit
+          << partCompound
+          << partCopy
+          << migration
+          << "PartDesign_PartMakeSolid"
+          << "PartDesign_PartReverseShape"
+          << "PartDesign_PartMakeFace"
+          << "PartDesign_PartLoft"
+          << "PartDesign_PartSweep"
+          << "PartDesign_PartThickness"
+          << "PartDesign_PartProjectionOnSurface"
+          << "PartDesign_PartSectionCut"
+          << "PartDesign_PartEditAttachment"
+          << "PartDesign_PartScale"
+          << "PartDesign_PartOffset"
+          << "PartDesign_PartOffset2D"
+          << "PartDesign_PartShapeFromMesh"
+          << "PartDesign_PartDefeaturing"
+          << "PartDesign_PartCrossSections"
+          << "PartDesign_PartRuledSurface"
           << "Separator"
           << "Materials_InspectAppearance"
           << "Materials_InspectMaterial"
           << "Separator"
-          << "Part_CheckGeometry"
+          << "PartDesign_PartCheckGeometry"
           << "Separator"
           << "PartDesign_InvoluteGear"
           << "PartDesign_Sprocket";
@@ -586,7 +667,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     *part << "PartDesign_Body"
           << "PartDesign_CompSketches"
           << "Sketcher_ValidateSketch"
-          << "Part_CheckGeometry"
+            << "PartDesign_PartCheckGeometry"
           << "PartDesign_SubShapeBinder"
           << "PartDesign_Clone";
 
@@ -625,6 +706,36 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_LinearPattern"
           << "PartDesign_PolarPattern"
           << "PartDesign_MultiTransform";
+
+    part = new Gui::ToolBarItem(root);
+    part->setCommand("Part Design Part Tools");
+
+    *part << "PartDesign_PartBox"
+          << "PartDesign_PartCylinder"
+          << "PartDesign_PartSphere"
+          << "PartDesign_PartCone"
+          << "PartDesign_PartTorus"
+          << "PartDesign_PartPrimitives"
+          << "Separator"
+          << "PartDesign_PartBuilder"
+          << "PartDesign_PartBoolean"
+          << "PartDesign_PartCut"
+          << "PartDesign_PartFuse"
+          << "PartDesign_PartCommon"
+          << "PartDesign_PartSection"
+          << "PartDesign_PartBooleanFragments"
+          << "PartDesign_PartJoinConnect"
+          << "PartDesign_PartCompound"
+          << "PartDesign_PartRefineShape"
+          << "PartDesign_PartMakeFace"
+          << "PartDesign_PartLoft"
+          << "PartDesign_PartSweep"
+          << "PartDesign_PartThickness"
+          << "PartDesign_PartOffset"
+          << "PartDesign_PartScale"
+          << "PartDesign_PartShapeFromMesh"
+          << "PartDesign_PartDefeaturing"
+          << "PartDesign_PartCheckGeometry";
 
     return root;
 }

@@ -40,38 +40,16 @@ class PartWorkbench(Gui.Workbench):
         self.__class__.ToolTip = "Part workbench"
 
     def Initialize(self):
-        # load the module
-        import PartGui
-
-        try:
-            import BasicShapes.CommandShapes
-        except ImportError as err:
-            App.Console.PrintError(
-                "'BasicShapes' package cannot be loaded. " "{err}\n".format(err=str(err))
-            )
-
-        try:
-            import CompoundTools._CommandCompoundFilter
-            import CompoundTools._CommandExplodeCompound
-        except ImportError as err:
-            App.Console.PrintError(
-                "'CompoundTools' package cannot be loaded. " "{err}\n".format(err=str(err))
-            )
-
-        try:
-            bop = __import__("BOPTools")
-            bop.importAll()
-            bop.addCommands()
-            PartGui.BOPTools = bop
-        except Exception as err:
-            App.Console.PrintError(
-                "'BOPTools' package cannot be loaded. " "{err}\n".format(err=str(err))
-            )
+        # Part workbench is deprecated and its UI is no longer registered.
+        # This module is kept for compatibility to avoid import errors.
+        pass
 
     def GetClassName(self):
         return "PartGui::Workbench"
 
 
-Gui.addWorkbench(PartWorkbench())
+# Part workbench is intentionally not registered anymore.
+# Its functionality is exposed in the Part Design workbench.
+App.Console.PrintLog("Part workbench registration disabled: use Part Design workbench.\n")
 
 App.__unit_test__ += ["TestPartGui"]
