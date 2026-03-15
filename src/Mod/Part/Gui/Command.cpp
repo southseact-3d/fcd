@@ -71,6 +71,7 @@
 #include "TaskShapeBuilder.h"
 #include "TaskSweep.h"
 #include "ViewProvider.h"
+#include "ShapeFromMesh.h"
 
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1264,11 +1265,44 @@ CmdPartMakeSolid::CmdPartMakeSolid()
 void CmdPartMakeSolid::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
-    std::vector<App::DocumentObject*> objs = Gui::Selection().getObjectsOfType(
-        App::DocumentObject::getClassTypeId(),
-        nullptr,
-        Gui::ResolveMode::FollowLink
-    );
+
+    // First, if a mesh is selected, convert it to a Part shape using the same dialog
+    // and settings used by the "Shape From Mesh" command.
+    Base::Type meshType = Base::Type::fromName("Mesh::Feature");
+    std::vector<App::DocumentObject*> meshObjs = Gui::Selection().getObjectsOfType(meshType);
+    std::vector<App::DocumentObject*> additionalShapes;
+    if (!meshObjs.empty()) {
+        PartGui::ShapeFromMesh dlg(Gui::getMainWindow());
+        if (dlg.exec() == QDialog::Accepted) {
+            // Remember the exact names that will be created so we can convert them.
+            std::vector<std::string> createdNames;
+            createdNames.reserve(meshObjs.size());
+            for (auto it : meshObjs) {
+                App::Document* doc = it->getDocument();
+                std::string mesh = it->getNameInDocument();
+                createdNames.push_back(doc->getUniqueObjectName(mesh.c_str()));
+            }
+
+            // Perform the conversion (same as ShapeFromMesh)
+            dlg.perform();
+
+            for (std::size_t i = 0; i < meshObjs.size(); ++i) {
+                App::Document* doc = meshObjs[i]->getDocument();
+                App::DocumentObject* created = doc->getObject(createdNames[i].c_str());
+                if (created) {
+                    additionalShapes.push_back(created);
+                }
+            }
+        }
+    }
+
+    // Convert selected Part shapes (and any newly created shapes from meshes) into solids
+    Base::Type partFeatureType = Base::Type::fromName("Part::Feature");
+    std::vector<App::DocumentObject*> objs = Gui::Selection().getObjectsOfType(partFeatureType);
+    if (!additionalShapes.empty()) {
+        objs.insert(objs.end(), additionalShapes.begin(), additionalShapes.end());
+    }
+
     runCommand(Doc, "import Part");
     for (auto it : objs) {
         const TopoDS_Shape& shape = Part::Feature::getShape(

@@ -42,8 +42,11 @@ public:
 
     void accept() override;
 
-private:
+    /// Perform the conversion for the currently selected mesh objects.
+    /// This is exposed so other commands (e.g. Convert to Solid) can reuse the same logic.
     void perform();
+
+private:
     std::unique_ptr<Ui_ShapeFromMesh> ui;
 };
 
