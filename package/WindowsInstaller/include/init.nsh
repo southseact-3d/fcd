@@ -1,4 +1,4 @@
-﻿/*
+/*
 init.nsh
 
 Initialization functions
@@ -121,16 +121,6 @@ Function .onInit
    !define LIBRARY_X64
   ${endif}
   
-  # Check that FreeCAD is not currently running
-  ${nsProcess::FindProcess} ${BIN_FREECAD} $R0
-  # if running result is '0', if not running it is '603'
-  ${if} $R0 == "0"
-   MessageBox MB_OK|MB_ICONSTOP "$(UnInstallRunning)" /SD IDOK
-   Abort
-  ${endif}
-  # plugin must be unloaded
-  ${nsProcess::Unload}
-  
   # initialize the multi-user installer UI
   !insertmacro MULTIUSER_INIT
 
@@ -158,16 +148,6 @@ Function un.onInit
   !insertmacro UnAppPreSuff $AppPre $AppSuff # macro from Utils.nsh
 
   !insertmacro MULTIUSER_UNINIT
-
-  # Check that FreeCAD is not currently running
-  ${nsProcess::FindProcess} ${BIN_FREECAD} $R0
-  # if running result is '0', if not running it is '603'
-  ${if} $R0 == "0"
-   MessageBox MB_OK|MB_ICONSTOP "$(UnInstallRunning)" /SD IDOK
-   Abort
-  ${endif}
-  # plugin must be unloaded
-  ${nsProcess::Unload}
   
   # check if it is a 64bit system
   ${if} ${RunningX64}
