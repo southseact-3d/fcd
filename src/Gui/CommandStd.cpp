@@ -572,7 +572,7 @@ void StdCmdOnlineHelpWebsite::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
     std::string defaulturl
-        = QCoreApplication::translate(this->className(), "https://wiki.freecad.org/Online_Help_Toc")
+        = QCoreApplication::translate(this->className(), "https://tungsten3d.com/wiki/Online_Help_Toc")
               .toStdString();
     ParameterGrp::handle hURLGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Websites"
@@ -592,8 +592,8 @@ StdCmdFreeCADDonation::StdCmdFreeCADDonation()
     : Command("Std_FreeCADDonation")
 {
     sGroup = "Help";
-    sMenuText = QT_TR_NOOP("Donate to FreeCA&D");
-    sToolTipText = QT_TR_NOOP("Support the FreeCAD development");
+    sMenuText = QT_TR_NOOP("Donate to Tungsten CAD");
+    sToolTipText = QT_TR_NOOP("Support the Tungsten CAD development");
     sWhatsThis = "Std_FreeCADDonation";
     sStatusTip = sToolTipText;
     sPixmap = "internet-web-browser";
@@ -606,7 +606,7 @@ void StdCmdFreeCADDonation::activated(int iMsg)
     ParameterGrp::handle hURLGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Websites"
     );
-    std::string url = hURLGrp->GetASCII("DonatePage", "https://www.freecad.org/sponsor");
+    std::string url = hURLGrp->GetASCII("DonatePage", "https://tungsten3d.com/donate");
     hURLGrp->SetASCII("DonatePage", url.c_str());
     OpenURLInBrowser(url.c_str());
 }
@@ -625,7 +625,7 @@ StdCmdDevHandbook::StdCmdDevHandbook()
     sGroup = "Help";
     sMenuText = QT_TR_NOOP("Developers Handbook");
 
-    sToolTipText = QT_TR_NOOP("Handbook about FreeCAD development");
+    sToolTipText = QT_TR_NOOP("Handbook about Tungsten CAD development");
 
     sWhatsThis = "Std_DevHandbook";
     sStatusTip = sToolTipText;
@@ -640,7 +640,7 @@ void StdCmdDevHandbook::activated(int iMsg)
     ParameterGrp::handle hURLGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Websites"
     );
-    std::string url = hURLGrp->GetASCII("DevHandbook", "https://freecad.github.io/DevelopersHandbook/");
+    std::string url = hURLGrp->GetASCII("DevHandbook", "https://tungsten3d.com/devhandbook/");
 
     hURLGrp->SetASCII("DevHandbook", url.c_str());
     OpenURLInBrowser(url.c_str());
@@ -656,8 +656,8 @@ StdCmdFreeCADWebsite::StdCmdFreeCADWebsite()
     : Command("Std_FreeCADWebsite")
 {
     sGroup = "Help";
-    sMenuText = QT_TR_NOOP("FreeCAD W&ebsite");
-    sToolTipText = QT_TR_NOOP("Navigates to the official FreeCAD website");
+    sMenuText = QT_TR_NOOP("Tungsten CAD W&ebsite");
+    sToolTipText = QT_TR_NOOP("Navigates to the official Tungsten CAD website");
     sWhatsThis = "Std_FreeCADWebsite";
     sStatusTip = sToolTipText;
     sPixmap = "internet-web-browser";
@@ -668,7 +668,7 @@ void StdCmdFreeCADWebsite::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
     std::string defaulturl
-        = QCoreApplication::translate(this->className(), "https://www.freecad.org").toStdString();
+        = QCoreApplication::translate(this->className(), "https://tungsten3d.com").toStdString();
     ParameterGrp::handle hURLGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Websites"
     );
@@ -699,7 +699,7 @@ void StdCmdFreeCADUserHub::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
     std::string defaulturl
-        = QCoreApplication::translate(this->className(), "https://wiki.freecad.org/User_hub")
+        = QCoreApplication::translate(this->className(), "https://tungsten3d.com/wiki/User_hub")
               .toStdString();
     ParameterGrp::handle hURLGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Websites"
@@ -719,8 +719,8 @@ StdCmdFreeCADForum::StdCmdFreeCADForum()
     : Command("Std_FreeCADForum")
 {
     sGroup = "Help";
-    sMenuText = QT_TR_NOOP("FreeCAD &Forum");
-    sToolTipText = QT_TR_NOOP("The FreeCAD forum, where you can find help from other users");
+    sMenuText = QT_TR_NOOP("Tungsten CAD &Forum");
+    sToolTipText = QT_TR_NOOP("The Tungsten CAD forum, where you can find help from other users");
     sWhatsThis = "Std_FreeCADForum";
     sStatusTip = sToolTipText;
     sPixmap = "internet-web-browser";
@@ -731,7 +731,7 @@ void StdCmdFreeCADForum::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
     std::string defaulturl
-        = QCoreApplication::translate(this->className(), "https://forum.freecad.org").toStdString();
+        = QCoreApplication::translate(this->className(), "https://tungsten3d.com/forum").toStdString();
     ParameterGrp::handle hURLGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Websites"
     );
