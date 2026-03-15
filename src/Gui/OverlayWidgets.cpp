@@ -1681,6 +1681,13 @@ void OverlayTabWidget::setRect(QRect rect)
             if (rect.height() < OverlayParams::getDockOverlayMinimumSize()) {
                 rect.setTop(rect.bottom() - OverlayParams::getDockOverlayMinimumSize());
             }
+            // Center bottom overlay by default (when it isn't explicitly moved by the user)
+            if (rect.left() == 0 && parentWidget()) {
+                int parentWidth = parentWidget()->width();
+                if (rect.width() < parentWidth) {
+                    rect.moveLeft((parentWidth - rect.width()) / 2);
+                }
+            }
             break;
         default:
             break;
