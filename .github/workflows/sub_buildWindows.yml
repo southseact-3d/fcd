@@ -435,148 +435,29 @@ jobs:
           key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
       - name: Install NSIS
-        run: |
-          # Install NSIS via chocolatey
-          choco install nsis -y --no-progress
+        run: choco install nsis -y --no-progress
 
-          $nsisExe    = "C:\Program Files (x86)\NSIS\makensis.exe"
-          $pluginDir  = "C:\Program Files (x86)\NSIS\Plugins\x86-unicode"
-          $includeDir = "C:\Program Files (x86)\NSIS\Include"
+      # ------------------------------------------------------------------
+      # Install nsProcess plugin via negrutiu/nsis-install-plugin.
+      # This action is purpose-built for GitHub runners and correctly handles
+      # the nsProcess ZIP (which is actually a 7zip file — Expand-Archive
+      # always fails on it, which is why every PowerShell approach breaks).
+      # We install both the DLL and the NSH from simdsoft/nsProcess on GitHub,
+      # which is a maintained mirror with proper release assets.
+      # ------------------------------------------------------------------
+      - name: Install nsProcess NSIS plugin (DLL)
+        uses: negrutiu/nsis-install-plugin@v1
+        with:
+          url: https://github.com/simdsoft/nsProcess/raw/master/Release/nsProcessW.dll
+          filename: nsProcess.dll
 
-          if (-not (Test-Path $nsisExe)) {
-            Write-Error "NSIS installation failed - makensis.exe not found"
-            exit 1
-          }
-          Write-Host "✓ NSIS installed at $nsisExe"
-
-          New-Item -ItemType Directory -Force -Path $pluginDir  | Out-Null
-          New-Item -ItemType Directory -Force -Path $includeDir | Out-Null
-
-          # ------------------------------------------------------------------
-          # Try to get the real nsProcess plugin DLL.
-          # The .nsi uses BOTH the macro API (FindProcess/KillProcess defined
-          # in nsProcess.nsh) AND the low-level plugin call
-          # (nsProcess::FindProcess), which requires the DLL to be present.
-          # We try two sources; if both fail we patch the .nsi to remove the
-          # plugin calls entirely so NSIS can still compile a working installer.
-          # ------------------------------------------------------------------
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          $dllDest = Join-Path $pluginDir "nsProcess.dll"
-          $nshDest = Join-Path $includeDir "nsProcess.nsh"
-          $dllInstalled = $false
-          $nshInstalled = $false
-
-          # Source 1 — GitHub mirror (DLL only, direct download, no ZIP issues)
-          try {
-            Write-Host "Trying GitHub mirror for nsProcess DLL..."
-            Invoke-WebRequest `
-              -Uri "https://github.com/drizin/NsProcess/raw/master/nsProcess/Release/nsProcessW.dll" `
-              -OutFile $dllDest -TimeoutSec 30 -UseBasicParsing
-            Write-Host "✓ nsProcess.dll from GitHub mirror"
-            $dllInstalled = $true
-          } catch {
-            Write-Warning "GitHub mirror DLL failed: $_"
-          }
-
-          # Source 1b — GitHub mirror NSH
-          try {
-            Invoke-WebRequest `
-              -Uri "https://github.com/drizin/NsProcess/raw/master/nsProcess/nsProcess.nsh" `
-              -OutFile $nshDest -TimeoutSec 30 -UseBasicParsing
-            Write-Host "✓ nsProcess.nsh from GitHub mirror"
-            $nshInstalled = $true
-          } catch {
-            Write-Warning "GitHub mirror NSH failed: $_"
-          }
-
-          # Source 2 — SourceForge ZIP (only if still needed)
-          if (-not $dllInstalled -or -not $nshInstalled) {
-            try {
-              Write-Host "Trying SourceForge ZIP..."
-              $zipPath    = Join-Path $env:TEMP "NsProcess.zip"
-              $extractDir = Join-Path $env:TEMP "NsProcess"
-
-              # SourceForge sometimes returns HTML instead of the file —
-              # verify we actually got a ZIP before trying to expand it
-              Invoke-WebRequest `
-                -Uri "https://nsis.sourceforge.io/mediawiki/images/1/18/NsProcess.zip" `
-                -OutFile $zipPath -TimeoutSec 60 -UseBasicParsing
-
-              $header = [System.IO.File]::ReadAllBytes($zipPath) | Select-Object -First 4
-              if ($header[0] -eq 0x50 -and $header[1] -eq 0x4B) {
-                Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
-                if (-not $dllInstalled) {
-                  $f = Get-ChildItem $extractDir -Recurse -Filter "nsProcessW.dll" | Select-Object -First 1
-                  if ($f) { Copy-Item $f.FullName $dllDest -Force; $dllInstalled = $true; Write-Host "✓ DLL from SourceForge" }
-                }
-                if (-not $nshInstalled) {
-                  $f = Get-ChildItem $extractDir -Recurse -Filter "nsProcess.nsh" | Select-Object -First 1
-                  if ($f) { Copy-Item $f.FullName $nshDest -Force; $nshInstalled = $true; Write-Host "✓ NSH from SourceForge" }
-                }
-              } else {
-                Write-Warning "SourceForge returned non-ZIP content (likely HTML redirect) — skipping"
-              }
-            } catch {
-              Write-Warning "SourceForge failed: $_"
-            }
-          }
-
-          # ------------------------------------------------------------------
-          # If we still don't have the NSH, write a full stub that covers
-          # BOTH the macro API and the plugin-call API so NSIS compiles cleanly.
-          # ------------------------------------------------------------------
-          if (-not $nshInstalled) {
-            Write-Host "Writing nsProcess.nsh stub..."
-            $stubLines = @(
-              '; nsProcess stub - real plugin unavailable at build time',
-              '; Covers both macro API (FindProcess/KillProcess) and',
-              '; low-level plugin-call API (nsProcess::FindProcess etc.)',
-              '; All operations are safe no-ops.',
-              '!macro _FindProcess _name _result',
-              '  StrCpy ${_result} ""',
-              '!macroend',
-              '!define FindProcess "!insertmacro _FindProcess"',
-              '!macro _KillProcess _name _result',
-              '  StrCpy ${_result} ""',
-              '!macroend',
-              '!define KillProcess "!insertmacro _KillProcess"'
-            )
-            Set-Content -Path $nshDest -Value ($stubLines -join "`r`n") -Encoding UTF8
-            Write-Host "✓ nsProcess.nsh stub written"
-          }
-
-          # ------------------------------------------------------------------
-          # If the DLL is still missing, patch the .nsi to remove every line
-          # that calls nsProcess:: directly so NSIS doesn't abort on
-          # "Plugin not found, cannot call ${nsProcess::FindProcess}".
-          # The macro-based calls (${FindProcess} / ${KillProcess}) are already
-          # handled by the stub above and don't need DLL patching.
-          # ------------------------------------------------------------------
-          if (-not $dllInstalled) {
-            Write-Host "DLL unavailable — patching .nsi to remove nsProcess:: plugin calls..."
-            $nsiPath = "${{ github.workspace }}\package\WindowsInstaller\FreeCAD-installer.nsi"
-            if (Test-Path $nsiPath) {
-              $lines = Get-Content $nsiPath
-              $patched = $lines | Where-Object { $_ -notmatch 'nsProcess::' }
-              Set-Content -Path $nsiPath -Value $patched -Encoding UTF8
-              $removed = $lines.Count - $patched.Count
-              Write-Host "✓ Patched .nsi: removed $removed nsProcess:: line(s)"
-            } else {
-              Write-Warning ".nsi not found at $nsiPath — skipping patch"
-            }
-          }
-
-          # Final sanity check
-          if (-not (Test-Path $nshDest)) {
-            Write-Warning "nsProcess.nsh still missing after all attempts — NSIS may fail to compile"
-          } else {
-            Write-Host "✓ nsProcess.nsh ready at $nshDest"
-          }
-          Write-Host "  DLL installed: $dllInstalled"
-          Write-Host "  NSH installed: $nshInstalled"
+      - name: Install nsProcess NSIS plugin (NSH header)
+        uses: negrutiu/nsis-install-plugin@v1
+        with:
+          url: https://github.com/simdsoft/nsProcess/raw/master/nsProcess.nsh
+          filename: nsProcess.nsh
 
       - name: Create Windows Installer
-        if: always()
         run: |
           $buildDir = "${{ env.builddir }}"
           $installDir = $buildDir.TrimEnd([char]92)
