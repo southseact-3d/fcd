@@ -1,17 +1,17 @@
 ==========================
-FreeCAD build dependencies
+Tungsten CAD build dependencies
 ==========================
 
 Distributions
 =============
 
-The following commands are used to install the packages needed to build FreeCAD from source on the following distributions.
+The following commands are used to install the packages needed to build Tungsten CAD from source on the following distributions.
 
 
 Arch Linux
 ----------
 
-The following command is used to install the required packages used to compile FreeCAD on Arch Linux.
+The following command is used to install the required packages used to compile Tungsten CAD on Arch Linux.
 
 .. code-block:: console
 
@@ -21,7 +21,7 @@ The following command is used to install the required packages used to compile F
 Debian
 ------
 
-The following command is used to install the required packages used to compile FreeCAD on Debian.
+The following command is used to install the required packages used to compile Tungsten CAD on Debian.
 
 .. code-block:: console
 
@@ -31,7 +31,7 @@ The following command is used to install the required packages used to compile F
 Fedora
 ------
 
-The following command is used to install the required packages used to compile FreeCAD on Fedora.
+The following command is used to install the required packages used to compile Tungsten CAD on Fedora.
 
 .. code-block:: console
 
@@ -41,7 +41,7 @@ The following command is used to install the required packages used to compile F
 Manjaro
 -------
 
-The following command is used to install the required packages used to compile FreeCAD on Manjaro Linux.
+The following command is used to install the required packages used to compile Tungsten CAD on Manjaro Linux.
 
 .. code-block:: console
 
@@ -52,7 +52,7 @@ Ubuntu
 ------
 
 
-The following command is used to install the required packages used to compile FreeCAD on Ubuntu Linux.
+The following command is used to install the required packages used to compile Tungsten CAD on Ubuntu Linux.
 
 .. code-block:: console
 
@@ -63,7 +63,7 @@ Containers
 ==========
 
 The following will create containers that have all the required dependencies
-pre-installed that are needed to build FreeCAD from source.
+pre-installed that are needed to build Tungsten CAD from source.
 
 
 Arch Linux
@@ -73,8 +73,8 @@ The following commands are used to create and run a Arch Linux build environment
 
 .. code-block:: console
 
-    docker build --file tools/build/Docker/Dockerfile.Arch --tag freecad-arch
-    docker run --rm --interactive --tty --volume $(pwd):/builds:z freecad-arch
+    docker build --file tools/build/Docker/Dockerfile.Arch --tag tungsten-cad-arch
+    docker run --rm --interactive --tty --volume $(pwd):/builds:z tungsten-cad-arch
 
 
 Debian
@@ -84,8 +84,8 @@ The following commands are used to create and run a Debian build environment.
 
 .. code-block:: console
 
-    docker build --file tools/build/Docker/Dockerfile.Debian --tag freecad-debian
-    docker run --rm --interactive --tty --volume $(pwd):/builds:z freecad-debian
+    docker build --file tools/build/Docker/Dockerfile.Debian --tag tungsten-cad-debian
+    docker run --rm --interactive --tty --volume $(pwd):/builds:z tungsten-cad-debian
 
 
 Fedora
@@ -95,8 +95,8 @@ The following commands are used to create and run a Fedora build environment.
 
 .. code-block:: console
 
-    docker build --file tools/build/Docker/Dockerfile.Fedora --tag freecad-fedora
-    docker run --rm --interactive --tty --volume $(pwd):/builds:z freecad-fedora
+    docker build --file tools/build/Docker/Dockerfile.Fedora --tag tungsten-cad-fedora
+    docker run --rm --interactive --tty --volume $(pwd):/builds:z tungsten-cad-fedora
 
 
 Manjaro
@@ -106,8 +106,8 @@ The following commands are used to create and run a Manjaro build environment.
 
 .. code-block:: console
 
-    docker build --file tools/build/Docker/Dockerfile.Manjaro --tag freecad-manjaro
-    docker run --rm --interactive --tty --volume $(pwd):/builds:z freecad-manjaro
+    docker build --file tools/build/Docker/Dockerfile.Manjaro --tag tungsten-cad-manjaro
+    docker run --rm --interactive --tty --volume $(pwd):/builds:z tungsten-cad-manjaro
 
 
 Ubuntu
@@ -118,19 +118,19 @@ The following commands are used to create and run a Ubuntu build environment.
 
 .. code-block:: console
 
-    docker build --file tools/build/Docker/Dockerfile.Ubuntu --tag freecad-ubuntu
-    docker run --rm --interactive --tty --volume $(pwd):/builds:z freecad-ubuntu
+    docker build --file tools/build/Docker/Dockerfile.Ubuntu --tag tungsten-cad-ubuntu
+    docker run --rm --interactive --tty --volume $(pwd):/builds:z tungsten-cad-ubuntu
 
 
 Build Code
 ==========
 
-To build the FreeCAD code inside one of the running containers the following
+To build the Tungsten CAD code inside one of the running containers the following
 commands should be used
 
 .. code-block:: console
 
-    mkdir freecad-build
-    cd freecad-build
-    cmake ../freecad-source
+    mkdir tungsten-cad-build
+    cd tungsten-cad-build
+    cmake ../tungsten-cad-source
     make -j$(nproc --ignore=2)
