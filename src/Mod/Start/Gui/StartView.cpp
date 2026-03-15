@@ -77,7 +77,7 @@ StartView::StartView(QWidget* parent)
         "User parameter:BaseApp/Preferences/Mod/Start"
     );
     auto cardSpacing = hGrp->GetInt("FileCardSpacing", 15);   // NOLINT
-    auto showExamples = hGrp->GetBool("ShowExamples", true);  // NOLINT
+    auto showExamples = hGrp->GetBool("ShowExamples", false);  // NOLINT
 
     // Verify that the folder specified in preferences is available before showing it
     std::string customFolder(hGrp->GetASCII("CustomFolder", ""));
@@ -116,17 +116,23 @@ StartView::StartView(QWidget* parent)
     _newFileLabel = gsl::owner<QLabel*>(new QLabel());
     documentsContentLayout->addWidget(_newFileLabel);
 
+    auto createNewCard = gsl::owner<QFrame*>(new QFrame);
+    createNewCard->setObjectName(QStringLiteral("CreateNewCard"));
+    createNewCard->setFrameStyle(QFrame::NoFrame);
+    auto cardLayout = gsl::owner<QVBoxLayout*>(new QVBoxLayout(createNewCard));
+    cardLayout->setContentsMargins(20, 20, 20, 20);
+    cardLayout->setSpacing(16);
+
     auto createNewRow = gsl::owner<QWidget*>(new QWidget);
     auto flowLayout = gsl::owner<FlowLayout*>(new FlowLayout);
 
-    // Reset margins of layout to provide consistent spacing
     flowLayout->setContentsMargins({});
 
-    // This allows new file widgets to be targeted via QSS
     createNewRow->setObjectName(QStringLiteral("CreateNewRow"));
     createNewRow->setLayout(flowLayout);
 
-    documentsContentLayout->addWidget(createNewRow);
+    cardLayout->addWidget(createNewRow);
+    documentsContentLayout->addWidget(createNewCard);
     configureNewFileButtons(flowLayout);
 
     _recentFilesLabel = gsl::owner<QLabel*>(new QLabel());
@@ -503,7 +509,7 @@ void StartView::retranslateUi()
     QString title = QCoreApplication::translate("Workbench", "Start");
     setWindowTitle(title);
 
-    const QLatin1String h1Start("<h1>");
+    const QLatin1String h1Start("<h1 style=\"margin-bottom: 12px; color: #2c3e50;\">");
     const QLatin1String h1End("</h1>");
 
     _newFileLabel->setText(h1Start + tr("New File") + h1End);
