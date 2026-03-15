@@ -28,16 +28,22 @@
 
 #include <Gui/Workbench.h>
 #include <Mod/PartDesign/PartDesignGlobal.h>
+#include <memory>
+
+class QSignalMapper;
 
 namespace Gui
 {
 
 class MenuItem;
+class Action;
 
 }
 
 namespace PartDesignGui
 {
+
+class PartDesignTabBar;
 
 /**
  * @author Werner Mayer
@@ -61,6 +67,15 @@ public:
 protected:
     Gui::MenuItem* setupMenuBar() const override;
     Gui::ToolBarItem* setupToolBars() const override;
+
+private:
+    void onModeChanged(int index);
+    void createTabBar();
+    void attachTabBar();
+
+    std::unique_ptr<WorkbenchModeHandler> modeHandler;
+    PartDesignTabBar* tabBar;
+    bool tabBarAttached;
 };
 
 }  // namespace PartDesignGui
