@@ -159,6 +159,7 @@ jobs:
             "/DFILES_FREECAD=$stagingDir" `
             "/DFILES_THUMBS=$nsisDir\thumbnail" `
             "/DExeFile=$exeName" `
+            "/DFC_TEST_BUILD" `
             $nsiScript
 
           if ($LASTEXITCODE -ne 0) {
