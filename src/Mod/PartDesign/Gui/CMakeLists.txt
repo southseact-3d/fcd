@@ -213,6 +213,10 @@ SET(PartDesignGuiModule_SRCS
     Utils.h
     Workbench.cpp
     Workbench.h
+    WorkbenchModeHandler.cpp
+    WorkbenchModeHandler.h
+    PartDesignTabBar.cpp
+    PartDesignTabBar.h
     WorkflowManager.cpp
     WorkflowManager.h
 )
