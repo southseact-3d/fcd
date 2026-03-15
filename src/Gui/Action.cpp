@@ -665,7 +665,7 @@ void WorkbenchGroup::addTo(QWidget* widget)
             hGrp->SetInt("WorkbenchSelectorType", fusionStyleSelectorType);
         }
 
-        QWidget* workbenchSelectorWidget = new WorkbenchTabWidget(this, widget);
+        QWidget* workbenchSelectorWidget = new WorkbenchComboBox(this, widget);
 
         static_cast<QToolBar*>(widget)->addWidget(workbenchSelectorWidget);
     }
