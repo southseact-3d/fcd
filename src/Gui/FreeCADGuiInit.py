@@ -49,6 +49,16 @@ import FreeCADGui
 Gui = FreeCADGui
 App = FreeCAD
 
+# Compatibility helper: some embeddings/scripts may call FreeCADGui.showMainWindow()
+# but this is not always provided by the underlying FreeCADGui module in some embedded builds.
+# Provide a no-op fallback that shows the main window if it exists.
+if not hasattr(FreeCADGui, "showMainWindow"):
+    def _freecadgui_showMainWindow():
+        mw = FreeCADGui.getMainWindow() if hasattr(FreeCADGui, "getMainWindow") else None
+        if mw is not None:
+            mw.show()
+    FreeCADGui.showMainWindow = _freecadgui_showMainWindow
+
 App.Console.PrintLog("Init: Running FreeCADGuiInit.py start script...\n")
 App.Console.PrintLog("░░░▀█▀░█▀█░▀█▀░▀█▀░░░█▀▀░█░█░▀█▀░░\n")
 App.Console.PrintLog("░░░░█░░█░█░░█░░░█░░░░█░█░█░█░░█░░░\n")
