@@ -505,6 +505,9 @@ public:
     //! Update colors of axis in corner to match preferences
     void updateColors();
 
+    static void setXPlaneGridEnabled(bool enabled);
+    static bool isXPlaneGridEnabled();
+
     void getDimensions(float& fHeight, float& fWidth) const;
     float getMaxDimension() const;
     SbVec3f getCenterPointOnFocalPlane() const;
@@ -534,6 +537,9 @@ protected:
     void printDimension() const;
     void selectAll();
 
+    // Grid in the X plane (YZ plane) to help orient the user to the origin and axes.
+    void createXPlaneGrid(float gridDimension);
+
 private:
     static void setViewportCB(void* userdata, SoAction* action);
     static void clearBufferCB(void* userdata, SoAction* action);
@@ -542,6 +548,9 @@ private:
     static void interactionStartCB(void* data, Quarter::SoQTQuarterAdaptor* viewer);
     static void interactionFinishCB(void* data, Quarter::SoQTQuarterAdaptor* viewer);
     static void interactionLoggerCB(void* ud, SoAction* action);
+
+    // Global flag for whether the X-plane grid is enabled.
+    static bool s_showXPlaneGrid;
 
 private:
     static void selectCB(void* viewer, SoPath* path);
@@ -573,6 +582,11 @@ private:
 
     // Scene graph root
     SoSeparator* pcViewProviderRoot;
+    // Grid along the X plane (YZ plane)
+    SoSeparator* xPlaneGridRoot;
+    bool xPlaneGridEnabled;
+    float xPlaneGridDimension;
+
     // Child group in the scene graph that contains view providers related to the physical object
     SoGroup* objectGroup;
 
