@@ -710,7 +710,7 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
             toolbar->setWindowTitle(QApplication::translate("Workbench", toolbarName.c_str()));
             toolbar->setObjectName(name);
 
-            getMainWindow()->addToolBar(toolbar);
+            getMainWindow()->addToolBar(Qt::BottomToolBarArea, toolbar);
 
             if (nameAsToolTip) {
                 auto tooltip = QChar::fromLatin1('[')
@@ -919,7 +919,7 @@ void ToolBarManager::restoreState() const
                 continue;
             }
             if (toolbar->parentWidget() != getMainWindow()) {
-                getMainWindow()->addToolBar(toolbar);
+                getMainWindow()->addToolBar(Qt::BottomToolBarArea, toolbar);
             }
         }
     }

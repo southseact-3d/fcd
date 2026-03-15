@@ -1451,6 +1451,7 @@ CmdPartExtrude::CmdPartExtrude()
     sWhatsThis = "Part_Extrude";
     sStatusTip = sToolTipText;
     sPixmap = "Part_Extrude";
+    sAccel = "Ctrl+E";
 }
 
 void CmdPartExtrude::activated(int iMsg)
