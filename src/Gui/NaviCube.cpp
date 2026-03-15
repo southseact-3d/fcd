@@ -206,7 +206,11 @@ private:
     bool m_MouseDown = false;
     bool m_Dragging = false;
     bool m_MightDrag = false;
+    bool m_Rotating = false;
     bool m_Hovering = false;
+
+    SbVec2s m_LastMouse = SbVec2s(0, 0);
+    SbRotation m_LastOrientation;
 
     SbVec2f m_RelPos = SbVec2f(1.0f, 1.0f);
     SbVec2s m_PosAreaBase = SbVec2s(0, 0);
@@ -384,6 +388,7 @@ NaviCubeImplementation::NaviCubeImplementation(Gui::View3DInventorViewer* viewer
 {
     m_View3DInventorViewer = viewer;
     m_PickingFramebuffer = nullptr;
+    m_LastOrientation = m_View3DInventorViewer->getCameraOrientation();
     m_Menu = createNaviCubeMenu();
 }
 
@@ -1061,10 +1066,19 @@ NaviCubeImplementation::PickId NaviCubeImplementation::pickFace(short x, short y
 bool NaviCubeImplementation::mousePressed(short x, short y)
 {
     m_MouseDown = true;
-    m_MightDrag = inDragZone(x, y);
+    m_Rotating = false;
+    m_LastMouse = SbVec2s(x, y);
+    m_LastOrientation = m_View3DInventorViewer->getCameraOrientation();
+
+    m_MightDrag = m_Draggable && inDragZone(x, y);
     PickId pick = pickFace(x, y);
     setHilite(pick);
-    return pick != PickId::None;
+
+    // Capture events inside the cube so dragging can rotate the view.
+    qreal physicalCubeWidgetSize = getPhysicalCubeWidgetSize();
+    bool withinCube = std::abs(x) <= physicalCubeWidgetSize / 2
+        && std::abs(y) <= physicalCubeWidgetSize / 2;
+    return pick != PickId::None || withinCube;
 }
 
 void NaviCubeImplementation::handleMenu()
@@ -1179,6 +1193,9 @@ bool NaviCubeImplementation::mouseReleased(short x, short y)
     if (m_Dragging) {
         m_Dragging = false;
     }
+    else if (m_Rotating) {
+        m_Rotating = false;
+    }
     else {
         PickId pickId = pickFace(x, y);
         long step = Base::clamp(long(m_NaviStepByTurn), 4L, 36L);
@@ -1262,15 +1279,26 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
         m_View3DInventorViewer->getSoRenderManager()->scheduleRedraw();
     }
 
-    if (!m_Dragging) {
+    if (!m_Dragging && !m_Rotating) {
         setHilite(pickFace(x, y));
     }
 
-    if (m_MouseDown && m_Draggable) {
-        if (m_MightDrag && !m_Dragging) {
-            m_Dragging = true;
-            setHilite(PickId::None);
+    if (m_MouseDown) {
+        // Determine if we should start moving the cube widget (when draggable) or rotating the view.
+        if (!m_Dragging && !m_Rotating) {
+            int dx = x - m_LastMouse[0];
+            int dy = y - m_LastMouse[1];
+            const int dragThreshold = 2;
+            if (m_MightDrag && m_Draggable && (std::abs(dx) > dragThreshold || std::abs(dy) > dragThreshold)) {
+                m_Dragging = true;
+                setHilite(PickId::None);
+            }
+            else if (std::abs(dx) > dragThreshold || std::abs(dy) > dragThreshold) {
+                m_Rotating = true;
+                setHilite(PickId::None);
+            }
         }
+
         if (m_Dragging && (std::abs(x) || std::abs(y))) {
             float newX = m_RelPos[0] + (float)(x) / m_PosAreaSize[0];
             float newY = m_RelPos[1] + (float)(y) / m_PosAreaSize[1];
@@ -1280,7 +1308,33 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
             m_View3DInventorViewer->getSoRenderManager()->scheduleRedraw();
             return true;
         }
+
+        if (m_Rotating) {
+            int dx = x - m_LastMouse[0];
+            int dy = y - m_LastMouse[1];
+            if (dx || dy) {
+                const float pi = std::numbers::pi_v<float>;
+                const float angleScaleX = (m_PosAreaSize[0] > 0) ? (pi / (float)m_PosAreaSize[0]) : 0.0f;
+                const float angleScaleY = (m_PosAreaSize[1] > 0) ? (pi / (float)m_PosAreaSize[1]) : 0.0f;
+
+                float yaw = -dx * angleScaleX;
+                float pitch = -dy * angleScaleY;
+
+                SbVec3f up, right;
+                m_LastOrientation.multVec(SbVec3f(0, 1, 0), up);
+                m_LastOrientation.multVec(SbVec3f(1, 0, 0), right);
+
+                SbRotation rotation = SbRotation(up, yaw) * SbRotation(right, pitch);
+                SbRotation newOrientation = rotation * m_LastOrientation;
+
+                m_View3DInventorViewer->setCameraOrientation(newOrientation);
+                m_LastOrientation = newOrientation;
+                m_LastMouse = SbVec2s(x, y);
+                return true;
+            }
+        }
     }
+
     return false;
 }
 
