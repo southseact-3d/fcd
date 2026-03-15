@@ -21,6 +21,8 @@
  ***************************************************************************/
 
 #include <FCConfig.h>
+#include <cmath>
+#include <algorithm>
 
 #include <Inventor/SoFCPlacementIndicatorKit.h>
 
@@ -71,6 +73,9 @@
 #include <Inventor/nodes/SoSelection.h>
 #include <Inventor/nodes/SoSeparator.h>
 #include <Inventor/nodes/SoSphere.h>
+#include <Inventor/nodes/SoDrawStyle.h>
+#include <Inventor/nodes/SoLineSet.h>
+#include <Inventor/nodes/SoVertexProperty.h>
 #include <Inventor/nodes/SoSwitch.h>
 #include <Inventor/nodes/SoTransform.h>
 #include <Inventor/nodes/SoTranslation.h>
@@ -149,6 +154,8 @@ FC_LOG_LEVEL_INIT("3DViewer", true, true)
 // #define FC_LOGGING_CB
 
 using namespace Gui;
+
+bool View3DInventorViewer::s_showXPlaneGrid = true;
 
 /*!
 As ProgressBar has no chance to control the incoming Qt events of Quarter so we need to stop
@@ -565,6 +572,22 @@ void View3DInventorViewer::init()
     hiddenAnchor->addChild(hiddenSep);
     pcViewProviderRoot->addChild(hiddenAnchor);
 
+    // Add a grid in the X plane (YZ plane) to help orient the user.
+    xPlaneGridRoot = new SoSeparator;
+    xPlaneGridRoot->ref();
+    xPlaneGridRoot->setName("XPlaneGridRoot");
+
+    // Read persistent preference for the X-plane grid.
+    auto hViewGrp = App::GetApplication().GetParameterGroupByPath(
+        "User parameter:BaseApp/Preferences/View"
+    );
+    s_showXPlaneGrid = hViewGrp->GetBool("ShowXPlaneGrid", s_showXPlaneGrid);
+
+    xPlaneGridEnabled = s_showXPlaneGrid;
+    xPlaneGridDimension = 0.0f;
+    createXPlaneGrid(getMaxDimension() * 1.5f);
+    pcViewProviderRoot->addChild(xPlaneGridRoot);
+
     // increase refcount before passing it to setScenegraph(), to avoid
     // premature destruction
     pcViewProviderRoot->ref();
@@ -726,6 +749,11 @@ View3DInventorViewer::~View3DInventorViewer()
     // the root node but isn't destroyed when closing this viewer so
     // that it prevents all children from being deleted. To reduce this
     // likelihood we explicitly remove all child nodes now.
+    if (xPlaneGridRoot) {
+        xPlaneGridRoot->unref();
+        xPlaneGridRoot = nullptr;
+    }
+
     coinRemoveAllChildren(this->pcViewProviderRoot);
     this->pcViewProviderRoot->unref();
     this->pcViewProviderRoot = nullptr;
@@ -2497,6 +2525,9 @@ void View3DInventorViewer::renderScene()
 {
     ZoneScoped;
 
+    // Update the X-plane grid if needed (dependent on camera zoom).
+    createXPlaneGrid(getMaxDimension() * 1.5f);
+
     // Must set up the OpenGL viewport manually, as upon resize
     // operations, Coin won't set it up until the SoGLRenderAction is
     // applied again. And since we need to do glClear() before applying
@@ -2692,6 +2723,22 @@ float View3DInventorViewer::getMaxDimension() const
     float fWidth = -1.0;
     getDimensions(fHeight, fWidth);
     return std::max(fHeight, fWidth);
+}
+
+void View3DInventorViewer::setXPlaneGridEnabled(bool enabled)
+{
+    s_showXPlaneGrid = enabled;
+    auto hGrp = App::GetApplication().GetParameterGroupByPath("User parameter:BaseApp/Preferences/View");
+    hGrp->SetBool("ShowXPlaneGrid", enabled);
+    // Force redraw of all views.
+    if (Gui::Application::Instance) {
+        Gui::Application::Instance->onUpdate();
+    }
+}
+
+bool View3DInventorViewer::isXPlaneGridEnabled()
+{
+    return s_showXPlaneGrid;
 }
 
 void View3DInventorViewer::getDimensions(float& fHeight, float& fWidth) const
@@ -4253,6 +4300,107 @@ void View3DInventorViewer::drawAxisCross()
 
     glPopAttrib();
     // NOLINTEND
+}
+
+void View3DInventorViewer::createXPlaneGrid(float gridDimension)
+{
+    if (!xPlaneGridEnabled || !xPlaneGridRoot) {
+        return;
+    }
+
+    if (gridDimension <= 0.0f) {
+        return;
+    }
+
+    // Avoid rebuilding the grid unless the dimensions changed significantly.
+    if (std::abs(gridDimension - xPlaneGridDimension) < 1e-3f) {
+        return;
+    }
+
+    xPlaneGridDimension = gridDimension;
+
+    Gui::coinRemoveAllChildren(xPlaneGridRoot);
+
+    const float half = gridDimension * 0.5f;
+    const int lineCount = std::min(200, std::max(4, static_cast<int>(gridDimension / 1.0f)));
+    const float spacing = gridDimension / static_cast<float>(lineCount);
+
+    // Draw the main grid lines in the X=0 plane (YZ plane).
+    {
+        auto* gridSep = new SoSeparator;
+        auto* style = new SoDrawStyle;
+        style->lineWidth = 1;
+        gridSep->addChild(style);
+
+        auto* color = new SoBaseColor;
+        color->rgb.setValue(0.7f, 0.7f, 0.7f);
+        gridSep->addChild(color);
+
+        auto* lineSet = new SoLineSet;
+        auto* vp = new SoVertexProperty;
+        lineSet->vertexProperty = vp;
+
+        // Each line consists of 2 vertices.
+        const int nLines = (lineCount + 1) * 2;
+        lineSet->numVertices.setNum(nLines);
+        for (int i = 0; i < nLines; ++i) {
+            lineSet->numVertices.set1Value(i, 2);
+        }
+
+        vp->vertex.setNum(2 * nLines);
+        SbVec3f* coords = vp->vertex.startEditing();
+
+        int idx = 0;
+        for (int i = 0; i <= lineCount; ++i) {
+            float coord = (i - lineCount * 0.5f) * spacing;
+            // line parallel to Z (varying Z) at constant Y
+            coords[idx++].setValue(0.0F, coord, -half);
+            coords[idx++].setValue(0.0F, coord, half);
+        }
+        for (int i = 0; i <= lineCount; ++i) {
+            float coord = (i - lineCount * 0.5f) * spacing;
+            // line parallel to Y (varying Y) at constant Z
+            coords[idx++].setValue(0.0F, -half, coord);
+            coords[idx++].setValue(0.0F, half, coord);
+        }
+        vp->vertex.finishEditing();
+
+        gridSep->addChild(vp);
+        gridSep->addChild(lineSet);
+        xPlaneGridRoot->addChild(gridSep);
+    }
+
+    // Draw the coordinate axes through the origin
+    auto addAxisLine = [&](const SbVec3f& start, const SbVec3f& end, const SbColor& col) {
+        auto* sep = new SoSeparator;
+        auto* style = new SoDrawStyle;
+        style->lineWidth = 2;
+        sep->addChild(style);
+
+        auto* color = new SoBaseColor;
+        color->rgb.setValue(col);
+        sep->addChild(color);
+
+        auto* lineSet = new SoLineSet;
+        auto* vp = new SoVertexProperty;
+        lineSet->vertexProperty = vp;
+        lineSet->numVertices.setNum(1);
+        lineSet->numVertices.set1Value(0, 2);
+
+        vp->vertex.setNum(2);
+        SbVec3f* coords = vp->vertex.startEditing();
+        coords[0] = start;
+        coords[1] = end;
+        vp->vertex.finishEditing();
+
+        sep->addChild(vp);
+        sep->addChild(lineSet);
+        xPlaneGridRoot->addChild(sep);
+    };
+
+    addAxisLine(SbVec3f(-half, 0.0F, 0.0F), SbVec3f(half, 0.0F, 0.0F), SbColor(1.0F, 0.0F, 0.0F));  // X axis
+    addAxisLine(SbVec3f(0.0F, -half, 0.0F), SbVec3f(0.0F, half, 0.0F), SbColor(0.0F, 1.0F, 0.0F));  // Y axis
+    addAxisLine(SbVec3f(0.0F, 0.0F, -half), SbVec3f(0.0F, 0.0F, half), SbColor(0.0F, 0.0F, 1.0F));  // Z axis
 }
 
 // Draw an arrow for the axis representation directly through OpenGL.
