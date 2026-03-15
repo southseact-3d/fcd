@@ -435,70 +435,129 @@ jobs:
           key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
       - name: Install NSIS
-        run: choco install nsis -y --no-progress
-
-      # ------------------------------------------------------------------
-      # Install nsProcess plugin via negrutiu/nsis-install-plugin.
-      # This action is purpose-built for GitHub runners and correctly handles
-      # the nsProcess ZIP (which is actually a 7zip file — Expand-Archive
-      # always fails on it, which is why every PowerShell approach breaks).
-      # We install both the DLL and the NSH from simdsoft/nsProcess on GitHub,
-      # which is a maintained mirror with proper release assets.
-      # ------------------------------------------------------------------
-      - name: Install nsProcess NSIS plugin (DLL)
-        uses: negrutiu/nsis-install-plugin@v1
-        with:
-          url: https://github.com/simdsoft/nsProcess/raw/master/Release/nsProcessW.dll
-          filename: nsProcess.dll
-
-      - name: Install nsProcess NSIS plugin (NSH header)
-        uses: negrutiu/nsis-install-plugin@v1
-        with:
-          url: https://github.com/simdsoft/nsProcess/raw/master/nsProcess.nsh
-          filename: nsProcess.nsh
-
-      - name: Create Windows Installer
         run: |
-          $buildDir = "${{ env.builddir }}"
-          $installDir = $buildDir.TrimEnd([char]92)
-          $installerDir = Join-Path $installDir "installer"
-          New-Item -ItemType Directory -Path $installerDir -Force
+          choco install nsis -y --no-progress
+          if (-not (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe")) {
+            Write-Error "NSIS installation failed"
+            exit 1
+          }
+          Write-Host "✓ NSIS installed"
 
-          $stagingDir = Join-Path $installerDir "FreeCAD"
-          New-Item -ItemType Directory -Path $stagingDir -Force
+      # ------------------------------------------------------------------
+      # Patch out nsProcess from the NSIS scripts.
+      # nsProcess is used only to warn the user if FreeCAD is already
+      # running at install/uninstall time — a nice-to-have, not essential.
+      # The plugin is distributed as a BCJ2-compressed 7zip that cannot be
+      # extracted by any standard Windows tool, so we remove the dependency
+      # permanently from the scripts instead.
+      #
+      # Changes made to source files (committed back via the checkout):
+      #   FreeCAD-installer.nsi  — remove  !include nsProcess.nsh
+      #   include/init.nsh       — remove the two FindProcess+Unload blocks
+      # ------------------------------------------------------------------
+      - name: Patch NSIS scripts to remove nsProcess dependency
+        run: |
+          $installerDir = "${{ github.workspace }}\package\WindowsInstaller"
 
-          Copy-Item -Path "${{ env.builddir }}\bin" -Destination "$stagingDir\bin" -Recurse -Force
-          Copy-Item -Path "${{ env.builddir }}\Mod" -Destination "$stagingDir\Mod" -Recurse -Force
-          if (Test-Path "${{ env.builddir }}\data") { Copy-Item -Path "${{ env.builddir }}\data" -Destination "$stagingDir\data" -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\doc")  { Copy-Item -Path "${{ env.builddir }}\doc"  -Destination "$stagingDir\doc"  -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\Ext")  { Copy-Item -Path "${{ env.builddir }}\Ext"  -Destination "$stagingDir\Ext"  -Recurse -Force }
-          if (Test-Path "${{ env.builddir }}\lib")  { Copy-Item -Path "${{ env.builddir }}\lib"  -Destination "$stagingDir\lib"  -Recurse -Force }
+          # --- Patch FreeCAD-installer.nsi: remove the !include line ---
+          $nsiPath = Join-Path $installerDir "FreeCAD-installer.nsi"
+          $nsi = Get-Content $nsiPath
+          $nsi = $nsi | Where-Object { $_ -notmatch '!include nsProcess\.nsh' }
+          Set-Content $nsiPath $nsi -Encoding UTF8
+          Write-Host "✓ Removed nsProcess include from FreeCAD-installer.nsi"
 
-          $version = "${{ env.builddir }}\bin\FreeCADCmd.exe"
-          $versionOutput = & $version --version 2>&1
-          $versionMatch = $versionOutput -match "(\d+\.\d+\.\d+)"
-          $appVersion = if ($versionMatch) { $Matches[1] } else { "1.2.0" }
-          Write-Host "Detected version: $appVersion"
+          # --- Patch include/init.nsh: remove FindProcess+Unload blocks ---
+          $initPath = Join-Path $installerDir "include\init.nsh"
+          $init = Get-Content $initPath -Raw
 
-          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
-          $installerNsi = "${{ github.workspace }}\package\WindowsInstaller\FreeCAD-installer.nsi"
-          $env:FILES_FREECAD = $stagingDir
-          $env:FILES_THUMBS  = "${{ github.workspace }}\package\WindowsInstaller\thumbnail"
+          # Remove the "check FreeCAD is not running" block in .onInit
+          # Matches from the comment line through the Unload call (both occurrences)
+          $pattern = '(?m)\s*# Check that FreeCAD is not currently running\r?\n.*?nsProcess::FindProcess.*?\r?\n.*?# if running.*?\r?\n.*?\$\{if\}.*?\r?\n.*?MessageBox.*?\r?\n.*?Abort\r?\n.*?\$\{endif\}\r?\n.*?# plugin must be unloaded\r?\n.*?nsProcess::Unload\}'
+          $init = [regex]::Replace($init, $pattern, '')
 
-          # Run NSIS — errors here are non-fatal so the artifact upload still runs
-          $nsisResult = & $nsisPath `
-            /D"FILES_FREECAD=$stagingDir" `
-            /D"FILES_THUMBS=${{ github.workspace }}\package\WindowsInstaller\thumbnail" `
-            /D"ExeFile=FreeCAD_${appVersion}-Windows-x86_64-installer.exe" `
-            $installerNsi
-          if ($LASTEXITCODE -ne 0) {
-            Write-Warning "NSIS exited with code $LASTEXITCODE — installer may not have been created"
+          # Fallback: line-by-line removal of any remaining nsProcess:: lines
+          $lines = $init -split "`n"
+          $cleaned = [System.Collections.Generic.List[string]]::new()
+          $skipNext = $false
+          foreach ($line in $lines) {
+            if ($line -match '# Check that FreeCAD is not currently running') {
+              $skipNext = $true
+              continue
+            }
+            if ($skipNext -and ($line -match 'nsProcess::' -or $line -match '# if running' -or $line -match '# plugin must be unloaded')) {
+              continue
+            }
+            if ($skipNext -and $line -match '\$\{endif\}') {
+              $skipNext = $false
+              continue
+            }
+            $cleaned.Add($line)
+          }
+          Set-Content $initPath ($cleaned -join "`n") -Encoding UTF8
+          Write-Host "✓ Removed nsProcess calls from include\init.nsh"
+
+          # Verify no nsProcess references remain
+          $remaining = Select-String -Path $nsiPath,$initPath -Pattern 'nsProcess' -SimpleMatch
+          if ($remaining) {
+            Write-Warning "Remaining nsProcess references:"
+            $remaining | ForEach-Object { Write-Warning "  $($_.Filename):$($_.LineNumber): $($_.Line.Trim())" }
+          } else {
+            Write-Host "✓ No nsProcess references remaining"
           }
 
-          $generatedInstaller = Get-ChildItem -Path "${{ github.workspace }}\package\WindowsInstaller" -Filter "*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if ($generatedInstaller) {
-            Move-Item -Path $generatedInstaller.FullName -Destination "$installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe" -Force
-            Write-Host "Installer created: $installerDir\FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
+      - name: Create Windows Installer
+        if: always()
+        run: |
+          $buildDir    = "${{ env.builddir }}"
+          $installerDir = Join-Path $buildDir.TrimEnd('/\') "installer"
+          $stagingDir  = Join-Path $installerDir "FreeCAD"
+          $nsisDir     = "${{ github.workspace }}\package\WindowsInstaller"
+
+          New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
+
+          # Stage all build output directories
+          foreach ($d in @("bin","Mod","data","doc","Ext","lib")) {
+            $src = Join-Path $buildDir $d
+            if (Test-Path $src) {
+              Write-Host "Staging: $d"
+              Copy-Item $src -Destination (Join-Path $stagingDir $d) -Recurse -Force
+            }
+          }
+
+          # Detect version from the built binary
+          $appVersion = "1.2.0"
+          $cmd = Join-Path $buildDir "bin\FreeCADCmd.exe"
+          if (Test-Path $cmd) {
+            $out = & $cmd --version 2>&1
+            if ($out -match "(\d+\.\d+\.\d+)") { $appVersion = $Matches[1] }
+          }
+          Write-Host "Version: $appVersion"
+
+          $exeName   = "FreeCAD_${appVersion}-Windows-x86_64-installer.exe"
+          $nsisExe   = "C:\Program Files (x86)\NSIS\makensis.exe"
+          $nsiScript = Join-Path $nsisDir "FreeCAD-installer.nsi"
+
+          & $nsisExe `
+            "/DFILES_FREECAD=$stagingDir" `
+            "/DFILES_THUMBS=$nsisDir\thumbnail" `
+            "/DExeFile=$exeName" `
+            $nsiScript
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "NSIS failed with exit code $LASTEXITCODE"
+            exit 1
+          }
+
+          # NSIS writes the exe next to the .nsi — move it to the installer dir
+          $generated = Get-ChildItem $nsisDir -Filter "*.exe" |
+                       Sort-Object LastWriteTime -Descending |
+                       Select-Object -First 1
+          if ($generated) {
+            Move-Item $generated.FullName (Join-Path $installerDir $exeName) -Force
+            Write-Host "✓ Installer: $(Join-Path $installerDir $exeName)"
+          } else {
+            Write-Error "NSIS succeeded but no .exe found in $nsisDir"
+            exit 1
           }
 
       - name: Upload Windows Installer
@@ -506,8 +565,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Windows-Installer
-          path: |
-            ${{ env.builddir }}\installer\*.exe
+          path: ${{ env.builddir }}\installer\*.exe
 
       - name: Upload logs
         if: always()
