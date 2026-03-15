@@ -687,6 +687,13 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
                              ->GetGroup("MainWindow")
                              ->GetBool("ToolBarNameAsToolTip", true);
 
+    bool toolBarTextUnderIcon = App::GetApplication()
+                                    .GetUserParameter()
+                                    .GetGroup("BaseApp")
+                                    ->GetGroup("Preferences")
+                                    ->GetGroup("MainWindow")
+                                    ->GetBool("ToolBarTextUnderIcon", true);
+
     QList<ToolBarItem*> items = toolBarItems->getItems();
     QList<ToolBar*> toolbars = toolBars();
 
@@ -711,11 +718,20 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
                     + QChar::fromLatin1(']');
                 toolbar->setToolTip(tooltip);
             }
+
+            if (toolBarTextUnderIcon) {
+                toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+            }
+
             toolbar_added = true;
         }
         else {
             int index = toolbars.indexOf(toolbar);
             toolbars.removeAt(index);
+
+            if (toolBarTextUnderIcon) {
+                toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+            }
         }
 
         bool visible = false;
