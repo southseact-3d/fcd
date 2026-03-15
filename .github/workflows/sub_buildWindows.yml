@@ -443,66 +443,52 @@ jobs:
           }
           Write-Host "✓ NSIS installed"
 
-      # ------------------------------------------------------------------
-      # Patch out nsProcess from the NSIS scripts.
-      # nsProcess is used only to warn the user if FreeCAD is already
-      # running at install/uninstall time — a nice-to-have, not essential.
-      # The plugin is distributed as a BCJ2-compressed 7zip that cannot be
-      # extracted by any standard Windows tool, so we remove the dependency
-      # permanently from the scripts instead.
-      #
-      # Changes made to source files (committed back via the checkout):
-      #   FreeCAD-installer.nsi  — remove  !include nsProcess.nsh
-      #   include/init.nsh       — remove the two FindProcess+Unload blocks
-      # ------------------------------------------------------------------
-      - name: Patch NSIS scripts to remove nsProcess dependency
+      - name: Patch NSIS scripts to remove nsProcess and LogSet dependencies
         run: |
           $installerDir = "${{ github.workspace }}\package\WindowsInstaller"
 
-          # --- Patch FreeCAD-installer.nsi: remove the !include line ---
+          # --- FreeCAD-installer.nsi: remove !include nsProcess.nsh ---
           $nsiPath = Join-Path $installerDir "FreeCAD-installer.nsi"
           $nsi = Get-Content $nsiPath
           $nsi = $nsi | Where-Object { $_ -notmatch '!include nsProcess\.nsh' }
           Set-Content $nsiPath $nsi -Encoding UTF8
           Write-Host "✓ Removed nsProcess include from FreeCAD-installer.nsi"
 
-          # --- Patch include/init.nsh: remove FindProcess+Unload blocks ---
+          # --- include/init.nsh: remove FindProcess + Unload blocks ---
           $initPath = Join-Path $installerDir "include\init.nsh"
-          $init = Get-Content $initPath -Raw
-
-          # Remove the "check FreeCAD is not running" block in .onInit
-          # Matches from the comment line through the Unload call (both occurrences)
-          $pattern = '(?m)\s*# Check that FreeCAD is not currently running\r?\n.*?nsProcess::FindProcess.*?\r?\n.*?# if running.*?\r?\n.*?\$\{if\}.*?\r?\n.*?MessageBox.*?\r?\n.*?Abort\r?\n.*?\$\{endif\}\r?\n.*?# plugin must be unloaded\r?\n.*?nsProcess::Unload\}'
-          $init = [regex]::Replace($init, $pattern, '')
-
-          # Fallback: line-by-line removal of any remaining nsProcess:: lines
-          $lines = $init -split "`n"
+          $lines = Get-Content $initPath
           $cleaned = [System.Collections.Generic.List[string]]::new()
-          $skipNext = $false
+          $skip = $false
           foreach ($line in $lines) {
             if ($line -match '# Check that FreeCAD is not currently running') {
-              $skipNext = $true
-              continue
+              $skip = $true; continue
             }
-            if ($skipNext -and ($line -match 'nsProcess::' -or $line -match '# if running' -or $line -match '# plugin must be unloaded')) {
-              continue
-            }
-            if ($skipNext -and $line -match '\$\{endif\}') {
-              $skipNext = $false
-              continue
+            if ($skip) {
+              if ($line -match 'nsProcess::' -or $line -match '# if running' -or $line -match '# plugin must be unloaded') {
+                continue
+              }
+              if ($line -match '\$\{endif\}') {
+                $skip = $false; continue
+              }
             }
             $cleaned.Add($line)
           }
           Set-Content $initPath ($cleaned -join "`n") -Encoding UTF8
           Write-Host "✓ Removed nsProcess calls from include\init.nsh"
 
-          # Verify no nsProcess references remain
-          $remaining = Select-String -Path $nsiPath,$initPath -Pattern 'nsProcess' -SimpleMatch
+          # --- setup/install.nsh: remove LogSet on (requires special NSIS build) ---
+          $installPath = Join-Path $installerDir "setup\install.nsh"
+          $install = Get-Content $installPath
+          $install = $install | Where-Object { $_ -notmatch 'LogSet\s+on' }
+          Set-Content $installPath $install -Encoding UTF8
+          Write-Host "✓ Removed LogSet from setup\install.nsh"
+
+          # Verify clean
+          $remaining = Select-String -Path $nsiPath,$initPath,$installPath -Pattern 'nsProcess|LogSet' -SimpleMatch
           if ($remaining) {
-            Write-Warning "Remaining nsProcess references:"
-            $remaining | ForEach-Object { Write-Warning "  $($_.Filename):$($_.LineNumber): $($_.Line.Trim())" }
+            $remaining | ForEach-Object { Write-Warning "Remaining: $($_.Filename):$($_.LineNumber): $($_.Line.Trim())" }
           } else {
-            Write-Host "✓ No nsProcess references remaining"
+            Write-Host "✓ All patches applied cleanly"
           }
 
       - name: Create Windows Installer
@@ -515,16 +501,16 @@ jobs:
 
           New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
 
-          # Stage all build output directories
           foreach ($d in @("bin","Mod","data","doc","Ext","lib")) {
             $src = Join-Path $buildDir $d
             if (Test-Path $src) {
               Write-Host "Staging: $d"
               Copy-Item $src -Destination (Join-Path $stagingDir $d) -Recurse -Force
+            } else {
+              Write-Warning "Skipping (not found): $d"
             }
           }
 
-          # Detect version from the built binary
           $appVersion = "1.2.0"
           $cmd = Join-Path $buildDir "bin\FreeCADCmd.exe"
           if (Test-Path $cmd) {
@@ -537,10 +523,13 @@ jobs:
           $nsisExe   = "C:\Program Files (x86)\NSIS\makensis.exe"
           $nsiScript = Join-Path $nsisDir "FreeCAD-installer.nsi"
 
+          # /DFC_TEST_BUILD disables SetCompressor /SOLID lzma — without this
+          # NSIS exhausts memory on the multi-GB FreeCAD build output.
           & $nsisExe `
             "/DFILES_FREECAD=$stagingDir" `
             "/DFILES_THUMBS=$nsisDir\thumbnail" `
             "/DExeFile=$exeName" `
+            "/DFC_TEST_BUILD" `
             $nsiScript
 
           if ($LASTEXITCODE -ne 0) {
@@ -548,15 +537,16 @@ jobs:
             exit 1
           }
 
-          # NSIS writes the exe next to the .nsi — move it to the installer dir
           $generated = Get-ChildItem $nsisDir -Filter "*.exe" |
                        Sort-Object LastWriteTime -Descending |
                        Select-Object -First 1
           if ($generated) {
-            Move-Item $generated.FullName (Join-Path $installerDir $exeName) -Force
-            Write-Host "✓ Installer: $(Join-Path $installerDir $exeName)"
+            $dest = Join-Path $installerDir $exeName
+            Move-Item $generated.FullName $dest -Force
+            Write-Host "✓ Installer: $dest"
+            Write-Host "  Size: $([math]::Round((Get-Item $dest).Length / 1MB, 1)) MB"
           } else {
-            Write-Error "NSIS succeeded but no .exe found in $nsisDir"
+            Write-Error "NSIS reported success but no .exe found in $nsisDir"
             exit 1
           }
 
