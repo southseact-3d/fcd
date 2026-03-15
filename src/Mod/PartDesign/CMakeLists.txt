@@ -8,6 +8,11 @@ endif(BUILD_GUI)
 set(PartDesign_Scripts
     __init__.py
     Init.py
+    JoinFeatures.py
+    SplitFeatures.py
+    PartCommandBridge.py
+    PartWorkbenchMigration.py
+    PartWorkbenchMigrationGui.py
     TestPartDesignApp.py
 )
 
@@ -33,8 +38,30 @@ set(PartDesign_OtherScripts
     Scripts/Spring.py
 )
 
+set(PartDesign_CompoundToolsScripts
+    CompoundTools/__init__.py
+    CompoundTools/CompoundFilter.py
+    CompoundTools/Explode.py
+    CompoundTools/_CommandCompoundFilter.py
+    CompoundTools/_CommandExplodeCompound.py
+)
+
+set(PartDesign_BOPToolsScripts
+    BOPTools/__init__.py
+    BOPTools/Utils.py
+    BOPTools/ToleranceFeatures.py
+    BOPTools/SplitFeatures.py
+    BOPTools/SplitAPI.py
+    BOPTools/ShapeMerge.py
+    BOPTools/JoinFeatures.py
+    BOPTools/JoinAPI.py
+    BOPTools/GeneralFuseResult.py
+    BOPTools/BOPFeatures.py
+)
+
 set(PartDesign_TestScripts
     PartDesignTests/__init__.py
+    PartDesignTests/TestPartMigration.py
     PartDesignTests/TestActiveObject.py
     PartDesignTests/TestDatum.py
     PartDesignTests/TestShapeBinder.py
@@ -99,6 +126,8 @@ set(PartDesign_WizardShaft
 add_custom_target(PartDesignScripts ALL SOURCES
     ${PartDesign_Scripts}
     ${PartDesign_OtherScripts}
+    ${PartDesign_CompoundToolsScripts}
+    ${PartDesign_BOPToolsScripts}
     ${PartDesign_TestScripts}
     ${PartDesign_TestFixtures}
     ${PartDesign_GearScripts}
@@ -110,6 +139,8 @@ fc_target_copy_resource(PartDesignScripts
     ${CMAKE_BINARY_DIR}/Mod/PartDesign
     ${PartDesign_Scripts}
     ${PartDesign_OtherScripts}
+    ${PartDesign_CompoundToolsScripts}
+    ${PartDesign_BOPToolsScripts}
     ${PartDesign_TestScripts}
     ${PartDesign_TestFixtures}
     ${PartDesign_GearScripts}
@@ -129,6 +160,20 @@ INSTALL(
     DESTINATION
         Mod/PartDesign/Scripts
        )
+
+INSTALL(
+    FILES
+        ${PartDesign_CompoundToolsScripts}
+    DESTINATION
+        Mod/PartDesign/CompoundTools
+)
+
+INSTALL(
+    FILES
+        ${PartDesign_BOPToolsScripts}
+    DESTINATION
+        Mod/PartDesign/BOPTools
+)
 
 INSTALL(
     FILES

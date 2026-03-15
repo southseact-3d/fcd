@@ -272,6 +272,1546 @@ bool CmdPartDesignPoint::isActive()
     }
 }
 
+//===========================================================================
+// PartDesign_PartBox
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartBox)
+
+CmdPartDesignPartBox::CmdPartDesignPartBox()
+    : Command("PartDesign_PartBox")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Box");
+    sToolTipText = QT_TR_NOOP("Creates a Part box");
+    sWhatsThis = "PartDesign_PartBox";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Box_Parametric";
+}
+
+void CmdPartDesignPartBox::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    openCommand(QT_TR_NOOP("Part Box Create"));
+    doCommand(Doc, "from FreeCAD import Base");
+    doCommand(Doc, "import Part");
+    doCommand(Doc, "__fb__ = App.ActiveDocument.addObject(\"Part::Box\",\"PartBox\")");
+    doCommand(Doc, "__fb__.Location = Base.Vector(0.0,0.0,0.0)");
+    doCommand(Doc, "__fb__.Length = 100.0");
+    doCommand(Doc, "__fb__.Width = 100.0");
+    doCommand(Doc, "__fb__.Height = 100.0");
+    doCommand(Doc, "del __fb__");
+    commitCommand();
+    updateActive();
+}
+
+bool CmdPartDesignPartBox::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCylinder
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCylinder)
+
+CmdPartDesignPartCylinder::CmdPartDesignPartCylinder()
+    : Command("PartDesign_PartCylinder")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Cylinder");
+    sToolTipText = QT_TR_NOOP("Creates a Part cylinder");
+    sWhatsThis = "PartDesign_PartCylinder";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Cylinder";
+}
+
+void CmdPartDesignPartCylinder::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Cylinder', 0)");
+}
+
+bool CmdPartDesignPartCylinder::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSphere
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSphere)
+
+CmdPartDesignPartSphere::CmdPartDesignPartSphere()
+    : Command("PartDesign_PartSphere")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Sphere");
+    sToolTipText = QT_TR_NOOP("Creates a Part sphere");
+    sWhatsThis = "PartDesign_PartSphere";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Sphere";
+}
+
+void CmdPartDesignPartSphere::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Sphere', 0)");
+}
+
+bool CmdPartDesignPartSphere::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCone
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCone)
+
+CmdPartDesignPartCone::CmdPartDesignPartCone()
+    : Command("PartDesign_PartCone")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Cone");
+    sToolTipText = QT_TR_NOOP("Creates a Part cone");
+    sWhatsThis = "PartDesign_PartCone";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Cone";
+}
+
+void CmdPartDesignPartCone::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Cone', 0)");
+}
+
+bool CmdPartDesignPartCone::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartTorus
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartTorus)
+
+CmdPartDesignPartTorus::CmdPartDesignPartTorus()
+    : Command("PartDesign_PartTorus")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Torus");
+    sToolTipText = QT_TR_NOOP("Creates a Part torus");
+    sWhatsThis = "PartDesign_PartTorus";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Torus";
+}
+
+void CmdPartDesignPartTorus::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Torus', 0)");
+}
+
+bool CmdPartDesignPartTorus::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartTube
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartTube)
+
+CmdPartDesignPartTube::CmdPartDesignPartTube()
+    : Command("PartDesign_PartTube")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Tube");
+    sToolTipText = QT_TR_NOOP("Creates a Part tube");
+    sWhatsThis = "PartDesign_PartTube";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Tube";
+}
+
+void CmdPartDesignPartTube::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Tube', 0)");
+}
+
+bool CmdPartDesignPartTube::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartPrimitives
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartPrimitives)
+
+CmdPartDesignPartPrimitives::CmdPartDesignPartPrimitives()
+    : Command("PartDesign_PartPrimitives")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Primitives");
+    sToolTipText = QT_TR_NOOP("Creates solid geometric primitives parametrically");
+    sWhatsThis = "PartDesign_PartPrimitives";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Primitives";
+}
+
+void CmdPartDesignPartPrimitives::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Primitives', 0)");
+}
+
+bool CmdPartDesignPartPrimitives::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartBuilder
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartBuilder)
+
+CmdPartDesignPartBuilder::CmdPartDesignPartBuilder()
+    : Command("PartDesign_PartBuilder")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Shape Builder");
+    sToolTipText = QT_TR_NOOP("Open shape builder");
+    sWhatsThis = "PartDesign_PartBuilder";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Builder";
+}
+
+void CmdPartDesignPartBuilder::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Builder', 0)");
+}
+
+bool CmdPartDesignPartBuilder::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartBoolean
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartBoolean)
+
+CmdPartDesignPartBoolean::CmdPartDesignPartBoolean()
+    : Command("PartDesign_PartBoolean")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Boolean");
+    sToolTipText = QT_TR_NOOP("Boolean operation dialog");
+    sWhatsThis = "PartDesign_PartBoolean";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Boolean";
+}
+
+void CmdPartDesignPartBoolean::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Boolean', 0)");
+}
+
+bool CmdPartDesignPartBoolean::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCut
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCut)
+
+CmdPartDesignPartCut::CmdPartDesignPartCut()
+    : Command("PartDesign_PartCut")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Cut");
+    sToolTipText = QT_TR_NOOP("Cuts selected shapes");
+    sWhatsThis = "PartDesign_PartCut";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Cut";
+}
+
+void CmdPartDesignPartCut::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Cut', 0)");
+}
+
+bool CmdPartDesignPartCut::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartFuse
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartFuse)
+
+CmdPartDesignPartFuse::CmdPartDesignPartFuse()
+    : Command("PartDesign_PartFuse")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Union");
+    sToolTipText = QT_TR_NOOP("Unites selected shapes");
+    sWhatsThis = "PartDesign_PartFuse";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Fuse";
+}
+
+void CmdPartDesignPartFuse::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Fuse', 0)");
+}
+
+bool CmdPartDesignPartFuse::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCommon
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCommon)
+
+CmdPartDesignPartCommon::CmdPartDesignPartCommon()
+    : Command("PartDesign_PartCommon")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Intersection");
+    sToolTipText = QT_TR_NOOP("Intersect selected shapes");
+    sWhatsThis = "PartDesign_PartCommon";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Common";
+}
+
+void CmdPartDesignPartCommon::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Common', 0)");
+}
+
+bool CmdPartDesignPartCommon::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSection
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSection)
+
+CmdPartDesignPartSection::CmdPartDesignPartSection()
+    : Command("PartDesign_PartSection")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Section");
+    sToolTipText = QT_TR_NOOP("Section operation between two shapes");
+    sWhatsThis = "PartDesign_PartSection";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Section";
+}
+
+void CmdPartDesignPartSection::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Section', 0)");
+}
+
+bool CmdPartDesignPartSection::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartOffset
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartOffset)
+
+CmdPartDesignPartOffset::CmdPartDesignPartOffset()
+    : Command("PartDesign_PartOffset")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("3D Offset");
+    sToolTipText = QT_TR_NOOP("Create 3D offset");
+    sWhatsThis = "PartDesign_PartOffset";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Offset";
+}
+
+void CmdPartDesignPartOffset::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Offset', 0)");
+}
+
+bool CmdPartDesignPartOffset::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartOffset2D
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartOffset2D)
+
+CmdPartDesignPartOffset2D::CmdPartDesignPartOffset2D()
+    : Command("PartDesign_PartOffset2D")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("2D Offset");
+    sToolTipText = QT_TR_NOOP("Create 2D offset");
+    sWhatsThis = "PartDesign_PartOffset2D";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Offset2D";
+}
+
+void CmdPartDesignPartOffset2D::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Offset2D', 0)");
+}
+
+bool CmdPartDesignPartOffset2D::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartRuledSurface
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartRuledSurface)
+
+CmdPartDesignPartRuledSurface::CmdPartDesignPartRuledSurface()
+    : Command("PartDesign_PartRuledSurface")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Ruled Surface");
+    sToolTipText = QT_TR_NOOP("Create ruled surface");
+    sWhatsThis = "PartDesign_PartRuledSurface";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_RuledSurface";
+}
+
+void CmdPartDesignPartRuledSurface::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_RuledSurface', 0)");
+}
+
+bool CmdPartDesignPartRuledSurface::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartScale
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartScale)
+
+CmdPartDesignPartScale::CmdPartDesignPartScale()
+    : Command("PartDesign_PartScale")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Scale");
+    sToolTipText = QT_TR_NOOP("Scale shape");
+    sWhatsThis = "PartDesign_PartScale";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Scale";
+}
+
+void CmdPartDesignPartScale::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Scale', 0)");
+}
+
+bool CmdPartDesignPartScale::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartShapeFromMesh
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartShapeFromMesh)
+
+CmdPartDesignPartShapeFromMesh::CmdPartDesignPartShapeFromMesh()
+    : Command("PartDesign_PartShapeFromMesh")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Shape from Mesh");
+    sToolTipText = QT_TR_NOOP("Convert mesh to shape");
+    sWhatsThis = "PartDesign_PartShapeFromMesh";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_ShapeFromMesh";
+}
+
+void CmdPartDesignPartShapeFromMesh::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_ShapeFromMesh', 0)");
+}
+
+bool CmdPartDesignPartShapeFromMesh::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartDefeaturing
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartDefeaturing)
+
+CmdPartDesignPartDefeaturing::CmdPartDesignPartDefeaturing()
+    : Command("PartDesign_PartDefeaturing")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Defeaturing");
+    sToolTipText = QT_TR_NOOP("Remove selected faces");
+    sWhatsThis = "PartDesign_PartDefeaturing";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Defeaturing";
+}
+
+void CmdPartDesignPartDefeaturing::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Defeaturing', 0)");
+}
+
+bool CmdPartDesignPartDefeaturing::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCheckGeometry
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCheckGeometry)
+
+CmdPartDesignPartCheckGeometry::CmdPartDesignPartCheckGeometry()
+    : Command("PartDesign_PartCheckGeometry")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Check Geometry");
+    sToolTipText = QT_TR_NOOP("Run geometry checks");
+    sWhatsThis = "PartDesign_PartCheckGeometry";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_CheckGeometry";
+}
+
+void CmdPartDesignPartCheckGeometry::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_CheckGeometry', 0)");
+}
+
+bool CmdPartDesignPartCheckGeometry::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartProjectionOnSurface
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartProjectionOnSurface)
+
+CmdPartDesignPartProjectionOnSurface::CmdPartDesignPartProjectionOnSurface()
+    : Command("PartDesign_PartProjectionOnSurface")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Projection on Surface");
+    sToolTipText = QT_TR_NOOP("Project edges and wires on surface");
+    sWhatsThis = "PartDesign_PartProjectionOnSurface";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_ProjectionOnSurface";
+}
+
+void CmdPartDesignPartProjectionOnSurface::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_ProjectionOnSurface', 0)");
+}
+
+bool CmdPartDesignPartProjectionOnSurface::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCrossSections
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCrossSections)
+
+CmdPartDesignPartCrossSections::CmdPartDesignPartCrossSections()
+    : Command("PartDesign_PartCrossSections")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Cross-sections");
+    sToolTipText = QT_TR_NOOP("Create cross-sections");
+    sWhatsThis = "PartDesign_PartCrossSections";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_CrossSections";
+}
+
+void CmdPartDesignPartCrossSections::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_CrossSections', 0)");
+}
+
+bool CmdPartDesignPartCrossSections::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartThickness
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartThickness)
+
+CmdPartDesignPartThickness::CmdPartDesignPartThickness()
+    : Command("PartDesign_PartThickness")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Thickness");
+    sToolTipText = QT_TR_NOOP("Make thickness");
+    sWhatsThis = "PartDesign_PartThickness";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Thickness";
+}
+
+void CmdPartDesignPartThickness::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Thickness', 0)");
+}
+
+bool CmdPartDesignPartThickness::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSectionCut
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSectionCut)
+
+CmdPartDesignPartSectionCut::CmdPartDesignPartSectionCut()
+    : Command("PartDesign_PartSectionCut")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Section Cut");
+    sToolTipText = QT_TR_NOOP("Interactive section cut");
+    sWhatsThis = "PartDesign_PartSectionCut";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_SectionCut";
+}
+
+void CmdPartDesignPartSectionCut::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_SectionCut', 0)");
+}
+
+bool CmdPartDesignPartSectionCut::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartEditAttachment
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartEditAttachment)
+
+CmdPartDesignPartEditAttachment::CmdPartDesignPartEditAttachment()
+    : Command("PartDesign_PartEditAttachment")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Attachment");
+    sToolTipText = QT_TR_NOOP("Edit attachment");
+    sWhatsThis = "PartDesign_PartEditAttachment";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_EditAttachment";
+}
+
+void CmdPartDesignPartEditAttachment::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_EditAttachment', 0)");
+}
+
+bool CmdPartDesignPartEditAttachment::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSimpleCopy
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSimpleCopy)
+
+CmdPartDesignPartSimpleCopy::CmdPartDesignPartSimpleCopy()
+    : Command("PartDesign_PartSimpleCopy")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Simple Copy");
+    sToolTipText = QT_TR_NOOP("Create simple copy");
+    sWhatsThis = "PartDesign_PartSimpleCopy";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_SimpleCopy";
+}
+
+void CmdPartDesignPartSimpleCopy::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_SimpleCopy', 0)");
+}
+
+bool CmdPartDesignPartSimpleCopy::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartTransformedCopy
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartTransformedCopy)
+
+CmdPartDesignPartTransformedCopy::CmdPartDesignPartTransformedCopy()
+    : Command("PartDesign_PartTransformedCopy")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Transformed Copy");
+    sToolTipText = QT_TR_NOOP("Create transformed copy");
+    sWhatsThis = "PartDesign_PartTransformedCopy";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_TransformedCopy";
+}
+
+void CmdPartDesignPartTransformedCopy::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_TransformedCopy', 0)");
+}
+
+bool CmdPartDesignPartTransformedCopy::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartElementCopy
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartElementCopy)
+
+CmdPartDesignPartElementCopy::CmdPartDesignPartElementCopy()
+    : Command("PartDesign_PartElementCopy")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Element Copy");
+    sToolTipText = QT_TR_NOOP("Create copy of sub-elements");
+    sWhatsThis = "PartDesign_PartElementCopy";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_ElementCopy";
+}
+
+void CmdPartDesignPartElementCopy::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_ElementCopy', 0)");
+}
+
+bool CmdPartDesignPartElementCopy::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartRefineShape
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartRefineShape)
+
+CmdPartDesignPartRefineShape::CmdPartDesignPartRefineShape()
+    : Command("PartDesign_PartRefineShape")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Refine Shape");
+    sToolTipText = QT_TR_NOOP("Refine shape");
+    sWhatsThis = "PartDesign_PartRefineShape";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_RefineShape";
+}
+
+void CmdPartDesignPartRefineShape::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_RefineShape', 0)");
+}
+
+bool CmdPartDesignPartRefineShape::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartMakeSolid
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartMakeSolid)
+
+CmdPartDesignPartMakeSolid::CmdPartDesignPartMakeSolid()
+    : Command("PartDesign_PartMakeSolid")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Convert to Solid");
+    sToolTipText = QT_TR_NOOP("Convert shell to solid");
+    sWhatsThis = "PartDesign_PartMakeSolid";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_MakeSolid";
+}
+
+void CmdPartDesignPartMakeSolid::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_MakeSolid', 0)");
+}
+
+bool CmdPartDesignPartMakeSolid::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartReverseShape
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartReverseShape)
+
+CmdPartDesignPartReverseShape::CmdPartDesignPartReverseShape()
+    : Command("PartDesign_PartReverseShape")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Reverse Shape");
+    sToolTipText = QT_TR_NOOP("Reverse shape orientation");
+    sWhatsThis = "PartDesign_PartReverseShape";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_ReverseShape";
+}
+
+void CmdPartDesignPartReverseShape::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_ReverseShape', 0)");
+}
+
+bool CmdPartDesignPartReverseShape::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartMakeFace
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartMakeFace)
+
+CmdPartDesignPartMakeFace::CmdPartDesignPartMakeFace()
+    : Command("PartDesign_PartMakeFace")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Face from Wires");
+    sToolTipText = QT_TR_NOOP("Create a face from wires");
+    sWhatsThis = "PartDesign_PartMakeFace";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_MakeFace";
+}
+
+void CmdPartDesignPartMakeFace::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_MakeFace', 0)");
+}
+
+bool CmdPartDesignPartMakeFace::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartLoft
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartLoft)
+
+CmdPartDesignPartLoft::CmdPartDesignPartLoft()
+    : Command("PartDesign_PartLoft")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Loft");
+    sToolTipText = QT_TR_NOOP("Create loft");
+    sWhatsThis = "PartDesign_PartLoft";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Loft";
+}
+
+void CmdPartDesignPartLoft::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Loft', 0)");
+}
+
+bool CmdPartDesignPartLoft::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSweep
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSweep)
+
+CmdPartDesignPartSweep::CmdPartDesignPartSweep()
+    : Command("PartDesign_PartSweep")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Sweep");
+    sToolTipText = QT_TR_NOOP("Create sweep");
+    sWhatsThis = "PartDesign_PartSweep";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Sweep";
+}
+
+void CmdPartDesignPartSweep::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Sweep', 0)");
+}
+
+bool CmdPartDesignPartSweep::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartBooleanFragments
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartBooleanFragments)
+
+CmdPartDesignPartBooleanFragments::CmdPartDesignPartBooleanFragments()
+    : Command("PartDesign_PartBooleanFragments")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Boolean Fragments");
+    sToolTipText = QT_TR_NOOP("Make Boolean fragments");
+    sWhatsThis = "PartDesign_PartBooleanFragments";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_BooleanFragments";
+}
+
+void CmdPartDesignPartBooleanFragments::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_BooleanFragments', 0)");
+}
+
+bool CmdPartDesignPartBooleanFragments::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSlice
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSlice)
+
+CmdPartDesignPartSlice::CmdPartDesignPartSlice()
+    : Command("PartDesign_PartSlice")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Slice");
+    sToolTipText = QT_TR_NOOP("Slice shapes");
+    sWhatsThis = "PartDesign_PartSlice";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Slice";
+}
+
+void CmdPartDesignPartSlice::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Slice', 0)");
+}
+
+bool CmdPartDesignPartSlice::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartSliceApart
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartSliceApart)
+
+CmdPartDesignPartSliceApart::CmdPartDesignPartSliceApart()
+    : Command("PartDesign_PartSliceApart")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Slice Apart");
+    sToolTipText = QT_TR_NOOP("Slice shapes apart");
+    sWhatsThis = "PartDesign_PartSliceApart";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_SliceApart";
+}
+
+void CmdPartDesignPartSliceApart::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_SliceApart', 0)");
+}
+
+bool CmdPartDesignPartSliceApart::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartXor
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartXor)
+
+CmdPartDesignPartXor::CmdPartDesignPartXor()
+    : Command("PartDesign_PartXor")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("XOR");
+    sToolTipText = QT_TR_NOOP("Boolean XOR");
+    sWhatsThis = "PartDesign_PartXor";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_XOR";
+}
+
+void CmdPartDesignPartXor::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_XOR', 0)");
+}
+
+bool CmdPartDesignPartXor::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartJoinConnect
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartJoinConnect)
+
+CmdPartDesignPartJoinConnect::CmdPartDesignPartJoinConnect()
+    : Command("PartDesign_PartJoinConnect")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Connect");
+    sToolTipText = QT_TR_NOOP("Connect shapes preserving voids");
+    sWhatsThis = "PartDesign_PartJoinConnect";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_JoinConnect";
+}
+
+void CmdPartDesignPartJoinConnect::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_JoinConnect', 0)");
+}
+
+bool CmdPartDesignPartJoinConnect::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartJoinEmbed
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartJoinEmbed)
+
+CmdPartDesignPartJoinEmbed::CmdPartDesignPartJoinEmbed()
+    : Command("PartDesign_PartJoinEmbed")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Embed");
+    sToolTipText = QT_TR_NOOP("Embed one shape into another");
+    sWhatsThis = "PartDesign_PartJoinEmbed";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_JoinEmbed";
+}
+
+void CmdPartDesignPartJoinEmbed::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_JoinEmbed', 0)");
+}
+
+bool CmdPartDesignPartJoinEmbed::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartJoinCutout
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartJoinCutout)
+
+CmdPartDesignPartJoinCutout::CmdPartDesignPartJoinCutout()
+    : Command("PartDesign_PartJoinCutout")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Cutout");
+    sToolTipText = QT_TR_NOOP("Subtract one shape from another preserving intersections");
+    sWhatsThis = "PartDesign_PartJoinCutout";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_JoinCutout";
+}
+
+void CmdPartDesignPartJoinCutout::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_JoinCutout', 0)");
+}
+
+bool CmdPartDesignPartJoinCutout::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCompound
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCompound)
+
+CmdPartDesignPartCompound::CmdPartDesignPartCompound()
+    : Command("PartDesign_PartCompound")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Compound");
+    sToolTipText = QT_TR_NOOP("Create compound");
+    sWhatsThis = "PartDesign_PartCompound";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_Compound";
+}
+
+void CmdPartDesignPartCompound::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_Compound', 0)");
+}
+
+bool CmdPartDesignPartCompound::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartCompoundFilter
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartCompoundFilter)
+
+CmdPartDesignPartCompoundFilter::CmdPartDesignPartCompoundFilter()
+    : Command("PartDesign_PartCompoundFilter")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Compound Filter");
+    sToolTipText = QT_TR_NOOP("Filter children of a compound");
+    sWhatsThis = "PartDesign_PartCompoundFilter";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_CompoundFilter";
+}
+
+void CmdPartDesignPartCompoundFilter::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_CompoundFilter', 0)");
+}
+
+bool CmdPartDesignPartCompoundFilter::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartExplodeCompound
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartExplodeCompound)
+
+CmdPartDesignPartExplodeCompound::CmdPartDesignPartExplodeCompound()
+    : Command("PartDesign_PartExplodeCompound")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Explode Compound");
+    sToolTipText = QT_TR_NOOP("Explode a compound into children");
+    sWhatsThis = "PartDesign_PartExplodeCompound";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_ExplodeCompound";
+}
+
+void CmdPartDesignPartExplodeCompound::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_ExplodeCompound', 0)");
+}
+
+bool CmdPartDesignPartExplodeCompound::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+//===========================================================================
+// PartDesign_PartToleranceSet
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartDesignPartToleranceSet)
+
+CmdPartDesignPartToleranceSet::CmdPartDesignPartToleranceSet()
+    : Command("PartDesign_PartToleranceSet")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Set Tolerance");
+    sToolTipText = QT_TR_NOOP("Set shape tolerance");
+    sWhatsThis = "PartDesign_PartToleranceSet";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_ToleranceSet";
+}
+
+void CmdPartDesignPartToleranceSet::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    doCommand(Doc, "Gui.runCommand('Part_ToleranceSet', 0)");
+}
+
+bool CmdPartDesignPartToleranceSet::isActive()
+{
+    if (getActiveGuiDocument()) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 DEF_STD_CMD_A(CmdPartDesignCS)
 
 CmdPartDesignCS::CmdPartDesignCS()
@@ -2717,6 +4257,52 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignPlane());
     rcCmdMgr.addCommand(new CmdPartDesignLine());
     rcCmdMgr.addCommand(new CmdPartDesignPoint());
+    rcCmdMgr.addCommand(new CmdPartDesignPartBox());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCylinder());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSphere());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCone());
+    rcCmdMgr.addCommand(new CmdPartDesignPartTorus());
+    rcCmdMgr.addCommand(new CmdPartDesignPartTube());
+    rcCmdMgr.addCommand(new CmdPartDesignPartPrimitives());
+    rcCmdMgr.addCommand(new CmdPartDesignPartBuilder());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCut());
+    rcCmdMgr.addCommand(new CmdPartDesignPartFuse());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCommon());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSection());
+    rcCmdMgr.addCommand(new CmdPartDesignPartOffset());
+    rcCmdMgr.addCommand(new CmdPartDesignPartOffset2D());
+    rcCmdMgr.addCommand(new CmdPartDesignPartRuledSurface());
+    rcCmdMgr.addCommand(new CmdPartDesignPartScale());
+    rcCmdMgr.addCommand(new CmdPartDesignPartShapeFromMesh());
+    rcCmdMgr.addCommand(new CmdPartDesignPartDefeaturing());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCheckGeometry());
+    rcCmdMgr.addCommand(new CmdPartDesignPartProjectionOnSurface());
+    rcCmdMgr.addCommand(new CmdPartDesignPartThickness());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSectionCut());
+    rcCmdMgr.addCommand(new CmdPartDesignPartEditAttachment());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSimpleCopy());
+    rcCmdMgr.addCommand(new CmdPartDesignPartTransformedCopy());
+    rcCmdMgr.addCommand(new CmdPartDesignPartElementCopy());
+    rcCmdMgr.addCommand(new CmdPartDesignPartRefineShape());
+    rcCmdMgr.addCommand(new CmdPartDesignPartMakeSolid());
+    rcCmdMgr.addCommand(new CmdPartDesignPartReverseShape());
+    rcCmdMgr.addCommand(new CmdPartDesignPartMakeFace());
+    rcCmdMgr.addCommand(new CmdPartDesignPartLoft());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSweep());
+
+    // Bridge commands imported from the Part workbench
+    rcCmdMgr.addCommand(new CmdPartDesignPartBooleanFragments());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSlice());
+    rcCmdMgr.addCommand(new CmdPartDesignPartSliceApart());
+    rcCmdMgr.addCommand(new CmdPartDesignPartXor());
+    rcCmdMgr.addCommand(new CmdPartDesignPartJoinConnect());
+    rcCmdMgr.addCommand(new CmdPartDesignPartJoinEmbed());
+    rcCmdMgr.addCommand(new CmdPartDesignPartJoinCutout());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCompound());
+    rcCmdMgr.addCommand(new CmdPartDesignPartCompoundFilter());
+    rcCmdMgr.addCommand(new CmdPartDesignPartExplodeCompound());
+    rcCmdMgr.addCommand(new CmdPartDesignPartToleranceSet());
+
     rcCmdMgr.addCommand(new CmdPartDesignCS());
 
     rcCmdMgr.addCommand(new CmdPartDesignNewSketch());
@@ -2726,12 +4312,12 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignHole());
     rcCmdMgr.addCommand(new CmdPartDesignRevolution());
     rcCmdMgr.addCommand(new CmdPartDesignGroove());
-    rcCmdMgr.addCommand(new CmdPartDesignAdditivePipe);
-    rcCmdMgr.addCommand(new CmdPartDesignSubtractivePipe);
-    rcCmdMgr.addCommand(new CmdPartDesignAdditiveLoft);
-    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveLoft);
-    rcCmdMgr.addCommand(new CmdPartDesignAdditiveHelix);
-    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveHelix);
+    rcCmdMgr.addCommand(new CmdPartDesignAdditivePipe());
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractivePipe());
+    rcCmdMgr.addCommand(new CmdPartDesignAdditiveLoft());
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveLoft());
+    rcCmdMgr.addCommand(new CmdPartDesignAdditiveHelix());
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveHelix());
 
     rcCmdMgr.addCommand(new CmdPartDesignFillet());
     rcCmdMgr.addCommand(new CmdPartDesignDraft());
