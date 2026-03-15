@@ -29,6 +29,9 @@
 # This is the second one of three init scripts, the third one
 # runs when the gui is up
 
+import FreeCAD as App
+import FreeCADGui as Gui
+
 
 class PartDesignWorkbench(Workbench):
     "PartDesign workbench object"
@@ -56,6 +59,64 @@ class PartDesignWorkbench(Workbench):
 
         import PartDesignGui
         import PartDesign
+
+        # Keep Part command packs available from Part Design.
+        try:
+            import BasicShapes.CommandShapes
+        except ImportError as err:
+            App.Console.PrintError(
+                "'BasicShapes' package cannot be loaded. " "{err}\n".format(err=str(err))
+            )
+
+        try:
+            import PartDesign.CompoundTools._CommandCompoundFilter
+            import PartDesign.CompoundTools._CommandExplodeCompound
+        except ImportError as err:
+            App.Console.PrintError(
+                "'CompoundTools' package cannot be loaded. " "{err}\n".format(err=str(err))
+            )
+
+        try:
+            import PartDesign.JoinFeatures
+            import PartDesign.SplitFeatures
+        except ImportError as err:
+            App.Console.PrintError(
+                "'PartDesign Join/Split bridge' cannot be loaded. "
+                "{err}\n".format(err=str(err))
+            )
+
+        try:
+            import PartGui
+
+            from PartDesign import BOPTools as bop
+
+            bop.importAll()
+            bop.addCommands()
+            PartGui.BOPTools = bop
+        except Exception as err:
+            App.Console.PrintError(
+                "'BOPTools' package cannot be loaded. " "{err}\n".format(err=str(err))
+            )
+
+        try:
+            from PartDesign import PartCommandBridge
+
+            PartCommandBridge.initialize_bridge()
+        except Exception as err:
+            App.Console.PrintError(
+                "'PartDesign.PartCommandBridge' cannot be loaded. "
+                "{err}\n".format(err=str(err))
+            )
+
+        try:
+            from PartDesign import PartWorkbenchMigrationGui
+
+            PartWorkbenchMigrationGui.register_gui_commands()
+        except Exception as err:
+            App.Console.PrintError(
+                "'PartDesign.PartWorkbenchMigrationGui' cannot be loaded. "
+                "{err}\n".format(err=str(err))
+            )
 
         from PartDesign.InvoluteGearFeature import CommandInvoluteGear
 

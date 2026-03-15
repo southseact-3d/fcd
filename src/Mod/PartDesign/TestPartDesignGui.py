@@ -327,6 +327,56 @@ class CreateSketch(unittest.TestCase):
         param.SetBool("NewSketchUseAttachmentDialog", useAttachmentSaved)
 
 
+class PartDesignBridgeCommandTests(unittest.TestCase):
+    def setUp(self):
+        self.Doc = App.newDocument("PartDesignBridgeCommands")
+
+    def testBridgeCommandsRegistered(self):
+        command_names = set(Gui.listCommands())
+        expected_commands = {
+            "PartDesign_PartBox",
+            "PartDesign_PartBoolean",
+            "PartDesign_PartJoinConnect",
+            "PartDesign_PartBooleanFragments",
+            "PartDesign_PartCompound",
+            "PartDesign_PartOffset",
+            "PartDesign_PartScale",
+            "PartDesign_PartShapeFromMesh",
+            "PartDesign_PartDefeaturing",
+            "PartDesign_PartCheckGeometry",
+            "PartDesign_MigratePartMacros",
+        }
+        for command_name in expected_commands:
+            self.assertIn(command_name, command_names)
+
+    def testBridgeBoxCommandDispatch(self):
+        Gui.runCommand("PartDesign_PartBox", 0)
+        App.ActiveDocument.recompute()
+
+        box_objects = [obj for obj in App.ActiveDocument.Objects if obj.isDerivedFrom("Part::Box")]
+        self.assertGreaterEqual(len(box_objects), 1)
+
+    def testBridgeModulesImportable(self):
+        import PartDesign.JoinFeatures  # noqa: F401
+        import PartDesign.SplitFeatures  # noqa: F401
+        import PartDesign.CompoundTools._CommandCompoundFilter  # noqa: F401
+        import PartDesign.CompoundTools._CommandExplodeCompound  # noqa: F401
+        import PartDesign.CompoundTools.CompoundFilter  # noqa: F401
+        import PartDesign.CompoundTools.Explode  # noqa: F401
+        import PartDesign.BOPTools  # noqa: F401
+        import PartDesign.BOPTools.BOPFeatures  # noqa: F401
+        import PartDesign.BOPTools.JoinFeatures  # noqa: F401
+        import PartDesign.BOPTools.SplitFeatures  # noqa: F401
+
+    def testWorkbenchRegistrationState(self):
+        workbenches = FreeCADGui.listWorkbenches()
+        self.assertIn("PartDesignWorkbench", workbenches)
+        self.assertNotIn("PartWorkbench", workbenches)
+
+    def tearDown(self):
+        App.closeDocument("PartDesignBridgeCommands")
+
+
 # class PartDesignGuiTestCases(unittest.TestCase):
 #   def setUp(self):
 #       self.Doc = FreeCAD.newDocument("SketchGuiTest")
