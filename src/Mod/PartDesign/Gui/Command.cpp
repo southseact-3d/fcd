@@ -2771,6 +2771,7 @@ CmdPartDesignPad::CmdPartDesignPad()
     sWhatsThis = "PartDesign_Pad";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Pad";
+    sAccel = "Ctrl+E";
 }
 
 void CmdPartDesignPad::activated(int iMsg)
@@ -2800,6 +2801,7 @@ CmdPartDesignPocket::CmdPartDesignPocket()
     sWhatsThis = "PartDesign_Pocket";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Pocket";
+    sAccel = "Ctrl+K";
 }
 
 void CmdPartDesignPocket::activated(int iMsg)
@@ -3504,6 +3506,7 @@ CmdPartDesignFillet::CmdPartDesignFillet()
     sWhatsThis = "PartDesign_Fillet";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Fillet";
+    sAccel = "Ctrl+F";
 }
 
 void CmdPartDesignFillet::activated(int iMsg)
@@ -3532,6 +3535,7 @@ CmdPartDesignChamfer::CmdPartDesignChamfer()
     sWhatsThis = "PartDesign_Chamfer";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Chamfer";
+    sAccel = "Ctrl+Shift+C";
 }
 
 void CmdPartDesignChamfer::activated(int iMsg)
