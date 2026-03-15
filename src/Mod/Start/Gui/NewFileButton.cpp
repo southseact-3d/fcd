@@ -44,10 +44,10 @@ NewFileButton::NewFileButton(const NewButton& newButton)
         "User parameter:BaseApp/Preferences/Mod/Start"
     );
 
-    constexpr int defaultWidth = 180;  // #newFileButton width in QSS
+    constexpr int defaultWidth = 200;
     labelWidth = int(hGrp->GetInt("FileCardLabelWith", defaultWidth));
 
-    constexpr int defaultSize = 48;
+    constexpr int defaultSize = 56;
     iconSize = int(hGrp->GetInt("NewFileIconSize", defaultSize));
 
     auto iconLabel = new QLabel(this);
@@ -70,11 +70,12 @@ NewFileButton::NewFileButton(const NewButton& newButton)
     mainLayout->addStretch();
     QFontMetrics qfm(font);
     int margin = qfm.height() / 2;
-    mainLayout->setSpacing(margin);
-    mainLayout->setContentsMargins(margin, margin, 2 * margin, margin);
+    mainLayout->setSpacing(margin + 4);
+    mainLayout->setContentsMargins(margin + 8, margin + 8, margin + 12, margin + 8);
     setLayout(mainLayout);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     setToolTip(QStringLiteral("<b>%1</b><br/>%2").arg(newButton.heading, newButton.description));
+    setMinimumWidth(180);
 }
 
 QSize NewFileButton::minimumSizeHint() const
