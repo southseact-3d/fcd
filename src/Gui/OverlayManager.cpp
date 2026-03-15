@@ -436,7 +436,8 @@ public:
     {
         _actFloat.setIcon(BitmapFactory().pixmap("qss:overlay/icons/float.svg"));
         _actOverlay.setIcon(BitmapFactory().pixmap("qss:overlay/icons/overlay.svg"));
-        _actClose.setIcon(BitmapFactory().pixmap("qss:overlay/icons/close.svg"));
+        // Use a home-style icon for the close action (e.g. when the overlay acts as a document selector)
+    _actClose.setIcon(BitmapFactory().pixmap("Std_ViewHome"));
         for (OverlayTabWidget* tabWidget : _Overlays) {
             tabWidget->refreshIcons();
             for (auto handle : tabWidget->findChildren<OverlaySplitterHandle*>()) {
