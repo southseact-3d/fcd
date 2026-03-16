@@ -317,134 +317,33 @@ jobs:
           Write-Host "✓ build.ninja found — Ninja generator active"
 
       # ------------------------------------------------------------------
-      # TARGETED BUILD — compile and link only targets affected by changed C++
-      # files. This replaces the old "changed files first" + full build steps.
+      # NINJA INCREMENTAL BUILD
+      # Ninja handles dependency tracking natively - no need to detect
+      # changed files via git. This approach works correctly for:
+      #   - Re-running failed builds (partial build state is restored from cache)
+      #   - Multiple PRs/commits since last successful build
+      #   - New, modified, and deleted files are detected automatically
       # ------------------------------------------------------------------
-      - name: Build affected targets only
-        id: targeted-build
+      - name: Build with Ninja
+        id: build
         run: |
-          # Honour forceRebuild flag
+          # Honour forceRebuild flag - when true, Ninja rebuilds everything
+          # because source files will have newer timestamps than cached artifacts
           if ("${{ inputs.forceRebuild }}" -eq "true") {
-            Write-Host "forceRebuild=true — running full build"
-            cmake --build "${{ env.builddir }}" --config Release -j32
-            exit $LASTEXITCODE
+            Write-Host "forceRebuild=true — full rebuild requested"
           }
 
-          # ---------------------------------------------------------------
-          # Detect which C++ source and header files changed vs last commit.
-          # On the very first run (no previous commit) fall back to full build.
-          # ---------------------------------------------------------------
-          $parentExists = git rev-parse HEAD~1 2>&1
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "No previous commit found — running full build for first run"
-            cmake --build "${{ env.builddir }}" --config Release -j32
-            exit $LASTEXITCODE
-          }
-
-          $changedFiles = git diff --name-only HEAD~1 HEAD |
-            Where-Object { $_ -match '\.(cpp|cxx|cc|h|hpp)$' }
-
-          if (-not $changedFiles) {
-            Write-Host "No C++ files changed — nothing to build"
-            exit 0
-          }
-
-          Write-Host "=== Changed C++ files ==="
-          $changedFiles | ForEach-Object { Write-Host "  $_" }
-          Write-Host "========================="
-
-          # ---------------------------------------------------------------
-          # Parse build.ninja to find every .obj target whose build rule
-          # references one of the changed files.
-          #
-          # Ninja build rule format:
-          #   build path/to/File.cpp.obj: CXX_COMPILER../path/to/File.cpp
-          #
-          # We match lines where the source path ends with our changed file.
-          # ---------------------------------------------------------------
-          $buildNinjaPath = "${{ env.builddir }}\build.ninja"
-          $buildNinja = Get-Content $buildNinjaPath -Raw
-
-          $affectedObjs = [System.Collections.Generic.HashSet[string]]::new()
-
-          foreach ($file in $changedFiles) {
-            # Normalize separators to allow matching both / and \\ in build.ninja
-            $fileForward = $file -replace '\\', '/'
-            # Escape regex metacharacters
-            $fileEscaped = [regex]::Escape($fileForward)
-            # Allow either slash or backslash in the build.ninja path
-            $fileEscaped = $fileEscaped -replace '/', '[\\/]'
-
-            # Match build rules that reference this source file
-            $pattern = "(?mi)^build\s+([^\r\n:]+\.obj)\s*:[^\r\n]*$fileEscaped"
-            $ruleMatches = [regex]::Matches($buildNinja, $pattern)
-
-            foreach ($m in $ruleMatches) {
-              $obj = $m.Groups[1].Value.Trim()
-              [void]$affectedObjs.Add($obj)
-              Write-Host "  → obj target: $obj"
-            }
-          }
-
-          if ($affectedObjs.Count -eq 0) {
-            Write-Host ""
-            Write-Host "No .obj targets matched in build.ninja for changed files."
-            Write-Host "This can happen if the files are new (not yet in the build graph)."
-            Write-Host "Running full build to incorporate new files..."
-            cmake --build "${{ env.builddir }}" --config Release -j32
-            exit $LASTEXITCODE
-          }
-
-          # ---------------------------------------------------------------
-          # From each .obj, walk build.ninja to find the parent .lib/.dll/.exe
-          # that links it. We need to re-link those too, not just recompile.
-          #
-          # Ninja link rules reference obj files as inputs, e.g.:
-          #   build path/to/FooModule.dll: CXX_SHARED_LIBRARY ... Foo.cpp.obj ...
-          #
-          # We collect these final link targets and pass them all to one
-          # cmake --build call. Ninja will recompile the .obj files and
-          # re-link only the affected libraries/executables.
-          # ---------------------------------------------------------------
-          $finalTargets = [System.Collections.Generic.HashSet[string]]::new()
-
-          foreach ($obj in $affectedObjs) {
-            $objEscaped = [regex]::Escape($obj)
-            # Find link rules that consume this obj
-            $linkPattern = "(?m)^build\s+([^\r\n:]+\.(?:dll|exe|lib))\s*:[^\r\n]+$objEscaped"
-            $linkMatches = [regex]::Matches($buildNinja, $linkPattern)
-
-            if ($linkMatches.Count -gt 0) {
-              foreach ($lm in $linkMatches) {
-                $linkTarget = $lm.Groups[1].Value.Trim()
-                [void]$finalTargets.Add($linkTarget)
-                Write-Host "  → link target: $linkTarget"
-              }
-            } else {
-              # No link target found — build the obj directly and let Ninja
-              # figure out downstream deps
-              [void]$finalTargets.Add($obj)
-            }
-          }
-
-          Write-Host ""
-          Write-Host "=== Building $($finalTargets.Count) final target(s) ==="
-          $finalTargets | ForEach-Object { Write-Host "  $_" }
-          Write-Host "======================================================="
-
-          # Build all affected targets in one call.
-          # Ninja resolves the full subgraph for each target — any shared
-          # dependency is only built once.
-          $targetArgs = $finalTargets -join " "
-          cmake --build "${{ env.builddir }}" --config Release --target $targetArgs -j32
+          # Let Ninja handle incremental builds natively
+          # Ninja compares source timestamps against .ninja_deps to determine
+          # what needs rebuilding - no git-based detection needed
+          cmake --build "${{ env.builddir }}" --config Release -j32
 
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "Targeted build failed with exit code $LASTEXITCODE"
+            Write-Error "Build failed with exit code $LASTEXITCODE"
             exit 1
           }
 
-          Write-Host ""
-          Write-Host "✓ Incremental build complete — only affected targets rebuilt"
+          Write-Host "✓ Build complete"
 
       - name: Print Ccache statistics after build
         if: always()
