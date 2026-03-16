@@ -351,12 +351,10 @@ jobs:
           foreach ($src in $changedSources) {
             # Get just the filename without path
             $fileName = Split-Path $src -Leaf
-            # Escape special regex characters
-            $escapedName = [regex]::Escape($fileName)
-            # Match the source file in build.ninja (case-insensitive)
-            $pattern = "(?i)$escapedName(?=[\s:]|obj)"
+            # Match the source file in build.ninja (case-insensitive) - use regex, not SimpleMatch
+            $pattern = "(?i)$fileName(?=[\s:])"
             $ninjaLine = Select-String -Path "${{ env.builddir }}\build.ninja" `
-                           -Pattern $pattern -SimpleMatch | Select-Object -First 1
+                           -Pattern $pattern | Select-Object -First 1
 
             if ($ninjaLine) {
               # Extract the output (.obj) path from the ninja rule line
