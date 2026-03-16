@@ -43,17 +43,17 @@ class _HandlerCommand(_RelayCommand):
 
 # Alias table: PartDesign command -> Part command
 ALIAS_COMMANDS = {
-    "PartDesign_PartBox": ("Part_Box", "Box", "Create a Part box", "Part_Box"),
+    "PartDesign_PartBox": ("Part_Box", "Box", "Create a Part box", "Part_Box_Parametric"),
     "PartDesign_PartCylinder": (
         "Part_Cylinder",
         "Cylinder",
         "Create a Part cylinder",
-        "Part_Cylinder",
+        "Part_Cylinder_Parametric",
     ),
-    "PartDesign_PartSphere": ("Part_Sphere", "Sphere", "Create a Part sphere", "Part_Sphere"),
-    "PartDesign_PartCone": ("Part_Cone", "Cone", "Create a Part cone", "Part_Cone"),
-    "PartDesign_PartTorus": ("Part_Torus", "Torus", "Create a Part torus", "Part_Torus"),
-    "PartDesign_PartTube": ("Part_Tube", "Tube", "Create a Part tube", "Part_Tube"),
+    "PartDesign_PartSphere": ("Part_Sphere", "Sphere", "Create a Part sphere", "Part_Sphere_Parametric"),
+    "PartDesign_PartCone": ("Part_Cone", "Cone", "Create a Part cone", "Part_Cone_Parametric"),
+    "PartDesign_PartTorus": ("Part_Torus", "Torus", "Create a Part torus", "Part_Torus_Parametric"),
+    "PartDesign_PartTube": ("Part_Tube", "Tube", "Create a Part tube", "Part_Tube_Parametric"),
     "PartDesign_PartPrimitives": (
         "Part_Primitives",
         "Primitive",
@@ -64,13 +64,13 @@ ALIAS_COMMANDS = {
         "Part_Builder",
         "Shape Builder",
         "Open shape builder",
-        "Part_Builder",
+        "Part_Shapebuilder",
     ),
     "PartDesign_PartBoolean": (
         "Part_Boolean",
         "Boolean",
         "Boolean operation dialog",
-        "Part_Boolean",
+        "Part_Booleans",
     ),
     "PartDesign_PartCut": ("Part_Cut", "Cut", "Cuts selected shapes", "Part_Cut"),
     "PartDesign_PartFuse": ("Part_Fuse", "Union", "Unites selected shapes", "Part_Fuse"),
@@ -169,7 +169,7 @@ ALIAS_COMMANDS = {
         "Part_RefineShape",
         "Refine Shape",
         "Refine shape",
-        "Part_RefineShape",
+        "Part_Refine_Shape",
     ),
     "PartDesign_PartMakeSolid": (
         "Part_MakeSolid",
@@ -227,7 +227,7 @@ ALIAS_COMMANDS = {
         "Part_ShapeFromMesh",
         "Shape from Mesh",
         "Convert mesh to shape",
-        "Part_ShapeFromMesh",
+        "Part_Shape_from_Mesh",
     ),
     "PartDesign_PartDefeaturing": (
         "Part_Defeaturing",

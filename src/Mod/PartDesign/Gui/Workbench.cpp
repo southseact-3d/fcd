@@ -765,7 +765,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_PolarPattern"
           << "PartDesign_MultiTransform";
 
-    part = new Gui::ToolBarItem(root);
+    part = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
     part->setCommand("Part Design Part Tools");
 
     *part << "PartDesign_PartBox"
