@@ -101,7 +101,7 @@ void Workbench::createTabBar()
     if (!tabBar) {
         tabBar = new PartDesignTabBar();
         QObject::connect(tabBar, &PartDesignTabBar::currentIndexChanged,
-                this, &Workbench::onModeChanged);
+                [this](int index) { onModeChanged(index); });
     }
 }
 
