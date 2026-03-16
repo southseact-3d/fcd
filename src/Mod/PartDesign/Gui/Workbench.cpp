@@ -34,6 +34,9 @@
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeatureMultiTransform.h>
 
+#include <QObject>
+#include <QVBoxLayout>
+
 #include "Utils.h"
 #include "Workbench.h"
 #include "WorkbenchModeHandler.h"
@@ -109,7 +112,7 @@ void Workbench::attachTabBar()
         if (mainWindow) {
             auto centralWidget = mainWindow->centralWidget();
             if (centralWidget) {
-                auto layout = centralWidget->layout();
+                auto layout = qobject_cast<QVBoxLayout*>(centralWidget->layout());
                 if (layout) {
                     layout->insertWidget(0, tabBar);
                     tabBarAttached = true;
