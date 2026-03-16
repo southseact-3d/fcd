@@ -34,8 +34,10 @@
 #include <QWidgetAction>
 
 
+#include <App/Document.h>
 #include <App/DocumentObjectGroup.h>
 #include <App/Datums.h>
+#include <App/Origin.h>
 #include <Gui/Action.h>
 #include <Gui/Application.h>
 #include <Gui/BitmapFactory.h>
@@ -47,7 +49,12 @@
 #include <Gui/PrefWidgets.h>
 #include <Gui/QuantitySpinBox.h>
 #include <Gui/Selection/SelectionFilter.h>
+#include <Gui/Selection/Selection.h>
+#include <Gui/Selection/SelectionObserver.h>
 #include <Gui/Selection/SelectionObject.h>
+#include <Gui/ViewProviderCoordinateSystem.h>
+#include <Gui/ViewProviderPlane.h>
+#include <Gui/ViewParams.h>
 #include <Mod/Part/App/Attacher.h>
 #include <Mod/Part/App/Part2DObject.h>
 #include <Mod/Part/Gui/AttacherTexts.h>
@@ -71,6 +78,105 @@ using namespace Attacher;
 
 namespace SketcherGui
 {
+
+class PlaneSelectionObserver : public Gui::SelectionObserver
+{
+public:
+    PlaneSelectionObserver(const std::vector<App::DocumentObject*>& planes, const std::string& groupName, bool groupSelected)
+        : planes(planes), groupName(groupName), groupSelected(groupSelected)
+    {
+        filter = new Gui::SelectionFilter("SELECT App::Plane");
+        Gui::Selection().addSelectionGate(filter, Gui::ResolveMode::NoResolve);
+    }
+
+    ~PlaneSelectionObserver() override
+    {
+        Gui::Selection().removeSelectionGate();
+        resetPlaneVisibility();
+        delete filter;
+    }
+
+    void onSelectionChanged(const Gui::SelectionChanges& msg) override
+    {
+        if (msg.Type == Gui::SelectionChanges::AddSelection) {
+            App::DocumentObject* obj = msg.pObject.getObject();
+            if (obj && std::find(planes.begin(), planes.end(), obj) != planes.end()) {
+                createSketchOnPlane(obj);
+                Gui::Selection().removeSelectionGate();
+                delete this;
+            }
+        }
+    }
+
+private:
+    void createSketchOnPlane(App::DocumentObject* plane)
+    {
+        App::Document* doc = plane->getDocument();
+        std::string FeatName = doc->getUniqueObjectName("Sketch");
+
+        std::string supportString;
+        App::Plane* appPlane = static_cast<App::Plane*>(plane);
+        auto* lcs = appPlane->getLCS();
+        if (lcs) {
+            supportString = Gui::Command::getObjectCmd(lcs, "(", ",'"
+                + std::string(plane->getNameInDocument()) + "'])");
+        }
+        else {
+            supportString = Gui::Command::getObjectCmd(plane, "(", ",[''])");
+        }
+
+        Gui::Command::openCommand(QT_TRANSLATE_NOOP("Command", "Create a new sketch"));
+
+        if (groupSelected) {
+            Gui::Command::doCommand(
+                Gui::Command::Doc,
+                "App.activeDocument().getObject('%s').addObject(App.activeDocument().addObject('Sketcher::SketchObject', '%s'))",
+                groupName.c_str(),
+                FeatName.c_str());
+        }
+        else {
+            Gui::Command::doCommand(
+                Gui::Command::Doc,
+                "App.activeDocument().addObject('Sketcher::SketchObject', '%s')",
+                FeatName.c_str());
+        }
+
+        Gui::Command::doCommand(
+            Gui::Command::Gui,
+            "App.activeDocument().%s.AttachmentSupport = %s",
+            FeatName.c_str(),
+            supportString.c_str());
+        Gui::Command::doCommand(
+            Gui::Command::Doc,
+            "App.activeDocument().%s.MapMode = \"%s\"",
+            FeatName.c_str(),
+            AttachEngine::getModeName(Attacher::mmFlatFace).c_str());
+        Gui::Command::doCommand(Gui::Command::Gui, "App.activeDocument().recompute()");
+        Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().setEdit('%s')", FeatName.c_str());
+    }
+
+    void resetPlaneVisibility()
+    {
+        for (auto& plane : planes) {
+            auto* planeViewProvider = Gui::Application::Instance->getViewProvider<Gui::ViewProviderPlane>(plane);
+            if (planeViewProvider) {
+                planeViewProvider->resetTemporarySize();
+                auto* coordSys = dynamic_cast<Gui::ViewProviderCoordinateSystem*>(
+                    Gui::Application::Instance->getViewProvider(plane->getDocument()->getObject("Origin")));
+                if (coordSys) {
+                    coordSys->resetTemporaryVisibility();
+                    coordSys->setPlaneLabelVisibility(false);
+                }
+            }
+        }
+    }
+
+    std::vector<App::DocumentObject*> planes;
+    std::string groupName;
+    bool groupSelected;
+    Gui::SelectionFilter* filter;
+};
+
 
 class ExceptionWrongInput: public Base::Exception
 {
@@ -275,46 +381,78 @@ void CmdSketcherNewSketch::activated(int iMsg)
         }
     }
     else {
-        // ask user for orientation
-        SketchOrientationDialog Dlg;
+        App::Document* doc = getActiveDocument();
+        if (!doc) {
+            return;
+        }
 
-        Dlg.adjustSize();
-        if (Dlg.exec() != QDialog::Accepted)
-            return;// canceled
-        Base::Vector3d p = Dlg.Pos.getPosition();
-        Base::Rotation r = Dlg.Pos.getRotation();
+        std::vector<App::DocumentObject*> planes;
+        auto* origin = App::Origin::getOrigin(doc);
+        if (origin) {
+            for (auto plane : origin->planes()) {
+                planes.push_back(plane);
+            }
+        }
 
-        std::string FeatName = getUniqueObjectName("Sketch");
+        if (!planes.empty()) {
+            auto* coordSys = dynamic_cast<Gui::ViewProviderCoordinateSystem*>(
+                Gui::Application::Instance->getViewProvider(origin));
+            if (coordSys) {
+                coordSys->setTemporaryVisibility(Gui::DatumElement::Planes);
+                coordSys->setPlaneLabelVisibility(true);
+            }
 
-        openCommand(QT_TRANSLATE_NOOP("Command", "Create a new sketch"));
-        if (groupSelected) {
-            doCommand(Doc,
-                    "App.activeDocument().getObject('%s').addObject(App.activeDocument().addObject('Sketcher::SketchObject', '%s'))",
-                    groupName.c_str(),
-                    FeatName.c_str());
+            for (auto& plane : planes) {
+                auto* planeViewProvider = Gui::Application::Instance->getViewProvider<Gui::ViewProviderPlane>(plane);
+                if (planeViewProvider) {
+                    planeViewProvider->setTemporaryScale(
+                        Gui::ViewParams::instance()->getDatumTemporaryScaleFactor());
+                }
+            }
+
+            new PlaneSelectionObserver(planes, groupName, groupSelected);
         }
         else {
-            doCommand(Doc,
-                  "App.activeDocument().addObject('Sketcher::SketchObject', '%s')",
-                  FeatName.c_str());
-        }
+            SketchOrientationDialog Dlg;
 
-        doCommand(Doc,
-                  "App.activeDocument().%s.Placement = App.Placement(App.Vector(%f, %f, %f), "
-                  "App.Rotation(%f, %f, %f, %f))",
-                  FeatName.c_str(),
-                  p.x,
-                  p.y,
-                  p.z,
-                  r[0],
-                  r[1],
-                  r[2],
-                  r[3]);
-        doCommand(Doc,
-                  "App.activeDocument().%s.MapMode = \"%s\"",
-                  FeatName.c_str(),
-                  AttachEngine::getModeName(Attacher::mmDeactivated).c_str());
-        doCommand(Gui, "Gui.activeDocument().setEdit('%s')", FeatName.c_str());
+            Dlg.adjustSize();
+            if (Dlg.exec() != QDialog::Accepted)
+                return;
+            Base::Vector3d p = Dlg.Pos.getPosition();
+            Base::Rotation r = Dlg.Pos.getRotation();
+
+            std::string FeatName = getUniqueObjectName("Sketch");
+
+            openCommand(QT_TRANSLATE_NOOP("Command", "Create a new sketch"));
+            if (groupSelected) {
+                doCommand(Doc,
+                        "App.activeDocument().getObject('%s').addObject(App.activeDocument().addObject('Sketcher::SketchObject', '%s'))",
+                        groupName.c_str(),
+                        FeatName.c_str());
+            }
+            else {
+                doCommand(Doc,
+                      "App.activeDocument().addObject('Sketcher::SketchObject', '%s')",
+                      FeatName.c_str());
+            }
+
+            doCommand(Doc,
+                      "App.activeDocument().%s.Placement = App.Placement(App.Vector(%f, %f, %f), "
+                      "App.Rotation(%f, %f, %f, %f))",
+                      FeatName.c_str(),
+                      p.x,
+                      p.y,
+                      p.z,
+                      r[0],
+                      r[1],
+                      r[2],
+                      r[3]);
+            doCommand(Doc,
+                      "App.activeDocument().%s.MapMode = \"%s\"",
+                      FeatName.c_str(),
+                      AttachEngine::getModeName(Attacher::mmDeactivated).c_str());
+            doCommand(Gui, "Gui.activeDocument().setEdit('%s')", FeatName.c_str());
+        }
     }
 }
 
