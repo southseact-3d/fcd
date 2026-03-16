@@ -747,7 +747,11 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_SubtractiveHelix"
           << "PartDesign_CompPrimitiveSubtractive"
           << "Separator"
-          << "PartDesign_Boolean";
+          << "PartDesign_Boolean"
+          << "Separator"
+          << "PartDesign_PartBuilder"
+          << "PartDesign_PartRefineShape"
+          << "PartDesign_PartShapeFromMesh";
 
     part = new Gui::ToolBarItem(root);
 
