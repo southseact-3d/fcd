@@ -114,14 +114,14 @@
 //#include "View3DInventorUtils.hpp"  // File does not exist
 #include "PyObjectFactory.h"
 #include "Quarter/QuarterWidget.h"
-#include "BrowseDir.h"
-#include "SetupProgress.h"
+//#include "BrowseDir.h"  // File does not exist
+//#include "SetupProgress.h"  // File does not exist
 #include "WorkbenchSelector.h"
-#include "GuiTracer.h"
+//#include "GuiTracer.h"  // File does not exist
 #include "Quarter/Quarter.h"
-#include "PythonViewer.h"
-#include "ColorScale.h"
-#include "MachineState.h"
+//#include "PythonViewer.h"  // File does not exist
+//#include "ColorScale.h"  // File does not exist
+//#include "MachineState.h"  // File does not exist
 #include "MeasureUtil.h"
 #include "GlobalProgressBarOverlay.h"
 #endif
