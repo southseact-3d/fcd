@@ -24,6 +24,7 @@
 # This workflow compiles changed files for Pull Requests.
 # It runs on all PR events and serves as a pass/fail check for compilation.
 # It does NOT create a Windows installer or modify the build cache.
+# It restores the build cache from main branch to enable incremental builds.
 
 name: PR Build Check
 
@@ -38,6 +39,7 @@ jobs:
       libpackdir: D:/FC/libpack/
       logdir: C:/logs/
       config: release
+      cacheKey: Windows
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -103,6 +105,40 @@ jobs:
             exit 1
           }
           Write-Host "CMake configuration successful"
+
+      - name: Generate file hash for cache key
+        id: file-hash
+        run: |
+          $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+          $presetsHash = Get-FileHash -Path CMakePresets.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+          $combinedHash = "$cmakeHash-$presetsHash"
+          echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
+          echo "combined_hash=$combinedHash" >> $env:GITHUB_OUTPUT
+          Write-Host "Combined hash: $combinedHash"
+        shell: pwsh
+
+      - name: Restore Ninja build cache
+        id: ninja-cache-restore
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.builddir }}
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
+          restore-keys: |
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
+            FC-NINJA-${{ env.cacheKey }}-refs/heads/main
+            FC-NINJA-${{ env.cacheKey }}
+
+      - name: Print cache status
+        run: |
+          $ninjaKey = "FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main"
+          Write-Host "Ninja cache key: $ninjaKey"
+          $ninjaHit = "${{ steps.ninja-cache-restore.outputs.cache-hit }}"
+          if ($ninjaHit -eq 'true') {
+            Write-Host "Cache HIT - incremental build will only compile changed files"
+          } else {
+            Write-Host "Cache MISS - full build required"
+          }
 
       - name: Build with Ninja
         run: |
