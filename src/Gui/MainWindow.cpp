@@ -98,8 +98,8 @@
 #include "View3DInventor.h"
 //#include "View3DInventorUtils.h"  // File does not exist
 #include "Selection.h"
-#include "CoinUtils.h"
-#include "InventorUtils.h"
+//#include "CoinUtils.h"  // File does not exist
+//#include "InventorUtils.h"  // File does not exist
 #include "Application.h"
 #include "InPlaceEditor.h"
 #include "CommandManager.h"
