@@ -1056,7 +1056,7 @@ StdCmdHome::StdCmdHome()
     sToolTipText = QT_TR_NOOP("Go to the home/start page");
     sWhatsThis = "Std_Home";
     sStatusTip = sToolTipText;
-    sPixmap = "go-home";
+    sPixmap = "Std_ViewHome";
     eType = 0;
 }
 
