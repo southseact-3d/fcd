@@ -36,6 +36,7 @@
 #include "MainWindow.h"
 #include "ProgressDialog.h"
 #include "WaitCursor.h"
+#include "GlobalProgressBarOverlay.h"
 
 
 using namespace Gui;
@@ -458,6 +459,14 @@ void ProgressBar::resetEx()
     setupTaskBarProgress();
     m_taskbarProgress->reset();
 #endif
+    MainWindow* mw = getMainWindow();
+    if (mw) {
+        GlobalProgressBarOverlay* overlay = mw->getGlobalProgressOverlay();
+        if (overlay) {
+            overlay->reset();
+            overlay->hideOverlay();
+        }
+    }
 }
 
 void ProgressBar::setRangeEx(int minimum, int maximum)
@@ -467,6 +476,13 @@ void ProgressBar::setRangeEx(int minimum, int maximum)
     setupTaskBarProgress();
     m_taskbarProgress->setRange(minimum, maximum);
 #endif
+    MainWindow* mw = getMainWindow();
+    if (mw) {
+        GlobalProgressBarOverlay* overlay = mw->getGlobalProgressOverlay();
+        if (overlay) {
+            overlay->setRange(minimum, maximum);
+        }
+    }
 }
 
 void ProgressBar::setValueEx(int value)
@@ -476,6 +492,13 @@ void ProgressBar::setValueEx(int value)
     setupTaskBarProgress();
     m_taskbarProgress->setValue(value);
 #endif
+    MainWindow* mw = getMainWindow();
+    if (mw) {
+        GlobalProgressBarOverlay* overlay = mw->getGlobalProgressOverlay();
+        if (overlay) {
+            overlay->setValue(value);
+        }
+    }
 }
 
 void ProgressBar::setMinimumDuration(int ms)
@@ -496,6 +519,13 @@ void ProgressBar::aboutToShow()
     setupTaskBarProgress();
     m_taskbarProgress->show();
 #endif
+    MainWindow* mw = getMainWindow();
+    if (mw) {
+        GlobalProgressBarOverlay* overlay = mw->getGlobalProgressOverlay();
+        if (overlay) {
+            overlay->showOverlay();
+        }
+    }
 }
 
 void ProgressBar::delayedShow()
@@ -512,6 +542,13 @@ void ProgressBar::aboutToHide()
     setupTaskBarProgress();
     m_taskbarProgress->hide();
 #endif
+    MainWindow* mw = getMainWindow();
+    if (mw) {
+        GlobalProgressBarOverlay* overlay = mw->getGlobalProgressOverlay();
+        if (overlay) {
+            overlay->hideOverlay();
+        }
+    }
 }
 
 bool ProgressBar::canAbort() const
