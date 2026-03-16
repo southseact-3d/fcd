@@ -200,7 +200,8 @@ jobs:
           restore-keys: |
             FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
             FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
-            FC-CCACHE-${{ env.cacheKey }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ github.ref }}
+            FC-CCACHE-${{ env.cacheKey }}
 
       # ------------------------------------------------------------------
       # Ninja build cache: persists .ninja_deps, .ninja_log, and all .obj
@@ -217,16 +218,21 @@ jobs:
           restore-keys: |
             FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
             FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
-            FC-NINJA-${{ env.cacheKey }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ github.ref }}
+            FC-NINJA-${{ env.cacheKey }}
 
       - name: Print cache status
         if: always()
         run: |
           Write-Host "=== Cache Status ==="
+          $ccacheKey = "FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}"
+          $ninjaKey  = "FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}"
+          Write-Host "ccache key   : $ccacheKey"
+          Write-Host "ninja key    : $ninjaKey"
           $ccacheHit = "${{ steps.cache-restore.outputs.cache-hit }}"
           $ninjaHit  = "${{ steps.ninja-cache-restore.outputs.cache-hit }}"
-          Write-Host "ccache hit  : $(if ($ccacheHit -eq 'true') { '✓ HIT' } else { '✗ MISS' })"
-          Write-Host "Ninja cache : $(if ($ninjaHit  -eq 'true') { '✓ HIT — next build will be incremental' } else { '✗ MISS — full build this run' })"
+          Write-Host "ccache hit   : $(if ($ccacheHit -eq 'true') { '✓ HIT' } else { '✗ MISS' })"
+          Write-Host "Ninja cache  : $(if ($ninjaHit  -eq 'true') { '✓ HIT — next build will be incremental' } else { '✗ MISS — full build this run' })"
           Write-Host "===================="
 
       - name: Print Ccache statistics before build, reset stats and print config
@@ -362,12 +368,15 @@ jobs:
           $affectedObjs = [System.Collections.Generic.HashSet[string]]::new()
 
           foreach ($file in $changedFiles) {
+            # Normalize separators to allow matching both / and \\ in build.ninja
             $fileForward = $file -replace '\\', '/'
-            # Escape dots for regex
+            # Escape regex metacharacters
             $fileEscaped = [regex]::Escape($fileForward)
+            # Allow either slash or backslash in the build.ninja path
+            $fileEscaped = $fileEscaped -replace '/', '[\\/]'
 
             # Match build rules that reference this source file
-            $pattern = "(?m)^build\s+([^\r\n:]+\.obj)\s*:[^\r\n]+$fileEscaped"
+            $pattern = "(?mi)^build\s+([^\r\n:]+\.obj)\s*:[^\r\n]*$fileEscaped"
             $ruleMatches = [regex]::Matches($buildNinja, $pattern)
 
             foreach ($m in $ruleMatches) {
