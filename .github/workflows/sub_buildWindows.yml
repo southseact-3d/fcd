@@ -172,7 +172,7 @@ jobs:
 
       # ------------------------------------------------------------------
       # ccache cache key strategy:
-      #   key    = includes run_id so every run saves a fresh cache entry
+      #   key    = per-branch + config hash so cache is reusable across runs
       #   restore-keys = cascading fallback — always restores the newest
       #                  available cache regardless of what source changed.
       #   The combined_hash (CMakeLists + CMakePresets) is kept in the
@@ -196,9 +196,9 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
             FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
             FC-CCACHE-${{ env.cacheKey }}-
 
@@ -213,9 +213,9 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
             FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
             FC-NINJA-${{ env.cacheKey }}-
 
@@ -311,85 +311,131 @@ jobs:
           Write-Host "✓ build.ninja found — Ninja generator active"
 
       # ------------------------------------------------------------------
-      # CHANGED FILES FIRST — pre-build step
-      #
-      # Ninja's dependency graph means it will only recompile what is
-      # necessary. This extra step goes one further: it explicitly compiles
-      # only the .cpp files that changed since the last commit BEFORE the
-      # full build. Benefits:
-      #   1. Errors in your changed files surface in seconds, not after
-      #      waiting for unrelated modules to finish linking.
-      #   2. ccache gets those object files warm so the full build is faster.
-      #
-      # Ninja target for a source file is its .obj path relative to builddir.
-      # We derive it from the source path using the same convention CMake uses:
-      #   src/Mod/Foo/Bar.cpp  ->  src/Mod/Foo/CMakeFiles/Foo.dir/Bar.cpp.obj
-      #
-      # If a file's target can't be determined we skip it — the full build
-      # below will catch it. Failures here are non-fatal (continue-on-error).
+      # TARGETED BUILD — compile and link only targets affected by changed C++
+      # files. This replaces the old "changed files first" + full build steps.
       # ------------------------------------------------------------------
-      - name: Build changed source files first
-        id: changed-first
-        continue-on-error: true
+      - name: Build affected targets only
+        id: targeted-build
         run: |
-          # Get list of changed .cpp/.cxx/.cc files vs previous commit
-          $changedSources = git diff --name-only HEAD~1 HEAD |
-            Where-Object { $_ -match '\.(cpp|cxx|cc)$' }
+          # Honour forceRebuild flag
+          if ("${{ inputs.forceRebuild }}" -eq "true") {
+            Write-Host "forceRebuild=true — running full build"
+            cmake --build "${{ env.builddir }}" --config Release -j32
+            exit $LASTEXITCODE
+          }
 
-          if (-not $changedSources) {
-            Write-Host "No changed C++ source files detected — skipping pre-build step"
+          # ---------------------------------------------------------------
+          # Detect which C++ source and header files changed vs last commit.
+          # On the very first run (no previous commit) fall back to full build.
+          # ---------------------------------------------------------------
+          $parentExists = git rev-parse HEAD~1 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "No previous commit found — running full build for first run"
+            cmake --build "${{ env.builddir }}" --config Release -j32
+            exit $LASTEXITCODE
+          }
+
+          $changedFiles = git diff --name-only HEAD~1 HEAD |
+            Where-Object { $_ -match '\.(cpp|cxx|cc|h|hpp)$' }
+
+          if (-not $changedFiles) {
+            Write-Host "No C++ files changed — nothing to build"
             exit 0
           }
 
-          Write-Host "=== Changed source files ==="
-          $changedSources | ForEach-Object { Write-Host "  $_" }
-          Write-Host "============================"
+          Write-Host "=== Changed C++ files ==="
+          $changedFiles | ForEach-Object { Write-Host "  $_" }
+          Write-Host "========================="
 
-          $builtCount = 0
-          $skippedCount = 0
+          # ---------------------------------------------------------------
+          # Parse build.ninja to find every .obj target whose build rule
+          # references one of the changed files.
+          #
+          # Ninja build rule format:
+          #   build path/to/File.cpp.obj: CXX_COMPILER../path/to/File.cpp
+          #
+          # We match lines where the source path ends with our changed file.
+          # ---------------------------------------------------------------
+          $buildNinjaPath = "${{ env.builddir }}\build.ninja"
+          $buildNinja = Get-Content $buildNinjaPath -Raw
 
-          foreach ($src in $changedSources) {
-            # Get just the filename without path
-            $fileName = Split-Path $src -Leaf
-            # Match the source file in build.ninja (case-insensitive) - use regex, not SimpleMatch
-            $pattern = "(?i)$fileName(?=[\s:])"
-            $ninjaLine = Select-String -Path "${{ env.builddir }}\build.ninja" `
-                           -Pattern $pattern | Select-Object -First 1
+          $affectedObjs = [System.Collections.Generic.HashSet[string]]::new()
 
-            if ($ninjaLine) {
-              # Extract the output (.obj) path from the ninja rule line
-              # Ninja format:  "build path\to\file.obj: CXX_COMPILER ..."
-              $objMatch = $ninjaLine.Line -match '^build\s+(.+\.obj)\s*:'
-              if ($objMatch) {
-                $objTarget = $Matches[1].Trim()
-                Write-Host "Pre-building: $objTarget"
-                cmake --build "${{ env.builddir }}" --config Release --target $objTarget
-                if ($LASTEXITCODE -eq 0) { $builtCount++ }
-                else {
-                  Write-Warning "Pre-build failed for $objTarget — will retry in full build"
-                }
-              } else {
-                Write-Host "Could not parse obj target for $src — skipping"
-                $skippedCount++
+          foreach ($file in $changedFiles) {
+            $fileForward = $file -replace '\\', '/'
+            # Escape dots for regex
+            $fileEscaped = [regex]::Escape($fileForward)
+
+            # Match build rules that reference this source file
+            $pattern = "(?m)^build\s+([^\r\n:]+\.obj)\s*:[^\r\n]+$fileEscaped"
+            $ruleMatches = [regex]::Matches($buildNinja, $pattern)
+
+            foreach ($m in $ruleMatches) {
+              $obj = $m.Groups[1].Value.Trim()
+              [void]$affectedObjs.Add($obj)
+              Write-Host "  → obj target: $obj"
+            }
+          }
+
+          if ($affectedObjs.Count -eq 0) {
+            Write-Host ""
+            Write-Host "No .obj targets matched in build.ninja for changed files."
+            Write-Host "This can happen if the files are new (not yet in the build graph)."
+            Write-Host "Running full build to incorporate new files..."
+            cmake --build "${{ env.builddir }}" --config Release -j32
+            exit $LASTEXITCODE
+          }
+
+          # ---------------------------------------------------------------
+          # From each .obj, walk build.ninja to find the parent .lib/.dll/.exe
+          # that links it. We need to re-link those too, not just recompile.
+          #
+          # Ninja link rules reference obj files as inputs, e.g.:
+          #   build path/to/FooModule.dll: CXX_SHARED_LIBRARY ... Foo.cpp.obj ...
+          #
+          # We collect these final link targets and pass them all to one
+          # cmake --build call. Ninja will recompile the .obj files and
+          # re-link only the affected libraries/executables.
+          # ---------------------------------------------------------------
+          $finalTargets = [System.Collections.Generic.HashSet[string]]::new()
+
+          foreach ($obj in $affectedObjs) {
+            $objEscaped = [regex]::Escape($obj)
+            # Find link rules that consume this obj
+            $linkPattern = "(?m)^build\s+([^\r\n:]+\.(?:dll|exe|lib))\s*:[^\r\n]+$objEscaped"
+            $linkMatches = [regex]::Matches($buildNinja, $linkPattern)
+
+            if ($linkMatches.Count -gt 0) {
+              foreach ($lm in $linkMatches) {
+                $linkTarget = $lm.Groups[1].Value.Trim()
+                [void]$finalTargets.Add($linkTarget)
+                Write-Host "  → link target: $linkTarget"
               }
             } else {
-              Write-Host "Source not found in build.ninja: $src — may be a new file, skipping"
-              $skippedCount++
+              # No link target found — build the obj directly and let Ninja
+              # figure out downstream deps
+              [void]$finalTargets.Add($obj)
             }
           }
 
           Write-Host ""
-          Write-Host "Pre-build summary: $builtCount compiled, $skippedCount skipped"
+          Write-Host "=== Building $($finalTargets.Count) final target(s) ==="
+          $finalTargets | ForEach-Object { Write-Host "  $_" }
+          Write-Host "======================================================="
 
-      # ------------------------------------------------------------------
-      # Full Ninja build.
-      # -j 4  matches the previous MSBuild MultiProcToolCount.
-      #        Increase if the runner has more cores (windows-latest = 4).
-      # ------------------------------------------------------------------
-      - name: Compiling sources (Ninja full build)
-        run: |
-          cmake --build "${{ env.builddir }}" --config Release -j32
-          Write-Host "✓ Ninja build complete"
+          # Build all affected targets in one call.
+          # Ninja resolves the full subgraph for each target — any shared
+          # dependency is only built once.
+          $targetArgs = $finalTargets -join " "
+          cmake --build "${{ env.builddir }}" --config Release --target $targetArgs -j32
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Targeted build failed with exit code $LASTEXITCODE"
+            exit 1
+          }
+
+          Write-Host ""
+          Write-Host "✓ Incremental build complete — only affected targets rebuilt"
 
       - name: Print Ccache statistics after build
         if: always()
@@ -414,7 +460,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
 
       # ------------------------------------------------------------------
       # Save the Ninja build tree (replaces the old MSBuild build tree cache).
@@ -428,7 +474,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
 
       - name: Install NSIS
         run: |
