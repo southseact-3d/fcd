@@ -327,15 +327,38 @@ jobs:
       - name: Build with Ninja
         id: build
         run: |
-          # Honour forceRebuild flag - when true, Ninja rebuilds everything
-          # because source files will have newer timestamps than cached artifacts
+          # Honour forceRebuild flag - when true, run full build without dry-run check
           if ("${{ inputs.forceRebuild }}" -eq "true") {
             Write-Host "forceRebuild=true — full rebuild requested"
+            cmake --build "${{ env.builddir }}" --config Release -j32
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Build failed with exit code $LASTEXITCODE"
+              exit 1
+            }
+            Write-Host "✓ Build complete"
+            exit 0
           }
 
-          # Let Ninja handle incremental builds natively
-          # Ninja compares source timestamps against .ninja_deps to determine
-          # what needs rebuilding - no git-based detection needed
+          # Check if there's anything to build (dry-run)
+          # This avoids the ~20 minute scan when nothing has changed
+          $ninjaCmd = "ninja -C `"${{ env.builddir }}`" -n"
+          Write-Host "Checking if build is needed (dry-run)..."
+          $dryRunOutput = Invoke-Expression $ninjaCmd 2>&1 | Out-String
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Ninja dry-run failed with exit code $LASTEXITCODE"
+            exit 1
+          }
+
+          # Check if ninja says "no work to do"
+          if ($dryRunOutput -match "no work to do") {
+            Write-Host "✓ Build is up to date — nothing to build"
+            exit 0
+          }
+
+          # Show what would be built and proceed with build
+          Write-Host "Build needed — starting build..."
+          Write-Host "===================================="
           cmake --build "${{ env.builddir }}" --config Release -j32
 
           if ($LASTEXITCODE -ne 0) {
