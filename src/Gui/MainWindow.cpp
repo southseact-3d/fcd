@@ -91,7 +91,7 @@
 #include "WaitCursor.h"
 #include "ProgressBar.h"
 #include "ProgressDialog.h"
-#include "PropertyEditor.h"
+#include "PropertyEditor/PropertyEditor.h"
 #include "PropertyContainer.h"
 #include "View3DInventorViewer.h"
 #include "ViewProvider.h"

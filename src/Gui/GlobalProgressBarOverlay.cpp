@@ -23,7 +23,7 @@
 #include "GlobalProgressBarOverlay.h"
 #include <QVBoxLayout>
 #include <QApplication>
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QScreen>
 
 namespace Gui
