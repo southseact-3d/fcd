@@ -30,6 +30,7 @@
 
 #include "Window.h"
 #include "InputHint.h"
+#include "GlobalProgressBarOverlay.h"
 
 class QMimeData;
 class QUrl;
@@ -114,6 +115,10 @@ public:
      * Returns the internal QMdiArea instance.
      */
     QMdiArea* getMdiArea() const;
+    /**
+     * Returns the global progress bar overlay that shows progress even when the app is not focused.
+     */
+    GlobalProgressBarOverlay* getGlobalProgressOverlay() const;
     /**
      * Can be called after the caption of an MDIView has changed to update the tab's caption.
      */

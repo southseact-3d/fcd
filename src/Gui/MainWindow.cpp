@@ -326,6 +326,7 @@ struct MainWindowP
     Timeline* timeline;
     QWidget* centralContainer;
     QVBoxLayout* centralLayout;
+    GlobalProgressBarOverlay* globalProgressOverlay;
     void restoreWindowState(const QByteArray&);
 };
 
@@ -2707,6 +2708,11 @@ void MainWindow::customEvent(QEvent* e)
 QMdiArea* MainWindow::getMdiArea() const
 {
     return d->mdiArea;
+}
+
+GlobalProgressBarOverlay* MainWindow::getGlobalProgressOverlay() const
+{
+    return d->globalProgressOverlay;
 }
 
 void MainWindow::setWindowTitle(const QString& string)
