@@ -38,9 +38,14 @@ void PartDesignTabBar::setupUI()
     meshIcon.addFile(QStringLiteral(":/icons/Mesh_Workbench.svg"), QSize(), QIcon::Normal, QIcon::Off);
     tabBar->addTab(meshIcon, tr("Mesh"));
 
+    QIcon materialIcon;
+    materialIcon.addFile(QStringLiteral(":/icons/Material_Workbench.svg"), QSize(), QIcon::Normal, QIcon::Off);
+    tabBar->addTab(materialIcon, tr("Material"));
+
     tabBar->setIconSize(QSize(24, 24));
     tabBar->setTabToolTip(0, tr("Part Design tools for creating solid geometry"));
     tabBar->setTabToolTip(1, tr("Mesh tools for working with mesh objects"));
+    tabBar->setTabToolTip(2, tr("Material tools for editing materials"));
 
     connect(tabBar, &QTabBar::currentChanged, this, &PartDesignTabBar::onTabClicked);
 
