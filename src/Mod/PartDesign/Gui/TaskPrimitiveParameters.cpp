@@ -1046,8 +1046,14 @@ void TaskBoxPrimitives::setGizmoPositions()
         return;
     }
 
-    SbVec3f pos = Base::convertTo<SbVec3f>(vp->getObjectPlacement().getPosition());
-    SbRotation rot = Base::convertTo<SbRotation>(vp->getObjectPlacement().getRotation());
+    auto obj = vp->getObject();
+    if (!obj) {
+        return;
+    }
+
+    Base::Placement plm = obj->Placement.getValue();
+    SbVec3f pos = Base::convertTo<SbVec3f>(plm.getPosition());
+    SbRotation rot = Base::convertTo<SbRotation>(plm.getRotation());
     auto getVec = [rot](SbVec3f vec) {
         rot.multVec(vec, vec);
 
