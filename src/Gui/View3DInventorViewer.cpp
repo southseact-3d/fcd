@@ -683,10 +683,10 @@ void View3DInventorViewer::init()
     viewerEventFilter = new ViewerEventFilter;
     installEventFilter(viewerEventFilter);
 #if defined(USE_3DCONNEXION_NAVLIB)
-    ParameterGrp::handle hViewGrp = App::GetApplication().GetParameterGroupByPath(
+    ParameterGrp::handle hSpaceMouseGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/View"
     );
-    if (hViewGrp->GetBool("LegacySpaceMouseDevices", false)) {
+    if (hSpaceMouseGrp->GetBool("LegacySpaceMouseDevices", false)) {
         getEventFilter()->registerInputDevice(new SpaceNavigatorDevice);
     }
 #else
