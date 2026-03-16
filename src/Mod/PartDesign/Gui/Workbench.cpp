@@ -105,7 +105,7 @@ void Workbench::createTabBar()
 void Workbench::attachTabBar()
 {
     if (tabBar && !tabBarAttached) {
-        auto mainWindow = Gui::MainWindow::instance();
+        auto mainWindow = Gui::getMainWindow();
         if (mainWindow) {
             auto centralWidget = mainWindow->centralWidget();
             if (centralWidget) {
