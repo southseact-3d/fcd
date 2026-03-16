@@ -30,6 +30,8 @@
 #include <Mod/PartDesign/PartDesignGlobal.h>
 #include <memory>
 
+#include "WorkbenchModeHandler.h"
+
 class QSignalMapper;
 
 namespace Gui

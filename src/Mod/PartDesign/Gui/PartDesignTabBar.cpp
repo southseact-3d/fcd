@@ -39,8 +39,8 @@ void PartDesignTabBar::setupUI()
     tabBar->addTab(meshIcon, tr("Mesh"));
 
     tabBar->setIconSize(QSize(24, 24));
-    tabBar->setToolTip(0, tr("Part Design tools for creating solid geometry"));
-    tabBar->setToolTip(1, tr("Mesh tools for working with mesh objects"));
+    tabBar->setTabToolTip(0, tr("Part Design tools for creating solid geometry"));
+    tabBar->setTabToolTip(1, tr("Mesh tools for working with mesh objects"));
 
     connect(tabBar, &QTabBar::currentChanged, this, &PartDesignTabBar::onTabClicked);
 
