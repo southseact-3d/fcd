@@ -33,6 +33,7 @@
 #include <QFontMetrics>
 #include <QKeySequence>
 #include <QLabel>
+#include <QListWidget>
 #include <QMdiSubWindow>
 #include <QMenu>
 #include <QMenuBar>
@@ -582,6 +583,7 @@ void MainWindow::initDockWindows(bool show)
     updateComboView(show);
     updateTaskView(show);
     updateDAGView(show);
+    updateBodyListView(show);
 }
 
 void MainWindow::setupDockWindows()
@@ -849,6 +851,40 @@ bool MainWindow::updateDAGView(bool show)
             dagDockWindow->setObjectName(QStringLiteral("DAG View"));
             dagDockWindow->setWindowTitle(QDockWidget::tr("DAG View"));
             widget = dagDockWindow;
+            return widget;
+        });
+
+        return enabled;
+    }
+
+    return false;
+}
+
+bool MainWindow::updateBodyListView(bool show)
+{
+    if (d->hiddenDockWindows.find("Std_BodyList") == std::string::npos) {
+        ParameterGrp::handle group = App::GetApplication()
+                                         .GetUserParameter()
+                                         .GetGroup("BaseApp")
+                                         ->GetGroup("Preferences")
+                                         ->GetGroup("DockWindows")
+                                         ->GetGroup("BodyList");
+        bool enabled = group->GetBool("Enabled", true);
+        _updateDockWidget("Std_BodyList", enabled, show, Qt::LeftDockWidgetArea, [](QWidget* widget) {
+            if (widget) {
+                return widget;
+            }
+
+            auto bodyListDock = new QDockWidget(nullptr, getMainWindow());
+            bodyListDock->setObjectName(QStringLiteral("Body List"));
+            bodyListDock->setWindowTitle(QDockWidget::tr("Bodies"));
+            
+            auto listWidget = new QListWidget(bodyListDock);
+            listWidget->addItem(QObject::tr("No bodies"));
+            listWidget->setEnabled(false);
+            bodyListDock->setWidget(listWidget);
+            
+            widget = bodyListDock;
             return widget;
         });
 
