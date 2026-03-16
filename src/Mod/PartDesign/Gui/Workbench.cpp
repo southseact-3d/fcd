@@ -127,8 +127,11 @@ void Workbench::onModeChanged(int index)
     if (index == 0) {
         modeHandler->switchToMode(WorkbenchMode::DesignMode);
     }
-    else {
+    else if (index == 1) {
         modeHandler->switchToMode(WorkbenchMode::MeshMode);
+    }
+    else if (index == 2) {
+        modeHandler->switchToMode(WorkbenchMode::MaterialMode);
     }
 }
 
@@ -205,11 +208,18 @@ void Workbench::activated()
     createTabBar();
     attachTabBar();
 
-    int savedIndex = (modeHandler->currentMode() == WorkbenchMode::MeshMode) ? 1 : 0;
+    int savedIndex = 0;
+    if (modeHandler->currentMode() == WorkbenchMode::MeshMode)
+        savedIndex = 1;
+    else if (modeHandler->currentMode() == WorkbenchMode::MaterialMode)
+        savedIndex = 2;
     tabBar->setCurrentIndex(savedIndex);
 
     if (modeHandler->currentMode() == WorkbenchMode::MeshMode) {
         modeHandler->switchToMode(WorkbenchMode::MeshMode);
+    }
+    else if (modeHandler->currentMode() == WorkbenchMode::MaterialMode) {
+        modeHandler->switchToMode(WorkbenchMode::MaterialMode);
     }
 
     WorkflowManager::init();

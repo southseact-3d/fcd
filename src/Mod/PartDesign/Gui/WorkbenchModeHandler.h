@@ -14,7 +14,8 @@ namespace PartDesignGui
 enum class WorkbenchMode
 {
     DesignMode,
-    MeshMode
+    MeshMode,
+    MaterialMode
 };
 
 class WorkbenchModeHandler: public QObject
