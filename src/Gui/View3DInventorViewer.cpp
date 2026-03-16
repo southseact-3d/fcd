@@ -572,7 +572,7 @@ void View3DInventorViewer::init()
     hiddenAnchor->addChild(hiddenSep);
     pcViewProviderRoot->addChild(hiddenAnchor);
 
-    // Add a grid in the X plane (YZ plane) to help orient the user.
+    // Add a grid in the Y plane (XZ plane) to help orient the user.
     xPlaneGridRoot = new SoSeparator;
     xPlaneGridRoot->ref();
     xPlaneGridRoot->setName("XPlaneGridRoot");
@@ -4325,7 +4325,7 @@ void View3DInventorViewer::createXPlaneGrid(float gridDimension)
     const int lineCount = std::min(200, std::max(4, static_cast<int>(gridDimension / 1.0f)));
     const float spacing = gridDimension / static_cast<float>(lineCount);
 
-    // Draw the main grid lines in the X=0 plane (YZ plane).
+    // Draw the main grid lines in the Y=0 plane (XZ plane).
     {
         auto* gridSep = new SoSeparator;
         auto* style = new SoDrawStyle;
@@ -4353,15 +4353,15 @@ void View3DInventorViewer::createXPlaneGrid(float gridDimension)
         int idx = 0;
         for (int i = 0; i <= lineCount; ++i) {
             float coord = (i - lineCount * 0.5f) * spacing;
-            // line parallel to Z (varying Z) at constant Y
-            coords[idx++].setValue(0.0F, coord, -half);
-            coords[idx++].setValue(0.0F, coord, half);
+            // line parallel to Z (varying Z) at constant X
+            coords[idx++].setValue(coord, 0.0F, -half);
+            coords[idx++].setValue(coord, 0.0F, half);
         }
         for (int i = 0; i <= lineCount; ++i) {
             float coord = (i - lineCount * 0.5f) * spacing;
-            // line parallel to Y (varying Y) at constant Z
-            coords[idx++].setValue(0.0F, -half, coord);
-            coords[idx++].setValue(0.0F, half, coord);
+            // line parallel to X (varying X) at constant Z
+            coords[idx++].setValue(-half, 0.0F, coord);
+            coords[idx++].setValue(half, 0.0F, coord);
         }
         vp->vertex.finishEditing();
 
@@ -4399,8 +4399,8 @@ void View3DInventorViewer::createXPlaneGrid(float gridDimension)
     };
 
     addAxisLine(SbVec3f(-half, 0.0F, 0.0F), SbVec3f(half, 0.0F, 0.0F), SbColor(1.0F, 0.0F, 0.0F));  // X axis
-    addAxisLine(SbVec3f(0.0F, -half, 0.0F), SbVec3f(0.0F, half, 0.0F), SbColor(0.0F, 1.0F, 0.0F));  // Y axis
     addAxisLine(SbVec3f(0.0F, 0.0F, -half), SbVec3f(0.0F, 0.0F, half), SbColor(0.0F, 0.0F, 1.0F));  // Z axis
+    addAxisLine(SbVec3f(0.0F, -half, 0.0F), SbVec3f(0.0F, half, 0.0F), SbColor(0.0F, 1.0F, 0.0F));  // Y axis
 }
 
 // Draw an arrow for the axis representation directly through OpenGL.
