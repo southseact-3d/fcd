@@ -101,8 +101,7 @@
 //#include "CoinUtils.h"  // File does not exist
 //#include "InventorUtils.h"  // File does not exist
 #include "Application.h"
-#include "InPlaceEditor.h"
-#include "CommandManager.h"
+#include "Command.h"
 #include "ToolBarManager.h"
 #include "MenuManager.h"
 #include "Property.h"
