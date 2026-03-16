@@ -1,10 +1,9 @@
 #ifndef GUI_GLOBALPROGRESSBAROVERLAY_H
 #define GUI_GLOBALPROGRESSBAROVERLAY_H
 
-#include "FCGlobal.h"
-
-class QProgressBar;
-class QWidget;
+#include <FCGlobal.h>
+#include <QWidget>
+#include <QProgressBar>
 
 namespace Gui
 {
@@ -15,19 +14,22 @@ public:
     explicit GlobalProgressBarOverlay(QWidget* parent = nullptr);
     ~GlobalProgressBarOverlay() override;
 
-    /** Show the overlay */
     void showOverlay();
-    /** Hide the overlay */
     void hideOverlay();
-    /** Set the range of the progress bar */
     void setRange(int minimum, int maximum);
-    /** Set the current progress value */
     void setValue(int value);
-    /** Reset the progress bar */
     void reset();
 
+protected:
+    void showEvent(QShowEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
+
 private:
+    void updatePosition();
+
     QProgressBar* progressBar;
+};
+
 } // namespace Gui
 
 #endif // GUI_GLOBALPROGRESSBAROVERLAY_H

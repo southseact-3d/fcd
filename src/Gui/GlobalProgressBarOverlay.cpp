@@ -31,24 +31,21 @@ namespace Gui
 
 GlobalProgressBarOverlay::GlobalProgressBarOverlay(QWidget* parent)
     : QWidget(parent)
+    , progressBar(nullptr)
 {
-    // Make it frameless and transparent background
     setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
-    
-    // Create layout
+
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(20, 20, 20, 20);
-    
-    // Create progress bar
+
     progressBar = new QProgressBar(this);
     progressBar->setFixedWidth(200);
     progressBar->setFixedHeight(20);
     progressBar->setTextVisible(true);
     progressBar->setAlignment(Qt::AlignCenter);
-    
-    // Style the progress bar
+
     progressBar->setStyleSheet(
         "QProgressBar {"
         "   border: 2px solid grey;"
@@ -61,10 +58,9 @@ GlobalProgressBarOverlay::GlobalProgressBarOverlay(QWidget* parent)
         "   width: 10px;"
         "}"
     );
-    
+
     layout->addWidget(progressBar);
-    
-    // Position at bottom-left of screen
+
     updatePosition();
 }
 
@@ -104,13 +100,15 @@ void GlobalProgressBarOverlay::reset()
 
 void GlobalProgressBarOverlay::updatePosition()
 {
-    // Get the primary screen geometry
-    QRect screenGeometry = QApplication::primaryScreen()->geometry();
-    
-    // Position at bottom-left with some margin
+    QScreen* screen = QApplication::primaryScreen();
+    if (!screen)
+        return;
+        
+    QRect screenGeometry = screen->geometry();
+
     int x = 20;
     int y = screenGeometry.height() - height() - 20;
-    
+
     move(x, y);
 }
 
