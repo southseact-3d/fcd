@@ -96,7 +96,7 @@
 #include "View3DInventorViewer.h"
 #include "ViewProvider.h"
 #include "View3DInventor.h"
-#include "View3DInventorUtils.h"
+//#include "View3DInventorUtils.h"  // File does not exist
 #include "Selection.h"
 #include "CoinUtils.h"
 #include "InventorUtils.h"
@@ -111,7 +111,7 @@
 #include "GuiApplication.h"
 #include "SelectionSingleton.h"
 #include "View3DInventor.hpp"
-#include "View3DInventorUtils.hpp"
+//#include "View3DInventorUtils.hpp"  // File does not exist
 #include "PyObjectFactory.h"
 #include "Quarter/QuarterWidget.h"
 #include "BrowseDir.h"
