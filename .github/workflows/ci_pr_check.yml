@@ -1,0 +1,117 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# ***************************************************************************
+# *                                                                         *
+# *   Copyright (c) 2023 0penBrain.                                         *
+# *                                                                         *
+# *   This file is part of FreeCAD.                                         *
+# *                                                                         *
+# *   FreeCAD is free software: you can redistribute it and/or modify it  *
+# *   under the terms of the GNU Lesser General Public License as          *
+# *   published by the Free Software Foundation, either version 2.1 of      *
+# *   the License, or (at your option) any later version.                 *
+# *                                                                         *
+# *   FreeCAD is distributed in the hope that it will be useful, but       *
+# *   WITHOUT ANY WARRANTY; without even the implied warranty of           *
+# *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the        *
+# *   GNU Lesser General Public License for more details.                  *
+# *                                                                         *
+# *   You should have received a copy of the GNU Lesser General Public     *
+# *   License along with FreeCAD. If not, see                              *
+# *   <https://www.gnu.org/licenses/>.                                     *
+# *                                                                         *
+# ***************************************************************************
+
+# This workflow compiles changed files for Pull Requests.
+# It runs on all PR events and serves as a pass/fail check for compilation.
+# It does NOT create a Windows installer or modify the build cache.
+
+name: PR Build Check
+
+on:
+  pull_request:
+
+jobs:
+  Build:
+    runs-on: windows-latest
+    env:
+      builddir: D:/FC/build/release/
+      libpackdir: D:/FC/libpack/
+      logdir: C:/logs/
+      config: release
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Enable Win32 long paths
+        run: |
+          reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+          git config --system core.longpaths true
+          Write-Host "Long paths enabled"
+
+      - name: Checking out source code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: 'recursive'
+
+      - name: Make needed directories
+        run: |
+          New-Item -ItemType Directory -Force -Path ${{ env.libpackdir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.builddir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.logdir }} | Out-Null
+
+      - name: Get Libpack
+        uses: ./.github/workflows/actions/windows/getLibpack
+        with:
+          libpackdir: ${{ env.libpackdir }}
+
+      - name: Install cmake
+        uses: jwlawson/actions-setup-cmake@3a6cbe35ba64df7ca70c51365c4aff65db9a9037 # v2.1.1
+        with:
+          cmake-version: '3.31.6'
+
+      - name: Install Ninja
+        run: |
+          choco install ninja -y --version=1.12.1
+          ninja --version
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      - name: Configuring CMake
+        run: >
+          cmake -B"${{ env.builddir }}" .
+          -G "Ninja"
+          -DCMAKE_BUILD_TYPE=Release
+          -DFREECAD_USE_PCH=OFF
+          -DFREECAD_RELEASE_PDB=OFF
+          -DFREECAD_LIBPACK_DIR="${{ env.libpackdir }}"
+          -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
+          -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
+          -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
+          -DCMAKE_AUTOGEN_PARALLEL=4
+
+      - name: Check CMake configuration
+        run: |
+          if (-not (Test-Path "${{ env.builddir }}\build.ninja")) {
+            Write-Error "CMake configuration failed - build.ninja not found"
+            exit 1
+          }
+          Write-Host "CMake configuration successful"
+
+      - name: Build with Ninja
+        run: |
+          cmake --build "${{ env.builddir }}" --config Release -j32
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: PR-Build-Logs
+          path: |
+            ${{ env.logdir }}
