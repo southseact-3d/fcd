@@ -807,8 +807,15 @@ void OverlayTabWidget::restore(ParameterGrp::handle handle)
         handle->SetASCII("Widgets", handle->GetASCII("Widgets", ""));
     }
 
-    std::string widgets
-        = handle->GetASCII("Widgets", getDockArea() == Qt::RightDockWidgetArea ? "Tasks," : "");
+    std::string defaultWidgets;
+    if (getDockArea() == Qt::RightDockWidgetArea) {
+        defaultWidgets = "Tasks,";
+    }
+    else if (getDockArea() == Qt::BottomDockWidgetArea) {
+        defaultWidgets = "Python console,";
+    }
+
+    std::string widgets = handle->GetASCII("Widgets", defaultWidgets.c_str());
 
     for (auto& name : QString::fromUtf8(widgets.c_str()).split(QLatin1Char(','))) {
         if (name.isEmpty()) {
@@ -827,6 +834,21 @@ void OverlayTabWidget::restore(ParameterGrp::handle handle)
     int height = handle->GetInt("Height", minimumSizeHint.height());
     int offset1 = handle->GetInt("Offset1", 0);
     int offset2 = handle->GetInt("Offset3", 0);
+
+    if (getDockArea() == Qt::RightDockWidgetArea && !parentWidget()->size().isEmpty()) {
+        ParameterGrp::handle viewGrp = App::GetApplication().GetUserParameter().GetGroup(
+            "BaseApp/Preferences/View"
+        );
+        int cubeSize = viewGrp->GetInt("CubeSize", 132);
+        int cubeOffsetY = viewGrp->GetInt("OffsetY", 0);
+        int defaultTopOffset = cubeSize + cubeOffsetY + 24;
+
+        bool useDefaultTopOffset = handle->GetInt("Offset3", 0) == 0
+            && handle->GetInt("Height", 0) == minimumSizeHint.height();
+        if (useDefaultTopOffset) {
+            offset2 = defaultTopOffset;
+        }
+    }
     setOffset(QSize(offset1, offset2));
     setSizeDelta(handle->GetInt("Offset2", 0));
 
@@ -1250,7 +1272,7 @@ bool OverlayTabWidget::checkAutoHide() const
     }
 
     if (autoMode == AutoMode::TaskShow) {
-        return (!Control().taskPanel() || Control().taskPanel()->isEmpty());
+        return (!Control().taskPanel() || Control().taskPanel()->isEmpty(false));
     }
 
     if (autoMode == AutoMode::EditHide && Application::Instance->editDocument()) {
