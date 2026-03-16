@@ -1,4 +1,4 @@
-<a href="https://tungsten3d.com"><img src="/src/Gui/Icons/freecad.svg" height="100px" width="100px"></a>
+<a href="https://tungsten3d.com"><img src="/src/Gui/Icons/freecad-doc.svg" height="100px" width="100px"></a>
 
 ### Your own 3D Parametric Modeler
 
