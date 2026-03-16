@@ -92,7 +92,7 @@
 #include "ProgressBar.h"
 #include "ProgressDialog.h"
 #include "PropertyEditor/PropertyEditor.h"
-#include "PropertyContainer.h"
+#include <App/PropertyContainer.h>
 #include "View3DInventorViewer.h"
 #include "ViewProvider.h"
 #include "View3DInventor.h"
