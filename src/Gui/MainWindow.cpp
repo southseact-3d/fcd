@@ -85,49 +85,44 @@
 #include <TaskView/TaskView.h>
 
 #include "MainWindow.h"
-#include "Action.h"
-#include "Assistant.h"
-#include "BitmapFactory.h"
-#include "ComboView.h"
-#include "Command.h"
-#include "DockWindowManager.h"
-#include "DownloadManager.h"
-#include "FileDialog.h"
-#include "InputHintWidget.h"
-#include "MenuManager.h"
-#include "ModuleIO.h"
-#include "NotificationArea.h"
-#include "OverlayManager.h"
-#include "ProgressBar.h"
-#include "PropertyView.h"
-#include "PythonConsole.h"
-#include "ReportView.h"
-#include "SelectionView.h"
-#include "SplashScreen.h"
-#include "StatusBarLabel.h"
-#include "ToolBarManager.h"
-#include "ToolBoxManager.h"
-#include "Tree.h"
+#include "MainWindowPy.h"
+#include "TaskView/TaskDialog.h"
 #include "WaitCursor.h"
-#include "WorkbenchManager.h"
-#include "Workbench.h"
-#include "Timeline.h"
-
-#include "MergeDocuments.h"
-#include "ViewProviderExtern.h"
-
-#include "SpaceballEvent.h"
-#include "View3DInventor.h"
+#include "ProgressBar.h"
+#include "ProgressDialog.h"
+#include "PropertyEditor.h"
+#include "PropertyContainer.h"
 #include "View3DInventorViewer.h"
-#include "Dialogs/DlgObjectSelection.h"
-
-#include <Base/Color.h>
-#include "QtWidgets.h"
-
-FC_LOG_LEVEL_INIT("MainWindow", false, true, true)
-
-#if defined(Q_OS_WIN32)
-# define slots
+#include "ViewProvider.h"
+#include "View3DInventor.h"
+#include "View3DInventorUtils.h"
+#include "Selection.h"
+#include "CoinUtils.h"
+#include "InventorUtils.h"
+#include "Application.h"
+#include "InPlaceEditor.h"
+#include "CommandManager.h"
+#include "ToolBarManager.h"
+#include "MenuManager.h"
+#include "Property.h"
+#include "Workbench.h"
+#include "WorkbenchManager.h"
+#include "GuiApplication.h"
+#include "SelectionSingleton.h"
+#include "View3DInventor.hpp"
+#include "View3DInventorUtils.hpp"
+#include "PyObjectFactory.h"
+#include "Quarter/QuarterWidget.h"
+#include "BrowseDir.h"
+#include "SetupProgress.h"
+#include "WorkbenchSelector.h"
+#include "GuiTracer.h"
+#include "Quarter/Quarter.h"
+#include "PythonViewer.h"
+#include "ColorScale.h"
+#include "MachineState.h"
+#include "MeasureUtil.h"
+#include "GlobalProgressBarOverlay.h"
 #endif
 
 using namespace Gui;
@@ -331,6 +326,7 @@ struct MainWindowP
     Timeline* timeline;
     QWidget* centralContainer;
     QVBoxLayout* centralLayout;
+    GlobalProgressBarOverlay* globalProgressOverlay;
     void restoreWindowState(const QByteArray&);
 };
 
@@ -441,6 +437,9 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
     QProgressBar* progressBar = Gui::SequencerBar::instance()->getProgressBar(statusBar());
     statusBar()->addPermanentWidget(progressBar, 0);
     statusBar()->addPermanentWidget(d->sizeLabel, 0);
+
+    // Global progress bar overlay (always visible, even in other apps)
+    d->globalProgressOverlay = new Gui::GlobalProgressBarOverlay(nullptr);
 
     // hint label
     d->hintLabel = new InputHintWidget(statusBar());
@@ -2709,6 +2708,11 @@ void MainWindow::customEvent(QEvent* e)
 QMdiArea* MainWindow::getMdiArea() const
 {
     return d->mdiArea;
+}
+
+GlobalProgressBarOverlay* MainWindow::getGlobalProgressOverlay() const
+{
+    return d->globalProgressOverlay;
 }
 
 void MainWindow::setWindowTitle(const QString& string)
