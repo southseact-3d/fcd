@@ -42,11 +42,24 @@ jobs:
   Build:
     runs-on: windows-latest
     env:
+      # -------------------------------------------------------------------
+      # ccache settings - same as sub_buildWindows.yml
+      # -------------------------------------------------------------------
+      CCACHE_COMPILERCHECK: "content"
+      CCACHE_COMPRESS: true
+      CCACHE_COMPRESSLEVEL: 1
+      CCACHE_DIR: C:/FC/cache/
+      CCACHE_LOGFILE: C:/logs/ccache.log
+      CCACHE_MAXSIZE: 5G
+      CCACHE_NODIRECT: true
+      CCACHE_NOHASHDIR: true
+      CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,time_macros"
       builddir: D:/FC/build/release/
+      cacheKey: Windows
+      ccachebindir: C:/FC/ccache/
       libpackdir: D:/FC/libpack/
       logdir: C:/logs/
       config: release
-      cacheKey: Windows
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -70,52 +83,25 @@ jobs:
         run: |
           git fetch origin main:main
 
-      - name: Make needed directories
+      - name: Check if source files changed
+        id: check-files
         run: |
-          New-Item -ItemType Directory -Force -Path ${{ env.libpackdir }} | Out-Null
-          New-Item -ItemType Directory -Force -Path ${{ env.builddir }} | Out-Null
-          New-Item -ItemType Directory -Force -Path ${{ env.logdir }} | Out-Null
-
-      - name: Get Libpack
-        uses: ./.github/workflows/actions/windows/getLibpack
-        with:
-          libpackdir: ${{ env.libpackdir }}
-
-      - name: Install cmake
-        uses: jwlawson/actions-setup-cmake@3a6cbe35ba64df7ca70c51365c4aff65db9a9037 # v2.1.1
-        with:
-          cmake-version: '3.31.6'
-
-      - name: Install Ninja
-        run: |
-          choco install ninja -y --version=1.12.1
-          ninja --version
-
-      - name: Set up MSVC environment
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
-        with:
-          arch: x64
-
-      - name: Configuring CMake
-        run: >
-          cmake -B"${{ env.builddir }}" .
-          -G "Ninja"
-          -DCMAKE_BUILD_TYPE=Release
-          -DFREECAD_USE_PCH=OFF
-          -DFREECAD_RELEASE_PDB=OFF
-          -DFREECAD_LIBPACK_DIR="${{ env.libpackdir }}"
-          -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
-          -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
-          -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
-          -DCMAKE_AUTOGEN_PARALLEL=4
-
-      - name: Check CMake configuration
-        run: |
-          if (-not (Test-Path "${{ env.builddir }}\build.ninja")) {
-            Write-Error "CMake configuration failed - build.ninja not found"
-            exit 1
+          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
+          if ($changedFiles) {
+            Write-Host "Changed source files:"
+            $changedFiles | ForEach-Object { Write-Host "  $_" }
+            echo "has_changes=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "No source files changed - skipping build"
+            echo "has_changes=false" >> $env:GITHUB_OUTPUT
           }
-          Write-Host "CMake configuration successful"
+        shell: pwsh
+
+      - name: Early exit if no source changes
+        if: steps.check-files.outputs.has_changes == 'false'
+        run: |
+          Write-Host "No source files changed in this PR - exiting early"
+          exit 0
 
       - name: Generate file hash for cache key
         id: file-hash
@@ -151,31 +137,69 @@ jobs:
             Write-Host "Cache MISS - full build required"
           }
 
-      - name: Check if source files changed
-        id: check-files
+      - name: Make needed directories
         run: |
-          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
-          if ($changedFiles) {
-            Write-Host "Changed source files:"
-            $changedFiles | ForEach-Object { Write-Host "  $_" }
-            echo "has_changes=true" >> $env:GITHUB_OUTPUT
+          New-Item -ItemType Directory -Force -Path ${{ env.libpackdir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.builddir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.logdir }} | Out-Null
+
+      - name: Get Libpack
+        uses: ./.github/workflows/actions/windows/getLibpack
+        with:
+          libpackdir: ${{ env.libpackdir }}
+
+      - name: Install cmake
+        uses: jwlawson/actions-setup-cmake@3a6cbe35ba64df7ca70c51365c4aff65db9a9037 # v2.1.1
+        with:
+          cmake-version: '3.31.6'
+
+      - name: Install Ninja
+        run: |
+          choco install ninja -y --version=1.12.1
+          ninja --version
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      - name: Check if CMake configure needed
+        id: cmake-needed
+        run: |
+          $buildNinja = "${{ env.builddir }}\build.ninja"
+          if (Test-Path $buildNinja) {
+            Write-Host "build.ninja already exists from cache - skipping CMake configure"
+            echo "needs_configure=false" >> $env:GITHUB_OUTPUT
           } else {
-            Write-Host "No source files changed - skipping build"
-            echo "has_changes=false" >> $env:GITHUB_OUTPUT
+            Write-Host "build.ninja not found - need to run CMake configure"
+            echo "needs_configure=true" >> $env:GITHUB_OUTPUT
           }
-        shell: pwsh
+
+      - name: Configuring CMake
+        if: steps.cmake-needed.outputs.needs_configure == 'true'
+        run: >
+          cmake -B"${{ env.builddir }}" .
+          -G "Ninja"
+          -DCMAKE_BUILD_TYPE=Release
+          -DFREECAD_USE_PCH=ON
+          -DFREECAD_RELEASE_PDB=OFF
+          -DFREECAD_LIBPACK_DIR="${{ env.libpackdir }}"
+          -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
+          -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
+          -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
+          -DCMAKE_AUTOGEN_PARALLEL=4
+
+      - name: Check CMake configuration
+        run: |
+          if (-not (Test-Path "${{ env.builddir }}\build.ninja")) {
+            Write-Error "CMake configuration failed - build.ninja not found"
+            exit 1
+          }
+          Write-Host "CMake configuration successful"
 
       - name: Build with Ninja
-        if: steps.check-files.outputs.has_changes == 'true'
         run: |
           cmake --build "${{ env.builddir }}" --config Release -j32
-
-      - name: Save Ninja build cache
-        if: steps.check-files.outputs.has_changes == 'true'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
 
       - name: Upload logs
         if: failure()
