@@ -83,6 +83,34 @@ jobs:
         run: |
           git fetch origin main:main
 
+      - name: Check if source files changed
+        id: check-files
+        run: |
+          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
+          if ($changedFiles) {
+            Write-Host "Changed source files:"
+            $changedFiles | ForEach-Object { Write-Host "  $_" }
+            
+            # Convert to Ninja targets (e.g., src/Gui/MainWindow.cpp -> Gui:MainWindow.obj)
+            $targets = @()
+            foreach ($file in $changedFiles) {
+              if ($file -match 'src[/\\](\w+)[/\\](.+)\.([ch]pp)$') {
+                $module = $matches[1]
+                $basename = [System.IO.Path]::GetFileNameWithoutExtension($matches[2])
+                $targets += "$module`:$basename.obj"
+              }
+            }
+            $targetsStr = $targets -join " "
+            
+            echo "has_changes=true" >> $env:GITHUB_OUTPUT
+            echo "targets=$targetsStr" >> $env:GITHUB_OUTPUT
+            Write-Host "Ninja targets: $targetsStr"
+          } else {
+            Write-Host "No source files changed - will still build all for verification"
+            echo "has_changes=false" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+
       - name: Make needed directories
         run: |
           New-Item -ItemType Directory -Force -Path ${{ env.CCACHE_DIR }} | Out-Null
@@ -205,8 +233,15 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
-      - name: Build with Ninja
+      - name: Build changed files first (quick compile check)
+        if: steps.check-files.outputs.has_changes == 'true'
         run: |
+          Write-Host "Building only changed files for quick compile check..."
+          cmake --build "${{ env.builddir }}" --config Release --target ${{ steps.check-files.outputs.targets }} -j32
+
+      - name: Full build
+        run: |
+          Write-Host "Continuing with full build..."
           cmake --build "${{ env.builddir }}" --config Release -j32
 
       - name: Print Ccache statistics after build
