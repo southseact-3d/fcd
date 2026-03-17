@@ -104,7 +104,7 @@
 #include "Command.h"
 #include "ToolBarManager.h"
 #include "MenuManager.h"
-#include "Property.h"
+#include <App/Property.h>
 #include "Workbench.h"
 #include "WorkbenchManager.h"
 #include "GuiApplication.h"
