@@ -197,58 +197,8 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
-      - name: Generate file hash for cache key
-        id: file-hash
-        run: |
-          $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
-          $presetsHash = Get-FileHash -Path CMakePresets.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash
-          $combinedHash = "$cmakeHash-$presetsHash"
-          echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
-          echo "combined_hash=$combinedHash" >> $env:GITHUB_OUTPUT
-          Write-Host "Combined hash: $combinedHash"
-        shell: pwsh
-
-      - name: Restore Ninja build cache
-        id: ninja-cache-restore
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
-          restore-keys: |
-            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
-            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
-            FC-NINJA-${{ env.cacheKey }}-refs/heads/main
-            FC-NINJA-${{ env.cacheKey }}
-
-      - name: Print cache status
-        run: |
-          $ninjaKey = "FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main"
-          Write-Host "Ninja cache key: $ninjaKey"
-          $ninjaHit = "${{ steps.ninja-cache-restore.outputs.cache-hit }}"
-          if ($ninjaHit -eq 'true') {
-            Write-Host "Cache HIT - incremental build will only compile changed files"
-          } else {
-            Write-Host "Cache MISS - full build required"
-          }
-
-      - name: Get changed files list
-        id: changed-files
-        run: |
-          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
-          if ($changedFiles) {
-            Write-Host "Changed source files:"
-            $changedFiles | ForEach-Object { Write-Host "  $_" }
-            echo "has_changes=true" >> $env:GITHUB_OUTPUT
-            # Write changed files to a file for later use
-            $changedFiles | Out-File -FilePath "${{ env.builddir }}/changed_files.txt" -Encoding utf8
-          } else {
-            Write-Host "No source files changed - will do full build"
-            echo "has_changes=false" >> $env:GITHUB_OUTPUT
-          }
-        shell: pwsh
-
       - name: Build changed files first (quick compile check)
-        if: steps.changed-files.outputs.has_changes == 'true'
+        if: steps.check-files.outputs.has_changes == 'true'
         run: |
           Write-Host "Building only changed files for quick compile check..."
           cmake --build "${{ env.builddir }}" --config Release -j32
@@ -259,7 +209,7 @@ jobs:
           cmake --build "${{ env.builddir }}" --config Release -j32
 
       - name: Save Ninja build cache
-        if: steps.changed-files.outputs.has_changes == 'true'
+        if: steps.check-files.outputs.has_changes == 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
