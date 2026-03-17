@@ -76,33 +76,34 @@ jobs:
       - name: Checking out source code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0
+          fetch-depth: 2
           submodules: 'recursive'
 
       - name: Fetch main branch for comparison
         run: |
           git fetch origin main:main
 
-      - name: Check if source files changed
-        id: check-files
+      - name: Make needed directories
         run: |
-          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
-          if ($changedFiles) {
-            Write-Host "Changed source files:"
-            $changedFiles | ForEach-Object { Write-Host "  $_" }
-            echo "has_changes=true" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Host "No source files changed - skipping build"
-            echo "has_changes=false" >> $env:GITHUB_OUTPUT
-          }
-        shell: pwsh
+          New-Item -ItemType Directory -Force -Path ${{ env.CCACHE_DIR }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.ccachebindir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.libpackdir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.builddir }} | Out-Null
+          New-Item -ItemType Directory -Force -Path ${{ env.logdir }} | Out-Null
 
-      - name: Early exit if no source changes
-        if: steps.check-files.outputs.has_changes == 'false'
-        run: |
-          Write-Host "No source files changed in this PR - exiting early"
-          exit 0
+      - name: Get Ccache
+        uses: ./.github/workflows/actions/windows/getCcache
+        with:
+          ccachebindir: ${{ env.ccachebindir }}
 
+      - name: Get Libpack
+        uses: ./.github/workflows/actions/windows/getLibpack
+        with:
+          libpackdir: ${{ env.libpackdir }}
+
+      # ------------------------------------------------------------------
+      # ccache and Ninja cache key - use github.ref so PRs can use main cache
+      # ------------------------------------------------------------------
       - name: Generate file hash for cache key
         id: file-hash
         run: |
@@ -114,39 +115,44 @@ jobs:
           Write-Host "Combined hash: $combinedHash"
         shell: pwsh
 
+      - name: Restore compiler cache
+        id: ccache-restore
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
+          restore-keys: |
+            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ github.ref }}
+            FC-CCACHE-${{ env.cacheKey }}
+
       - name: Restore Ninja build cache
         id: ninja-cache-restore
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
             FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
-            FC-NINJA-${{ env.cacheKey }}-refs/heads/main
+            FC-NINJA-${{ env.cacheKey }}-${{ github.ref }}
             FC-NINJA-${{ env.cacheKey }}
 
       - name: Print cache status
         run: |
-          $ninjaKey = "FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main"
-          Write-Host "Ninja cache key: $ninjaKey"
+          $ccacheKey = "FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}"
+          $ninjaKey = "FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}"
+          Write-Host "ccache key   : $ccacheKey"
+          Write-Host "ninja key    : $ninjaKey"
+          $ccacheHit = "${{ steps.ccache-restore.outputs.cache-hit }}"
           $ninjaHit = "${{ steps.ninja-cache-restore.outputs.cache-hit }}"
-          if ($ninjaHit -eq 'true') {
-            Write-Host "Cache HIT - incremental build will only compile changed files"
-          } else {
-            Write-Host "Cache MISS - full build required"
-          }
+          Write-Host "ccache hit   : $(if ($ccacheHit -eq 'true') { 'HIT' } else { 'MISS' })"
+          Write-Host "Ninja cache  : $(if ($ninjaHit -eq 'true') { 'HIT' } else { 'MISS' })"
 
-      - name: Make needed directories
+      - name: Print Ccache statistics, reset stats
         run: |
-          New-Item -ItemType Directory -Force -Path ${{ env.libpackdir }} | Out-Null
-          New-Item -ItemType Directory -Force -Path ${{ env.builddir }} | Out-Null
-          New-Item -ItemType Directory -Force -Path ${{ env.logdir }} | Out-Null
-
-      - name: Get Libpack
-        uses: ./.github/workflows/actions/windows/getLibpack
-        with:
-          libpackdir: ${{ env.libpackdir }}
+          . $env:ccachebindir\ccache -s
+          . $env:ccachebindir\ccache -z
+          . $env:ccachebindir\ccache -p
 
       - name: Install cmake
         uses: jwlawson/actions-setup-cmake@3a6cbe35ba64df7ca70c51365c4aff65db9a9037 # v2.1.1
@@ -181,9 +187,11 @@ jobs:
           cmake -B"${{ env.builddir }}" .
           -G "Ninja"
           -DCMAKE_BUILD_TYPE=Release
-          -DFREECAD_USE_PCH=ON
+          -DFREECAD_USE_PCH=OFF
           -DFREECAD_RELEASE_PDB=OFF
           -DFREECAD_LIBPACK_DIR="${{ env.libpackdir }}"
+          -DCMAKE_C_COMPILER_LAUNCHER="${{ env.ccachebindir }}/ccache.exe"
+          -DCMAKE_CXX_COMPILER_LAUNCHER="${{ env.ccachebindir }}/ccache.exe"
           -DFREECAD_COPY_DEPEND_DIRS_TO_BUILD=ON
           -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
           -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
@@ -197,23 +205,25 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
-      - name: Build changed files first (quick compile check)
-        if: steps.check-files.outputs.has_changes == 'true'
+      - name: Build with Ninja
         run: |
-          Write-Host "Building only changed files for quick compile check..."
           cmake --build "${{ env.builddir }}" --config Release -j32
 
-      - name: Full build
+      - name: Print Ccache statistics after build
         run: |
-          Write-Host "Continuing with full build..."
-          cmake --build "${{ env.builddir }}" --config Release -j32
+          . $env:ccachebindir\ccache -s
+
+      - name: Save compiler cache
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
 
       - name: Save Ninja build cache
-        if: steps.check-files.outputs.has_changes == 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
 
       - name: Upload logs
         if: failure()
