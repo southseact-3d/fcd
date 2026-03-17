@@ -109,7 +109,7 @@
 #include "WorkbenchManager.h"
 #include "GuiApplication.h"
 //#include "SelectionSingleton.h"  // Now included in Selection.h
-#include "View3DInventor.hpp"
+//#include "View3DInventor.hpp"  // Already included as View3DInventor.h on line 98
 //#include "View3DInventorUtils.hpp"  // File does not exist
 #include "PyObjectFactory.h"
 #include "Quarter/QuarterWidget.h"
