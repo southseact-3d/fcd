@@ -163,6 +163,25 @@ jobs:
         with:
           arch: x64
 
+      - name: Clear stale CMake cache if generator changed
+        run: |
+          $cacheFile = "${{ env.builddir }}\CMakeCache.txt"
+          if (Test-Path $cacheFile) {
+            $cached = Select-String -Path $cacheFile -Pattern "CMAKE_GENERATOR:INTERNAL=" | Select-Object -First 1
+            $generatorOk = $cached -and $cached.Line -match "^CMAKE_GENERATOR:INTERNAL=Ninja$"
+            if (-not $generatorOk) {
+              Write-Host "CMake cache stale (generator or flags changed) - clearing..."
+              Remove-Item $cacheFile -Force
+              $cmakeFiles = "${{ env.builddir }}\CMakeFiles"
+              if (Test-Path $cmakeFiles) { Remove-Item $cmakeFiles -Recurse -Force }
+              Write-Host "Cache cleared - full reconfigure will run."
+            } else {
+              Write-Host "CMake cache valid - keeping cached generator state."
+            }
+          } else {
+            Write-Host "No CMakeCache.txt found - fresh configure."
+          }
+
       - name: Check if CMake configure needed
         id: cmake-needed
         run: |
