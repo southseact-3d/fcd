@@ -108,10 +108,10 @@
 #include "Workbench.h"
 #include "WorkbenchManager.h"
 #include "GuiApplication.h"
-#include "SelectionSingleton.h"
-#include "View3DInventor.hpp"
+//#include "SelectionSingleton.h"  // SelectionSingleton is declared in Selection.h
+//#include "View3DInventor.hpp"  // View3DInventor.h is already included above
 //#include "View3DInventorUtils.hpp"  // File does not exist
-#include "PyObjectFactory.h"
+//#include "PyObjectFactory.h"  // File does not exist
 #include "Quarter/QuarterWidget.h"
 //#include "BrowseDir.h"  // File does not exist
 //#include "SetupProgress.h"  // File does not exist
