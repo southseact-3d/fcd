@@ -747,7 +747,11 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_SubtractiveHelix"
           << "PartDesign_CompPrimitiveSubtractive"
           << "Separator"
-          << "PartDesign_Boolean";
+          << "PartDesign_Boolean"
+          << "Separator"
+          << "PartDesign_PartBuilder"
+          << "PartDesign_PartRefineShape"
+          << "PartDesign_PartShapeFromMesh";
 
     part = new Gui::ToolBarItem(root);
 
@@ -765,7 +769,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_PolarPattern"
           << "PartDesign_MultiTransform";
 
-    part = new Gui::ToolBarItem(root);
+    part = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
     part->setCommand("Part Design Part Tools");
 
     *part << "PartDesign_PartBox"
