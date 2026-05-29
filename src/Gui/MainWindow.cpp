@@ -120,6 +120,7 @@
 #include "StatusBarLabel.h"
 #include "TaskView/TaskDialog.h"
 #include "ToolBarManager.h"
+#include "Timeline.h"
 #include "ToolBoxManager.h"
 #include "Tree.h"
 #include "Utilities.h"
