@@ -50,7 +50,6 @@
 #include <Gui/QuantitySpinBox.h>
 #include <Gui/Selection/SelectionFilter.h>
 #include <Gui/Selection/Selection.h>
-#include <Gui/Selection/SelectionObserver.h>
 #include <Gui/Selection/SelectionObject.h>
 #include <Gui/ViewProviderCoordinateSystem.h>
 #include <Gui/ViewProviderPlane.h>
