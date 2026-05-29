@@ -135,6 +135,8 @@
 #include <App/Property.h>
 #include <App/PropertyContainer.h>
 
+FC_LOG_LEVEL_INIT("MainWindow", false, true, true)
+
 using namespace Gui;
 using namespace Gui::DockWnd;
 using namespace std;
