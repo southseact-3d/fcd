@@ -84,13 +84,13 @@ public:
     PlaneSelectionObserver(const std::vector<App::DocumentObject*>& planes, const std::string& groupName, bool groupSelected)
         : planes(planes), groupName(groupName), groupSelected(groupSelected)
     {
-        filter = new Gui::SelectionFilter("SELECT App::Plane");
+        filter = new Gui::SelectionFilterGate("SELECT App::Plane");
         Gui::Selection().addSelectionGate(filter, Gui::ResolveMode::NoResolve);
     }
 
     ~PlaneSelectionObserver() override
     {
-        Gui::Selection().removeSelectionGate();
+        Gui::Selection().rmvSelectionGate();
         resetPlaneVisibility();
         delete filter;
     }
@@ -98,10 +98,10 @@ public:
     void onSelectionChanged(const Gui::SelectionChanges& msg) override
     {
         if (msg.Type == Gui::SelectionChanges::AddSelection) {
-            App::DocumentObject* obj = msg.pObject.getObject();
+            App::DocumentObject* obj = msg.Object.getObject();
             if (obj && std::find(planes.begin(), planes.end(), obj) != planes.end()) {
                 createSketchOnPlane(obj);
-                Gui::Selection().removeSelectionGate();
+                Gui::Selection().rmvSelectionGate();
                 delete this;
             }
         }
@@ -117,8 +117,8 @@ private:
         App::Plane* appPlane = static_cast<App::Plane*>(plane);
         auto* lcs = appPlane->getLCS();
         if (lcs) {
-            supportString = Gui::Command::getObjectCmd(lcs, "(", ",'"
-                + std::string(plane->getNameInDocument()) + "'])");
+            supportString = Gui::Command::getObjectCmd(lcs, "(", (",'"
+                + std::string(plane->getNameInDocument()) + "'])").c_str());
         }
         else {
             supportString = Gui::Command::getObjectCmd(plane, "(", ",[''])");
@@ -173,7 +173,7 @@ private:
     std::vector<App::DocumentObject*> planes;
     std::string groupName;
     bool groupSelected;
-    Gui::SelectionFilter* filter;
+    Gui::SelectionFilterGate* filter;
 };
 
 
@@ -386,7 +386,7 @@ void CmdSketcherNewSketch::activated(int iMsg)
         }
 
         std::vector<App::DocumentObject*> planes;
-        auto* origin = App::Origin::getOrigin(doc);
+        auto* origin = dynamic_cast<App::Origin*>(doc->getObject("Origin"));
         if (origin) {
             for (auto plane : origin->planes()) {
                 planes.push_back(plane);
