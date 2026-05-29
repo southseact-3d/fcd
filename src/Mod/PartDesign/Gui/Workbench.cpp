@@ -88,7 +88,7 @@ Workbench::Workbench()
     : tabBar(nullptr)
     , tabBarAttached(false)
 {
-    modeHandler = std::make_unique<WorkbenchModeHandler>(this);
+    modeHandler = std::make_unique<WorkbenchModeHandler>();
 }
 
 Workbench::~Workbench()
