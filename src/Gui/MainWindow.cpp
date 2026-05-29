@@ -96,10 +96,10 @@
 #include "View3DInventorViewer.h"
 #include "ViewProvider.h"
 #include "View3DInventor.h"
-//#include "View3DInventorUtils.h"  // File does not exist
+// #include "View3DInventorUtils.h"  // File does not exist
 #include "Selection.h"
-//#include "CoinUtils.h"  // File does not exist
-//#include "InventorUtils.h"  // File does not exist
+// #include "CoinUtils.h"  // File does not exist
+// #include "InventorUtils.h"  // File does not exist
 #include "Application.h"
 #include "Command.h"
 #include "ToolBarManager.h"
@@ -108,22 +108,20 @@
 #include "Workbench.h"
 #include "WorkbenchManager.h"
 #include "GuiApplication.h"
-//#include "SelectionSingleton.h"  // SelectionSingleton is declared in Selection.h
-//#include "View3DInventor.hpp"  // View3DInventor.h is already included above
-//#include "View3DInventorUtils.hpp"  // File does not exist
-//#include "PyObjectFactory.h"  // File does not exist
+// #include "SelectionSingleton.h"  // SelectionSingleton is declared in Selection.h
+// #include "View3DInventor.hpp"  // View3DInventor.h is already included above
+// #include "View3DInventorUtils.hpp"  // File does not exist
+// #include "PyObjectFactory.h"  // File does not exist
 #include "Quarter/QuarterWidget.h"
-//#include "BrowseDir.h"  // File does not exist
-//#include "SetupProgress.h"  // File does not exist
+// #include "BrowseDir.h"  // File does not exist
+// #include "SetupProgress.h"  // File does not exist
 #include "WorkbenchSelector.h"
-//#include "GuiTracer.h"  // File does not exist
+// #include "GuiTracer.h"  // File does not exist
 #include "Quarter/Quarter.h"
-//#include "PythonViewer.h"  // File does not exist
-//#include "ColorScale.h"  // File does not exist
-//#include "MachineState.h"  // File does not exist
-#include "MeasureUtil.h"
+// #include "PythonViewer.h"  // File does not exist
+// #include "ColorScale.h"  // File does not exist
+// #include "MachineState.h"  // File does not exist
 #include "GlobalProgressBarOverlay.h"
-#endif
 
 using namespace Gui;
 using namespace Gui::DockWnd;
@@ -410,18 +408,18 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
     d->mdiArea->setActivationOrder(QMdiArea::ActivationHistoryOrder);
 #endif
     d->mdiArea->setBackground(QBrush(QColor(160, 160, 160)));
-    
+
     d->centralContainer = new QWidget(this);
     d->centralLayout = new QVBoxLayout(d->centralContainer);
     d->centralLayout->setContentsMargins(0, 0, 0, 0);
     d->centralLayout->setSpacing(0);
-    
+
     d->centralLayout->addWidget(d->mdiArea, 1);
-    
+
     d->timeline = new Timeline(d->centralContainer);
     d->timeline->setVisible(false);
     d->centralLayout->addWidget(d->timeline);
-    
+
     setCentralWidget(d->centralContainer);
 
     statusBar()->setObjectName(QStringLiteral("statusBar"));
@@ -876,12 +874,12 @@ bool MainWindow::updateBodyListView(bool show)
             auto bodyListDock = new QDockWidget(nullptr, getMainWindow());
             bodyListDock->setObjectName(QStringLiteral("Body List"));
             bodyListDock->setWindowTitle(QDockWidget::tr("Bodies"));
-            
+
             auto listWidget = new QListWidget(bodyListDock);
             listWidget->addItem(QObject::tr("No bodies"));
             listWidget->setEnabled(false);
             bodyListDock->setWidget(listWidget);
-            
+
             widget = bodyListDock;
             return widget;
         });
