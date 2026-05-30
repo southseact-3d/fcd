@@ -572,7 +572,7 @@ void View3DInventorViewer::init()
     hiddenAnchor->addChild(hiddenSep);
     pcViewProviderRoot->addChild(hiddenAnchor);
 
-    // Add a grid in the X plane (YZ plane) to help orient the user.
+    // Add a grid in the Z plane (XY plane) to help orient the user.
     xPlaneGridRoot = new SoSeparator;
     xPlaneGridRoot->ref();
     xPlaneGridRoot->setName("XPlaneGridRoot");
@@ -4325,7 +4325,7 @@ void View3DInventorViewer::createXPlaneGrid(float gridDimension)
     const int lineCount = std::min(200, std::max(4, static_cast<int>(gridDimension / 1.0f)));
     const float spacing = gridDimension / static_cast<float>(lineCount);
 
-    // Draw the main grid lines in the X=0 plane (YZ plane).
+    // Draw the main grid lines in the Z=0 plane (XY plane).
     {
         auto* gridSep = new SoSeparator;
         auto* style = new SoDrawStyle;
@@ -4353,15 +4353,15 @@ void View3DInventorViewer::createXPlaneGrid(float gridDimension)
         int idx = 0;
         for (int i = 0; i <= lineCount; ++i) {
             float coord = (i - lineCount * 0.5f) * spacing;
-            // line parallel to Z (varying Z) at constant Y
-            coords[idx++].setValue(0.0F, coord, -half);
-            coords[idx++].setValue(0.0F, coord, half);
+            // line parallel to X (varying X) at constant Y
+            coords[idx++].setValue(-half, coord, 0.0F);
+            coords[idx++].setValue(half, coord, 0.0F);
         }
         for (int i = 0; i <= lineCount; ++i) {
             float coord = (i - lineCount * 0.5f) * spacing;
-            // line parallel to Y (varying Y) at constant Z
-            coords[idx++].setValue(0.0F, -half, coord);
-            coords[idx++].setValue(0.0F, half, coord);
+            // line parallel to Y (varying Y) at constant X
+            coords[idx++].setValue(coord, -half, 0.0F);
+            coords[idx++].setValue(coord, half, 0.0F);
         }
         vp->vertex.finishEditing();
 

@@ -537,7 +537,7 @@ protected:
     void printDimension() const;
     void selectAll();
 
-    // Grid in the X plane (YZ plane) to help orient the user to the origin and axes.
+    // Grid in the Z plane (XY plane) to help orient the user to the origin and axes.
     void createXPlaneGrid(float gridDimension);
 
 private:
@@ -549,7 +549,7 @@ private:
     static void interactionFinishCB(void* data, Quarter::SoQTQuarterAdaptor* viewer);
     static void interactionLoggerCB(void* ud, SoAction* action);
 
-    // Global flag for whether the X-plane grid is enabled.
+    // Global flag for whether the Z-plane grid is enabled.
     static bool s_showXPlaneGrid;
 
 private:
