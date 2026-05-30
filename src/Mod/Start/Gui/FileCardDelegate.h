@@ -54,8 +54,8 @@ private:
     QPixmap loadAndCacheThumbnail(const QString& path, int thumbnailSize) const;
 
     Base::Reference<ParameterGrp> _parameterGroup;
-    const int margin = 11;
-    const int textspacing = 2;
+    const int margin = 10;
+    const int textspacing = 4;
     QPushButton styleButton;
 
     static QCache<QString, QPixmap> _thumbnailCache;  // cache key structure: "path:modtime:size"

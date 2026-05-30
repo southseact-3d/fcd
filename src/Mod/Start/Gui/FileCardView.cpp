@@ -47,7 +47,7 @@ FileCardView::FileCardView(QWidget* parent)
     auto hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Mod/Start"
     );
-    m_cardSpacing = static_cast<int>(hGrp->GetInt("FileCardSpacing", 16));  // NOLINT
+    m_cardSpacing = static_cast<int>(hGrp->GetInt("FileCardSpacing", 14));  // NOLINT
 
     setSpacing(m_cardSpacing);
 }

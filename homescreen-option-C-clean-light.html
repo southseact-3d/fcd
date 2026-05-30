@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tungsten CAD - Option C: Clean Minimal Light</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f8f9fa;
+    color: #374151;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 40px;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 48px;
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar-brand .logo {
+    width: 36px;
+    height: 36px;
+    background: #111827;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .topbar-brand .name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.3px;
+  }
+  .topbar-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .topbar-actions button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .topbar-actions button:hover {
+    border-color: #d1d5db;
+    color: #374151;
+  }
+  .topbar-actions button.primary {
+    background: #111827;
+    color: #fff;
+    border-color: #111827;
+  }
+  .topbar-actions button.primary:hover {
+    background: #1f2937;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    margin-bottom: 14px;
+  }
+
+  /* New file - horizontal pill buttons */
+  .new-file-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+  }
+  .new-file-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .new-file-pill:hover {
+    border-color: #111827;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .new-file-pill .icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .new-file-pill:hover .icon {
+    background: #111827;
+    color: #fff;
+  }
+  .new-file-pill .text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  /* File cards - clean white cards */
+  .files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+
+  .file-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .file-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+  .file-card .thumb {
+    width: 100%;
+    height: 110px;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+    font-size: 28px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .file-card .info {
+    padding: 12px 14px;
+  }
+  .file-card .filename {
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-card .filesize {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 3px;
+  }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+  }
+  .footer-btn {
+    font-size: 12px;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  .footer-btn:hover { color: #374151; }
+  .footer-check {
+    font-size: 12px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="logo">W</div>
+      <div class="name">Tungsten CAD</div>
+    </div>
+    <div class="topbar-actions">
+      <button>&#128194; Open File</button>
+      <button class="primary">+ New File</button>
+    </div>
+  </div>
+
+  <div class="section-label">Quick Start</div>
+  <div class="new-file-row">
+    <div class="new-file-pill">
+      <div class="icon">&#9635;</div>
+      <div class="text">Parametric Body</div>
+    </div>
+    <div class="new-file-pill">
+      <div class="icon">&#9881;</div>
+      <div class="text">Assembly</div>
+    </div>
+    <div class="new-file-pill">
+      <div class="icon">&#9998;</div>
+      <div class="text">2D Draft</div>
+    </div>
+    <div class="new-file-pill">
+      <div class="icon">&#9960;</div>
+      <div class="text">BIM / Architecture</div>
+    </div>
+    <div class="new-file-pill">
+      <div class="icon">&#10010;</div>
+      <div class="text">Empty File</div>
+    </div>
+  </div>
+
+  <div class="section-label">Recent Files</div>
+  <div class="files-grid">
+    <div class="file-card">
+      <div class="thumb">&#9635;</div>
+      <div class="info">
+        <div class="filename">engine_block_v3.fcstd</div>
+        <div class="filesize">4.2 MB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9881;</div>
+      <div class="info">
+        <div class="filename">bracket_assembly.fcstd</div>
+        <div class="filesize">1.8 MB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9998;</div>
+      <div class="info">
+        <div class="filename">floor_plan_draft.FCStd</div>
+        <div class="filesize">820 KB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9960;</div>
+      <div class="info">
+        <div class="filename">warehouse_layout.fcstd</div>
+        <div class="filesize">3.1 MB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9635;</div>
+      <div class="info">
+        <div class="filename">pipe_connector.fcstd</div>
+        <div class="filesize">560 KB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9881;</div>
+      <div class="info">
+        <div class="filename">gear_train.fcstd</div>
+        <div class="filesize">2.4 MB</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Examples</div>
+  <div class="files-grid">
+    <div class="file-card">
+      <div class="thumb">&#9635;</div>
+      <div class="info">
+        <div class="filename">example_part.FCStd</div>
+        <div class="filesize">1.1 MB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9881;</div>
+      <div class="info">
+        <div class="filename">assembly_demo.fcstd</div>
+        <div class="filesize">2.7 MB</div>
+      </div>
+    </div>
+    <div class="file-card">
+      <div class="thumb">&#9998;</div>
+      <div class="info">
+        <div class="filename">draft_tutorial.FCStd</div>
+        <div class="filesize">430 KB</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="footer-btn">&#9881; Open First Start Setup</button>
+    <label class="footer-check"><input type="checkbox"> Do not show on startup</label>
+  </div>
+
+</div>
+</body>
+</html>
