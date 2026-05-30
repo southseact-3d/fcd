@@ -461,8 +461,8 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
 
     statusBar()->addWidget(d->hintLabel);
 
-    // toggle for X-plane grid (YZ plane at x=0)
-    d->xPlaneGridToggle = new QCheckBox(tr("X-plane grid"), statusBar());
+    // toggle for Z-plane grid (XY plane at z=0)
+    d->xPlaneGridToggle = new QCheckBox(tr("Z-plane grid"), statusBar());
     d->xPlaneGridToggle->setChecked(Gui::View3DInventorViewer::isXPlaneGridEnabled());
     connect(d->xPlaneGridToggle, &QCheckBox::toggled, this, [this](bool checked) {
         Gui::View3DInventorViewer::setXPlaneGridEnabled(checked);

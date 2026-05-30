@@ -206,9 +206,12 @@ bool BitmapFactoryInst::loadPixmap(const QString& filename, QPixmap& icon) const
 {
     QFileInfo fi(filename);
     if (fi.exists()) {
+        // Use the resolved absolute path so QFile can open Qt resources correctly.
+        QString resolvedPath = fi.absoluteFilePath();
+
         // first check if it's an SVG because Qt's qsvg4 module shouldn't be used therefore
         if (fi.suffix().toLower() == QLatin1String("svg")) {
-            QFile svgFile(fi.filePath());
+            QFile svgFile(resolvedPath);
             if (svgFile.open(QFile::ReadOnly | QFile::Text)) {
                 QByteArray content = svgFile.readAll();
                 icon = pixmapFromSvg(content, QSize(64, 64));
@@ -216,7 +219,7 @@ bool BitmapFactoryInst::loadPixmap(const QString& filename, QPixmap& icon) const
         }
         else {
             // try with Qt plugins
-            icon.load(fi.filePath());
+            icon.load(resolvedPath);
         }
     }
 
@@ -307,13 +310,13 @@ QPixmap BitmapFactoryInst::pixmapFromSvg(
         QString fileName = QStringLiteral("icons:") + fn;
         QFileInfo fi(fileName);
         if (fi.exists()) {
-            iconPath = fi.filePath();
+            iconPath = fi.absoluteFilePath();
         }
         else {
             fileName += QLatin1String(".svg");
             fi.setFile(fileName);
             if (fi.exists()) {
-                iconPath = fi.filePath();
+                iconPath = fi.absoluteFilePath();
             }
         }
     }
