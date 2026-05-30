@@ -100,6 +100,7 @@ ToolBarItem* ToolBarItem::copy() const
 {
     auto root = new ToolBarItem;
     root->setCommand(command());
+    root->setCustomIconSize(_customIconSize);
 
     QList<ToolBarItem*> items = getItems();
     for (auto it : items) {
@@ -117,6 +118,16 @@ uint ToolBarItem::count() const
 void ToolBarItem::appendItem(ToolBarItem* item)
 {
     _items.push_back(item);
+}
+
+void ToolBarItem::setCustomIconSize(int size)
+{
+    _customIconSize = size;
+}
+
+int ToolBarItem::getCustomIconSize() const
+{
+    return _customIconSize;
 }
 
 bool ToolBarItem::insertItem(ToolBarItem* before, ToolBarItem* item)
@@ -767,6 +778,11 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
         auto actions = toolbar->actions();
         for (auto action : actions) {
             actionWidget->addAction(action);
+        }
+
+        // Apply custom icon size if set on the ToolBarItem
+        if (it->getCustomIconSize() > 0) {
+            toolbar->setIconSize(QSize(it->getCustomIconSize(), it->getCustomIconSize()));
         }
 
         // try to add some breaks to avoid to have all toolbars in one line

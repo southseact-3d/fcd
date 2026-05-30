@@ -721,16 +721,17 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     Gui::ToolBarItem* root = StdWorkbench::setupToolBars();
     Gui::ToolBarItem* part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Helper Features");
+    part->setCustomIconSize(20);
 
     *part << "PartDesign_Body"
           << "PartDesign_CompSketches"
           << "Sketcher_ValidateSketch"
-            << "PartDesign_PartCheckGeometry"
           << "PartDesign_SubShapeBinder"
           << "PartDesign_Clone";
 
     part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Modeling Features");
+    part->setCustomIconSize(20);
 
     *part << "PartDesign_Pad"
           << "PartDesign_Revolution"
@@ -752,6 +753,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     part = new Gui::ToolBarItem(root);
 
     part->setCommand("Part Design Dress-Up Features");
+    part->setCustomIconSize(20);
     *part << "PartDesign_Fillet"
           << "PartDesign_Chamfer"
           << "PartDesign_Draft"
@@ -759,6 +761,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
 
     part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Transformation Features");
+    part->setCustomIconSize(20);
 
     *part << "PartDesign_Mirrored"
           << "PartDesign_LinearPattern"
@@ -767,33 +770,17 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
 
     part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Part Tools");
+    part->setCustomIconSize(20);
 
     *part << "PartDesign_PartBox"
           << "PartDesign_PartCylinder"
           << "PartDesign_PartSphere"
           << "PartDesign_PartCone"
           << "PartDesign_PartTorus"
-          << "PartDesign_PartPrimitives"
           << "Separator"
-          << "PartDesign_PartBuilder"
-          << "PartDesign_PartBoolean"
-          << "PartDesign_PartCut"
-          << "PartDesign_PartFuse"
-          << "PartDesign_PartCommon"
-          << "PartDesign_PartSection"
-          << "PartDesign_PartBooleanFragments"
-          << "PartDesign_PartJoinConnect"
-          << "PartDesign_PartCompound"
-          << "PartDesign_PartRefineShape"
-          << "PartDesign_PartMakeFace"
-          << "PartDesign_PartLoft"
-          << "PartDesign_PartSweep"
-          << "PartDesign_PartThickness"
-          << "PartDesign_PartOffset"
-          << "PartDesign_PartScale"
-          << "PartDesign_PartShapeFromMesh"
-          << "PartDesign_PartDefeaturing"
-          << "PartDesign_PartCheckGeometry";
+          << "PartDesign_CompCreate"
+          << "PartDesign_CompModify"
+          << "PartDesign_CompInspect";
 
     Gui::ToolBarItem* mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
     mesh->setCommand("Mesh Tools");

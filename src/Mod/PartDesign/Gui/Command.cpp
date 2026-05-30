@@ -1923,7 +1923,7 @@ CmdPartDesignSubShapeBinder::CmdPartDesignSubShapeBinder()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Sub-Shape Binder");
+    sMenuText = QT_TR_NOOP("Sub-Shape\nBinder");
     sToolTipText = QT_TR_NOOP(
         "Creates a reference to geometry from one or more objects, allowing it to be used inside "
         "or outside a body. It tracks relative placements, supports multiple geometry types "
@@ -3003,7 +3003,7 @@ CmdPartDesignAdditivePipe::CmdPartDesignAdditivePipe()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Additive Pipe");
+    sMenuText = QT_TR_NOOP("Additive\nPipe");
     sToolTipText = QT_TR_NOOP(
         "Sweeps the selected sketch or profile along a path and adds it to the body"
     );
@@ -3053,7 +3053,7 @@ CmdPartDesignSubtractivePipe::CmdPartDesignSubtractivePipe()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Subtractive Pipe");
+    sMenuText = QT_TR_NOOP("Subtractive\nPipe");
     sToolTipText = QT_TR_NOOP(
         "Sweeps the selected sketch or profile along a path and removes it from the body"
     );
@@ -3103,7 +3103,7 @@ CmdPartDesignAdditiveLoft::CmdPartDesignAdditiveLoft()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Additive Loft");
+    sMenuText = QT_TR_NOOP("Additive\nLoft");
     sToolTipText = QT_TR_NOOP(
         "Lofts the selected sketch or profile along a path and adds it to the body"
     );
@@ -3153,7 +3153,7 @@ CmdPartDesignSubtractiveLoft::CmdPartDesignSubtractiveLoft()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Subtractive Loft");
+    sMenuText = QT_TR_NOOP("Subtractive\nLoft");
     sToolTipText = QT_TR_NOOP(
         "Lofts the selected sketch or profile along a path and removes it from the body"
     );
@@ -3202,7 +3202,7 @@ CmdPartDesignAdditiveHelix::CmdPartDesignAdditiveHelix()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Additive Helix");
+    sMenuText = QT_TR_NOOP("Additive\nHelix");
     sToolTipText = QT_TR_NOOP(
         "Sweeps the selected sketch or profile along a helix and adds it to the body"
     );
@@ -3286,7 +3286,7 @@ CmdPartDesignSubtractiveHelix::CmdPartDesignSubtractiveHelix()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Subtractive Helix");
+    sMenuText = QT_TR_NOOP("Subtractive\nHelix");
     sToolTipText = QT_TR_NOOP(
         "Sweeps the selected sketch or profile along a helix and removes it from the body"
     );
@@ -3815,7 +3815,7 @@ CmdPartDesignLinearPattern::CmdPartDesignLinearPattern()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Linear Pattern");
+    sMenuText = QT_TR_NOOP("Linear\nPattern");
     sToolTipText = QT_TR_NOOP(
         "Duplicates the selected features or the active body in a linear pattern"
     );
@@ -3884,7 +3884,7 @@ CmdPartDesignPolarPattern::CmdPartDesignPolarPattern()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Polar Pattern");
+    sMenuText = QT_TR_NOOP("Polar\nPattern");
     sToolTipText = QT_TR_NOOP(
         "Duplicates the selected features or the active body in a circular pattern"
     );
@@ -3989,7 +3989,7 @@ CmdPartDesignMultiTransform::CmdPartDesignMultiTransform()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Multi-Transform");
+    sMenuText = QT_TR_NOOP("Multi-\nTransform");
     sToolTipText = QT_TR_NOOP(
         "Applies multiple transformations to the selected features or active body"
     );
@@ -4120,7 +4120,7 @@ CmdPartDesignBoolean::CmdPartDesignBoolean()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Boolean Operation");
+    sMenuText = QT_TR_NOOP("Boolean\nOperation");
     sToolTipText = QT_TR_NOOP(
         "Applies boolean operations with the selected objects and the active body"
     );
@@ -4247,6 +4247,122 @@ public:
     }
 };
 
+// Command group for Create dropdown ========================================
+
+class CmdPartDesignCompCreate: public Gui::GroupCommand
+{
+public:
+    CmdPartDesignCompCreate()
+        : GroupCommand("PartDesign_CompCreate")
+    {
+        sAppModule = "PartDesign";
+        sGroup = "PartDesign";
+        sMenuText = QT_TR_NOOP("Create");
+        sToolTipText = QT_TR_NOOP("Create shapes from primitives, wires, or meshes");
+        sWhatsThis = "PartDesign_CompCreate";
+        sStatusTip = sToolTipText;
+        eType = ForEdit;
+
+        setCheckable(false);
+        setDropDownMenu(true);
+
+        addCommand("PartDesign_PartPrimitives");
+        addCommand("PartDesign_PartBuilder");
+        addCommand("PartDesign_PartCompound");
+        addCommand("PartDesign_PartMakeFace");
+        addCommand("PartDesign_PartLoft");
+        addCommand("PartDesign_PartSweep");
+        addCommand("PartDesign_PartShapeFromMesh");
+    }
+
+    const char* className() const override
+    {
+        return "CmdPartDesignCompCreate";
+    }
+
+    bool isActive() override
+    {
+        return (hasActiveDocument() && !Gui::Control().activeDialog());
+    }
+};
+
+// Command group for Modify dropdown ========================================
+
+class CmdPartDesignCompModify: public Gui::GroupCommand
+{
+public:
+    CmdPartDesignCompModify()
+        : GroupCommand("PartDesign_CompModify")
+    {
+        sAppModule = "PartDesign";
+        sGroup = "PartDesign";
+        sMenuText = QT_TR_NOOP("Modify");
+        sToolTipText = QT_TR_NOOP("Modify shapes with boolean, offset, or refinement operations");
+        sWhatsThis = "PartDesign_CompModify";
+        sStatusTip = sToolTipText;
+        eType = ForEdit;
+
+        setCheckable(false);
+        setDropDownMenu(true);
+
+        addCommand("PartDesign_PartBoolean");
+        addCommand("PartDesign_PartCut");
+        addCommand("PartDesign_PartFuse");
+        addCommand("PartDesign_PartCommon");
+        addCommand("PartDesign_PartBooleanFragments");
+        addCommand("PartDesign_PartJoinConnect");
+        addCommand("PartDesign_PartRefineShape");
+        addCommand("PartDesign_PartThickness");
+        addCommand("PartDesign_PartOffset");
+        addCommand("PartDesign_PartScale");
+        addCommand("PartDesign_PartDefeaturing");
+    }
+
+    const char* className() const override
+    {
+        return "CmdPartDesignCompModify";
+    }
+
+    bool isActive() override
+    {
+        return (hasActiveDocument() && !Gui::Control().activeDialog());
+    }
+};
+
+// Command group for Inspect dropdown =======================================
+
+class CmdPartDesignCompInspect: public Gui::GroupCommand
+{
+public:
+    CmdPartDesignCompInspect()
+        : GroupCommand("PartDesign_CompInspect")
+    {
+        sAppModule = "PartDesign";
+        sGroup = "PartDesign";
+        sMenuText = QT_TR_NOOP("Inspect");
+        sToolTipText = QT_TR_NOOP("Inspect and analyze shapes");
+        sWhatsThis = "PartDesign_CompInspect";
+        sStatusTip = sToolTipText;
+        eType = ForEdit;
+
+        setCheckable(false);
+        setDropDownMenu(true);
+
+        addCommand("PartDesign_PartSection");
+        addCommand("PartDesign_PartCheckGeometry");
+    }
+
+    const char* className() const override
+    {
+        return "CmdPartDesignCompInspect";
+    }
+
+    bool isActive() override
+    {
+        return (hasActiveDocument() && !Gui::Control().activeDialog());
+    }
+};
+
 //===========================================================================
 // Initialization
 //===========================================================================
@@ -4337,4 +4453,7 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignBoolean());
     rcCmdMgr.addCommand(new CmdPartDesignCompDatums());
     rcCmdMgr.addCommand(new CmdPartDesignCompSketches());
+    rcCmdMgr.addCommand(new CmdPartDesignCompCreate());
+    rcCmdMgr.addCommand(new CmdPartDesignCompModify());
+    rcCmdMgr.addCommand(new CmdPartDesignCompInspect());
 }

@@ -87,11 +87,15 @@ public:
     ToolBarItem& operator<<(const std::string& command);
     QList<ToolBarItem*> getItems() const;
 
+    void setCustomIconSize(int size);
+    int getCustomIconSize() const;
+
     DefaultVisibility visibilityPolicy;
 
 private:
     std::string _name;
     QList<ToolBarItem*> _items;
+    int _customIconSize = 0;
 };
 
 class ToolBarGrip: public QWidget
