@@ -74,7 +74,7 @@ CmdPrimtiveCompAdditive::CmdPrimtiveCompAdditive()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Additive Primitive");
+    sMenuText = QT_TR_NOOP("Additive\nPrimitive");
     sToolTipText = QT_TR_NOOP("Creates an additive primitive");
     sWhatsThis = "PartDesign_CompPrimitiveAdditive";
     sStatusTip = sToolTipText;
@@ -282,7 +282,7 @@ CmdPrimtiveCompSubtractive::CmdPrimtiveCompSubtractive()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Subtractive Primitive");
+    sMenuText = QT_TR_NOOP("Subtractive\nPrimitive");
     sToolTipText = QT_TR_NOOP("Creates a subtractive primitive");
     sWhatsThis = "PartDesign_CompPrimitiveSubtractive";
     sStatusTip = sToolTipText;
