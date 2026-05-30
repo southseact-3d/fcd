@@ -90,7 +90,7 @@ void FirstStartWidget::retranslateUi()
 {
     _doneButton->setText(tr("Done"));
     _welcomeLabel->setText(
-        QLatin1String("<h1>") + tr("Welcome to %1").arg(QStringLiteral("Tungsten CAD"))
+        QLatin1String("<h1 style='color: #111827;'>") + tr("Welcome to %1").arg(QStringLiteral("Tungsten CAD"))
         + QLatin1String("</h1>")
     );
     _descriptionLabel->setText(

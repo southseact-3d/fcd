@@ -119,9 +119,12 @@ StartView::StartView(QWidget* parent)
     auto createNewCard = gsl::owner<QFrame*>(new QFrame);
     createNewCard->setObjectName(QStringLiteral("CreateNewCard"));
     createNewCard->setFrameStyle(QFrame::NoFrame);
+    createNewCard->setStyleSheet(
+        QStringLiteral("QFrame#CreateNewCard { background: transparent; border: none; }")
+    );
     auto cardLayout = gsl::owner<QVBoxLayout*>(new QVBoxLayout(createNewCard));
-    cardLayout->setContentsMargins(20, 20, 20, 20);
-    cardLayout->setSpacing(16);
+    cardLayout->setContentsMargins(0, 0, 0, 8);
+    cardLayout->setSpacing(10);
 
     auto createNewRow = gsl::owner<QWidget*>(new QWidget);
     auto flowLayout = gsl::owner<FlowLayout*>(new FlowLayout);
@@ -159,13 +162,20 @@ StartView::StartView(QWidget* parent)
     connect(examplesListWidget, &QListView::clicked, this, &StartView::fileCardSelected);
     documentsContentLayout->addWidget(examplesListWidget);
 
-    documentsContentLayout->setSpacing(static_cast<int>(cardSpacing));
+    documentsContentLayout->setSpacing(20);
     documentsContentLayout->addStretch();
 
 
     // Documents page footer
-    auto footerLayout = gsl::owner<QHBoxLayout*>(new QHBoxLayout());
-    documentsMainLayout->addLayout(footerLayout);
+    auto footerFrame = gsl::owner<QFrame*>(new QFrame);
+    footerFrame->setObjectName(QStringLiteral("StartFooter"));
+    footerFrame->setFrameStyle(QFrame::NoFrame);
+    footerFrame->setStyleSheet(
+        QStringLiteral("QFrame#StartFooter { border-top: 1px solid #e5e7eb; }")
+    );
+    auto footerLayout = gsl::owner<QHBoxLayout*>(new QHBoxLayout(footerFrame));
+    footerLayout->setContentsMargins(0, 16, 0, 0);
+    documentsMainLayout->addWidget(footerFrame);
 
     _openFirstStart = gsl::owner<QPushButton*>(new QPushButton());
     _openFirstStart->setIcon(QIcon(QLatin1String(":/icons/preferences-general.svg")));
@@ -509,8 +519,11 @@ void StartView::retranslateUi()
     QString title = QCoreApplication::translate("Workbench", "Start");
     setWindowTitle(title);
 
-    const QLatin1String h1Start("<h1 style=\"margin-bottom: 12px; color: #2c3e50;\">");
-    const QLatin1String h1End("</h1>");
+    const QLatin1String h1Start(
+        "<div style=\"font-size:12px; font-weight:600; text-transform:uppercase; "
+        "letter-spacing:1.5px; color:#9ca3af; margin-bottom:14px; font-family:Inter,-apple-system,sans-serif;\">"
+    );
+    const QLatin1String h1End("</div>");
 
     _newFileLabel->setText(h1Start + tr("New File") + h1End);
     _examplesLabel->setText(h1Start + tr("Examples") + h1End);

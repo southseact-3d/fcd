@@ -75,27 +75,40 @@ void FileCardDelegate::paint(
 ) const
 {
     painter->save();
-    // Step 1: Styling
-    QStyleOptionButton buttonOption;
-    buttonOption.initFrom(option.widget);
-    buttonOption.rect = option.rect;
-    buttonOption.state = QStyle::State_Enabled;
+    painter->setRenderHint(QPainter::Antialiasing);
 
-    if ((option.state & QStyle::State_MouseOver) != 0) {
-        buttonOption.state |= QStyle::State_MouseOver;
-    }
-    if ((option.state & QStyle::State_Selected) != 0) {
-        buttonOption.state |= QStyle::State_On;
-    }
-    if ((option.state & QStyle::State_Sunken) != 0) {
-        buttonOption.state |= QStyle::State_Sunken;
-    }
-    qApp->style()->drawControl(QStyle::CE_PushButton, &buttonOption, painter, &styleButton);
+    auto thumbnailSize = static_cast<int>(_parameterGroup->GetInt("FileThumbnailIconsSize", 128));
+
+    // Step 1: Custom card background (matches Option C .file-card)
+    QRect cardRect = option.rect.adjusted(1, 1, -1, -1);
+
+    // Determine hover state
+    bool isHovered = (option.state & QStyle::State_MouseOver) != 0;
+
+    // Outer card: white background, subtle border, rounded corners
+    QColor cardBg(255, 255, 255);       // #ffffff
+    QColor borderColor = isHovered ? QColor(209, 213, 219) : QColor(229, 231, 235);  // #d1d5db or #e5e7eb
+
+    painter->setPen(QPen(borderColor, 1));
+    painter->setBrush(cardBg);
+    painter->drawRoundedRect(cardRect, 10, 10);
+
+    // Thumbnail area: light grey background with bottom border
+    int thumbH = std::min(thumbnailSize, cardRect.height() - 40);  // leave room for text
+    QRect thumbArea(cardRect.x(), cardRect.y(), cardRect.width(), thumbH);
+    painter->setPen(QPen(QColor(243, 244, 246), 1));  // #f3f4f6 bottom border
+    painter->setBrush(QColor(249, 250, 251));          // #f9fafb background
+    // Draw only bottom line as border, fill the area
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(QColor(249, 250, 251));
+    painter->drawRect(thumbArea);
+    // Bottom border line
+    painter->setPen(QPen(QColor(243, 244, 246), 1));
+    painter->drawLine(thumbArea.bottomLeft(), thumbArea.bottomRight());
 
     // Step 2: Fetch required data
-    auto thumbnailSize = static_cast<int>(_parameterGroup->GetInt("FileThumbnailIconsSize", 128));  // NOLINT
     auto baseName = index.data(static_cast<int>(DisplayedFilesModelRoles::baseName)).toString();
-    auto elidedName = painter->fontMetrics().elidedText(baseName, Qt::ElideRight, thumbnailSize);
+    auto elidedName = painter->fontMetrics().elidedText(baseName, Qt::ElideRight, cardRect.width() - 2 * margin);
     auto size = index.data(static_cast<int>(DisplayedFilesModelRoles::size)).toString();
     auto image = index.data(static_cast<int>(DisplayedFilesModelRoles::image)).toByteArray();
     auto path = index.data(static_cast<int>(DisplayedFilesModelRoles::path)).toString();
@@ -114,28 +127,41 @@ void FileCardDelegate::paint(
         Qt::SmoothTransformation
     );
 
-    // Step 4: Positioning
-    QRect thumbnailRect(option.rect.x() + margin, option.rect.y() + margin, thumbnailSize, thumbnailSize);
+    // Step 3: Position thumbnail centered in thumb area
+    QRect pixmapRect(thumbArea.topLeft(), scaledPixmap.size());
+    pixmapRect.moveCenter(thumbArea.center());
+    painter->drawPixmap(pixmapRect.topLeft(), scaledPixmap);
+
+    // Step 4: Draw text below thumbnail area
+    int textY = thumbArea.bottom() + margin;
     QRect textRect(
-        option.rect.x() + margin,
-        thumbnailRect.bottom() + margin,
-        thumbnailSize,
+        cardRect.x() + margin,
+        textY,
+        cardRect.width() - 2 * margin,
         painter->fontMetrics().lineSpacing()
     );
 
     QRect sizeRect(
-        option.rect.x() + margin,
+        cardRect.x() + margin,
         textRect.bottom() + textspacing,
-        thumbnailSize,
-        painter->fontMetrics().lineSpacing() + margin
+        cardRect.width() - 2 * margin,
+        painter->fontMetrics().lineSpacing()
     );
 
-    // Step 5: Draw
-    QRect pixmapRect(thumbnailRect.topLeft(), scaledPixmap.size());
-    pixmapRect.moveCenter(thumbnailRect.center());
-    painter->drawPixmap(pixmapRect.topLeft(), scaledPixmap);
+    // Step 5: Draw text with Option C colors
+    painter->setPen(QColor(55, 65, 81));  // #374151 for filename
+    QFont nameFont = painter->font();
+    nameFont.setWeight(QFont::Medium);
+    nameFont.setPointSizeF(nameFont.pointSizeF() * 0.9);
+    painter->setFont(nameFont);
     painter->drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, elidedName);
+
+    painter->setPen(QColor(156, 163, 175));  // #9ca3af for filesize
+    QFont sizeFont = painter->font();
+    sizeFont.setPointSizeF(sizeFont.pointSizeF() * 0.92);
+    painter->setFont(sizeFont);
     painter->drawText(sizeRect, Qt::AlignLeft | Qt::AlignTop, size);
+
     painter->restore();
 }
 
@@ -145,11 +171,11 @@ QSize FileCardDelegate::sizeHint(const QStyleOptionViewItem& option, const QMode
     Q_UNUSED(option);
     Q_UNUSED(index);
 
-    auto thumbnailSize = _parameterGroup->GetInt("FileThumbnailIconsSize", 128);  // NOLINT
+    auto thumbnailSize = _parameterGroup->GetInt("FileThumbnailIconsSize", 128);
 
     QFontMetrics qfm(QGuiApplication::font());
     int textHeight = textspacing + qfm.lineSpacing() * 2;  // name + size
-    int cardWidth = static_cast<int>(thumbnailSize) + 2 * margin;
+    int cardWidth = std::max(145, static_cast<int>(thumbnailSize) + 2 * margin);
     int cardHeight = static_cast<int>(thumbnailSize) + textHeight + 3 * margin;
 
     return {cardWidth, cardHeight};

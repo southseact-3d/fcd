@@ -1188,7 +1188,21 @@ QAbstractButton[flat="true"] {
 }
 
 #CreateNewRow > QPushButton {
-  border-radius: @InputFieldBorderRadius;
+  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 8px 16px;
+  min-width: 0;
+  min-height: 32px;
+}
+
+#CreateNewRow > QPushButton:hover {
+  border-color: #111827;
+  background-color: #ffffff;
+}
+
+#CreateNewRow > QPushButton:pressed {
+  background-color: #f3f4f6;
 }
 
 Gui--FileChooser QPushButton {
@@ -2636,17 +2650,33 @@ QMdiSubWindow:active {
 Start page
 ==================================================================================================*/
 QWidget#thumbnailWidget {
-  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 @ButtonTopBackgroundColor,stop:1 @ButtonBottomBackgroundColor);
-  border-radius: 8px;
-  border: 1px solid @GeneralBorderColor;
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
 }
 
 QWidget#thumbnailWidget[state="hovered"] {
-  border: 1px solid @AccentColor;
+  border: 1px solid #d1d5db;
 }
 
 QWidget#thumbnailWidget[state="pressed"] {
-  border: 1px solid @AccentColor;
+  border: 1px solid #d1d5db;
+}
+
+QFrame#StartFooter {
+  border-top: 1px solid #e5e7eb;
+}
+
+Gui--MDIView QPushButton {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: #6b7280;
+}
+
+Gui--MDIView QPushButton:hover {
+  color: #374151;
+  background-color: transparent;
+  border: 1px solid transparent;
 }
 
 /**

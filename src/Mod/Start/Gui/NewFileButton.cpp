@@ -47,46 +47,57 @@ NewFileButton::NewFileButton(const NewButton& newButton)
     constexpr int defaultWidth = 200;
     labelWidth = int(hGrp->GetInt("FileCardLabelWith", defaultWidth));
 
-    constexpr int defaultSize = 56;
+    constexpr int defaultSize = 32;
     iconSize = int(hGrp->GetInt("NewFileIconSize", defaultSize));
 
-    auto iconLabel = new QLabel(this);
+    // Icon inside a grey rounded box (matches Option C .icon style)
+    auto iconWrapper = new QLabel(this);
+    iconWrapper->setFixedSize(32, 32);
+    iconWrapper->setStyleSheet(
+        QStringLiteral(
+            "background: #f3f4f6; border-radius: 8px; padding: 0px;"
+        )
+    );
+    iconWrapper->setAlignment(Qt::AlignCenter);
+
+    auto iconLabel = new QLabel(iconWrapper);
     QIcon baseIcon(newButton.iconPath);
     iconLabel->setPixmap(baseIcon.pixmap(iconSize, iconSize));
-    iconLabel->setAlignment(Qt::AlignHCenter);
+    iconLabel->setAlignment(Qt::AlignCenter);
 
-    textLayout->addWidget(headingLabel);
-    textLayout->setSpacing(0);
-    textLayout->setContentsMargins(0, 0, 0, 0);
+    // Overlay the pixmap centered in the wrapper
+    auto iconOverlayLayout = new QHBoxLayout(iconWrapper);
+    iconOverlayLayout->setContentsMargins(0, 0, 0, 0);
+    iconOverlayLayout->addWidget(iconLabel, 0, Qt::AlignCenter);
 
     headingLabel->setText(newButton.heading);
     QFont font = headingLabel->font();
-    font.setWeight(QFont::Bold);
+    font.setWeight(QFont::Medium);
     headingLabel->setFont(font);
 
-    mainLayout->setAlignment(Qt::AlignCenter);
-    textLayout->insertWidget(0, iconLabel, 0, Qt::AlignHCenter);
-    mainLayout->addLayout(textLayout);
-    mainLayout->addStretch();
-    QFontMetrics qfm(font);
-    int margin = qfm.height() / 2;
-    mainLayout->setSpacing(margin + 4);
-    mainLayout->setContentsMargins(margin + 8, margin + 8, margin + 12, margin + 8);
+    // Remove the old vertical textLayout structure — use a flat horizontal layout
+    textLayout->setSpacing(0);
+    textLayout->setContentsMargins(0, 0, 0, 0);
+
+    mainLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainLayout->addWidget(iconWrapper, 0, Qt::AlignVCenter);
+    mainLayout->addWidget(headingLabel, 0, Qt::AlignVCenter);
+    mainLayout->setSpacing(10);
+    mainLayout->setContentsMargins(16, 10, 20, 10);
     setLayout(mainLayout);
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     setToolTip(QStringLiteral("<b>%1</b><br/>%2").arg(newButton.heading, newButton.description));
-    setMinimumWidth(180);
+    setMinimumHeight(44);
 }
 
 QSize NewFileButton::minimumSizeHint() const
 {
-    int minWidth = labelWidth + iconSize + mainLayout->contentsMargins().left()
-        + mainLayout->contentsMargins().right() + mainLayout->spacing();
+    int textWidth = headingLabel->fontMetrics().horizontalAdvance(headingLabel->text());
+    int minWidth = 32 + textWidth + mainLayout->spacing()
+        + mainLayout->contentsMargins().left() + mainLayout->contentsMargins().right();
 
-    int textHeight = headingLabel->sizeHint().height();
-
-    int minHeight = std::max(iconSize, textHeight) + mainLayout->contentsMargins().top()
-        + mainLayout->contentsMargins().bottom();
+    int minHeight = mainLayout->contentsMargins().top() + mainLayout->contentsMargins().bottom()
+        + std::max(32, headingLabel->sizeHint().height());
 
     return {minWidth, minHeight};
 }
