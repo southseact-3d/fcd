@@ -721,7 +721,7 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
             toolbar->setWindowTitle(QApplication::translate("Workbench", toolbarName.c_str()));
             toolbar->setObjectName(name);
 
-            getMainWindow()->addToolBar(Qt::BottomToolBarArea, toolbar);
+            getMainWindow()->addToolBar(Qt::TopToolBarArea, toolbar);
 
             if (nameAsToolTip) {
                 auto tooltip = QChar::fromLatin1('[')
@@ -732,6 +732,8 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
 
             if (toolBarTextUnderIcon) {
                 toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+                toolbar->setStyleSheet(
+                    QStringLiteral("QToolButton { white-space: pre-wrap; text-align: center; }"));
             }
 
             toolbar_added = true;
@@ -742,6 +744,8 @@ void ToolBarManager::setup(ToolBarItem* toolBarItems)
 
             if (toolBarTextUnderIcon) {
                 toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+                toolbar->setStyleSheet(
+                    QStringLiteral("QToolButton { white-space: pre-wrap; text-align: center; }"));
             }
         }
 

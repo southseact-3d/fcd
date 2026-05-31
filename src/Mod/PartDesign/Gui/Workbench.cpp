@@ -779,7 +779,9 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_PartTorus"
           << "Separator"
           << "PartDesign_CompCreate"
+          << "Separator"
           << "PartDesign_CompModify"
+          << "Separator"
           << "PartDesign_CompInspect";
 
     Gui::ToolBarItem* mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);

@@ -4305,14 +4305,12 @@ public:
         setCheckable(false);
         setDropDownMenu(true);
 
-        addCommand("PartDesign_PartBoolean");
         addCommand("PartDesign_PartCut");
         addCommand("PartDesign_PartFuse");
         addCommand("PartDesign_PartCommon");
         addCommand("PartDesign_PartBooleanFragments");
         addCommand("PartDesign_PartJoinConnect");
         addCommand("PartDesign_PartRefineShape");
-        addCommand("PartDesign_PartThickness");
         addCommand("PartDesign_PartOffset");
         addCommand("PartDesign_PartScale");
         addCommand("PartDesign_PartDefeaturing");
