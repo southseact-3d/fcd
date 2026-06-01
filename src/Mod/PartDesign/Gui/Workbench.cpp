@@ -35,8 +35,10 @@
 #include <Mod/PartDesign/App/FeatureMultiTransform.h>
 
 #include <QObject>
+#include <QToolBar>
 #include <QVBoxLayout>
 
+#include "PartDesignPartToolsWidget.h"
 #include "Utils.h"
 #include "Workbench.h"
 #include "WorkbenchModeHandler.h"
@@ -528,6 +530,18 @@ void Workbench::activated()
             ->GetGroup("Mod/PartDesign")
             ->GetBool("SwitchToTask", true)) {
         Gui::Control().showTaskView();
+    }
+
+    // Replace Part Design Part Tools toolbar with custom responsive widget
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Part Design Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            auto* widget = new PartDesignPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
     }
 }
 
