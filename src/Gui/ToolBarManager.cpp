@@ -944,6 +944,19 @@ void ToolBarManager::restoreState() const
         }
     }
 
+    // Force Part Design Part Tools to top row (override QMainWindow::restoreState placement)
+    {
+        QList<ToolBar*> allToolbars = toolBars();
+        for (const QString& it : toolbarNames) {
+            QToolBar* tb = findToolBar(allToolbars, it);
+            if (tb && tb->objectName() == QLatin1String("Part Design Part Tools")) {
+                if (getMainWindow()->toolBarArea(tb) != Qt::TopToolBarArea) {
+                    getMainWindow()->addToolBar(Qt::TopToolBarArea, tb);
+                }
+            }
+        }
+    }
+
     setMovable(!areToolBarsLocked());
 
     statusBarAreaWidget->restoreState(sbToolBars);

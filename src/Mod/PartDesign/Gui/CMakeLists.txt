@@ -211,6 +211,8 @@ SET(PartDesignGuiModule_SRCS
     StyleParameters.h
     Utils.cpp
     Utils.h
+    PartDesignPartToolsWidget.cpp
+    PartDesignPartToolsWidget.h
     Workbench.cpp
     Workbench.h
     WorkbenchModeHandler.cpp
