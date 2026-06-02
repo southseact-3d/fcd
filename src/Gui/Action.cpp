@@ -693,7 +693,7 @@ void WorkbenchGroup::refreshWorkbenchList()
     enabledWbsActions.clear();
     disabledWbsActions.clear();
 
-    std::string activeWbName = WorkbenchManager::instance()->activeName();
+    QString activeWbName = QString::fromStdString(WorkbenchManager::instance()->activeName());
 
     // Create action list of enabled wb
     int index = 0;
@@ -716,7 +716,7 @@ void WorkbenchGroup::refreshWorkbenchList()
         if (index < 9) {
             action->setShortcut(QKeySequence(QStringLiteral("W,%1").arg(index + 1)));
         }
-        if (wbName.toStdString() == activeWbName) {
+        if (wbName == activeWbName) {
             action->setChecked(true);
         }
         enabledWbsActions.push_back(action);
@@ -741,7 +741,7 @@ void WorkbenchGroup::refreshWorkbenchList()
         action->setIcon(px);
         action->setToolTip(tip);
         action->setStatusTip(tr("Select the '%1' workbench").arg(name));
-        if (wbName.toStdString() == activeWbName) {
+        if (wbName == activeWbName) {
             action->setChecked(true);
         }
         disabledWbsActions.push_back(action);

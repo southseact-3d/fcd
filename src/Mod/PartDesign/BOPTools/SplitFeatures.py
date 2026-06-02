@@ -45,8 +45,14 @@ if FreeCAD.GuiUp:
         def _fromUtf8(s):
             return s
 
-    translate = FreeCAD.Qt.translate
+translate = FreeCAD.Qt.translate
 # --------------------------/translation-related code --------------------------
+
+
+def _addCommandOnce(name, command, known_commands):
+    if name not in known_commands:
+        FreeCADGui.addCommand(name, command)
+        known_commands.add(name)
 
 
 def getIconPath(icon_dot_svg):
@@ -704,12 +710,12 @@ class CommandXOR:
 
 
 def addCommands():
-    FreeCADGui.addCommand("Part_BooleanFragments", CommandBooleanFragments())
-    FreeCADGui.addCommand("Part_Slice", CommandSlice())
-    FreeCADGui.addCommand("Part_SliceApart", CommandSliceApart())
-    FreeCADGui.addCommand("Part_XOR", CommandXOR())
-    FreeCADGui.addCommand("PartDesign_PartBooleanFragments", CommandBooleanFragments())
-    FreeCADGui.addCommand("PartDesign_PartSlice", CommandSlice())
-    FreeCADGui.addCommand("PartDesign_PartSliceApart", CommandSliceApart())
-    FreeCADGui.addCommand("PartDesign_PartXor", CommandXOR())
-
+    known_commands = set(FreeCADGui.listCommands())
+    _addCommandOnce("Part_BooleanFragments", CommandBooleanFragments(), known_commands)
+    _addCommandOnce("Part_Slice", CommandSlice(), known_commands)
+    _addCommandOnce("Part_SliceApart", CommandSliceApart(), known_commands)
+    _addCommandOnce("Part_XOR", CommandXOR(), known_commands)
+    _addCommandOnce("PartDesign_PartBooleanFragments", CommandBooleanFragments(), known_commands)
+    _addCommandOnce("PartDesign_PartSlice", CommandSlice(), known_commands)
+    _addCommandOnce("PartDesign_PartSliceApart", CommandSliceApart(), known_commands)
+    _addCommandOnce("PartDesign_PartXor", CommandXOR(), known_commands)

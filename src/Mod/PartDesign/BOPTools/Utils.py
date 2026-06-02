@@ -56,14 +56,17 @@ class HashableShape_Deep(object):
     def __init__(self, shape):
         self.Shape = shape
         self.hash = 0
-        for el in shape.childShapes():
+        child_shapes = shape.childShapes()
+        self.child_count = len(child_shapes)
+        self.shape_type = shape.ShapeType
+        for el in child_shapes:
             self.hash = self.hash ^ el.hashCode()
 
     def __eq__(self, other):
         # avoiding extensive comparison for now. Just doing a few extra tests should reduce the already-low chances of false-positives
         if self.hash == other.hash:
-            if len(self.Shape.childShapes()) == len(other.Shape.childShapes()):
-                if self.Shape.ShapeType == other.Shape.ShapeType:
+            if self.child_count == other.child_count:
+                if self.shape_type == other.shape_type:
                     return True
         return False
 

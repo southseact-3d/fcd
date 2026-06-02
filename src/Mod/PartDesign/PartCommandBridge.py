@@ -515,6 +515,13 @@ CUSTOM_ACTIVATORS = {
     "PartDesign_PartToleranceSet": _activate_tolerance_set,
 }
 
+SOURCE_TO_ALIAS = {
+    source_name: alias_name
+    for alias_name, (source_name, _menu_text, _tooltip, _pixmap) in ALIAS_COMMANDS.items()
+}
+
+_BRIDGE_INITIALIZED = False
+
 
 def _list_commands():
     try:
@@ -525,11 +532,13 @@ def _list_commands():
 
 def register_alias_commands():
     known_commands = _list_commands()
+    custom_activators = CUSTOM_ACTIVATORS
 
     for alias_name, (source_name, menu_text, tooltip, pixmap) in ALIAS_COMMANDS.items():
         if alias_name in known_commands:
             continue
-        has_custom_handler = alias_name in CUSTOM_ACTIVATORS
+        handler = custom_activators.get(alias_name)
+        has_custom_handler = handler is not None
         if not has_custom_handler and source_name not in known_commands:
             continue
 
@@ -541,19 +550,17 @@ def register_alias_commands():
                     menu_text,
                     tooltip,
                     pixmap,
-                    CUSTOM_ACTIVATORS[alias_name],
+                    handler,
                 ),
             )
         else:
             Gui.addCommand(alias_name, _RelayCommand(source_name, menu_text, tooltip, pixmap))
+        known_commands.add(alias_name)
 
 
 def map_legacy_command(command_name):
     """Map old Part command name to PartDesign bridge command name if available."""
-    for alias_name, (source_name, _menu, _tip, _pixmap) in ALIAS_COMMANDS.items():
-        if source_name == command_name:
-            return alias_name
-    return command_name
+    return SOURCE_TO_ALIAS.get(command_name, command_name)
 
 
 def run_mapped_command(command_name):
@@ -562,5 +569,10 @@ def run_mapped_command(command_name):
 
 
 def initialize_bridge():
+    global _BRIDGE_INITIALIZED
+    if _BRIDGE_INITIALIZED:
+        return
+
     register_alias_commands()
+    _BRIDGE_INITIALIZED = True
     App.Console.PrintLog("PartDesign bridge commands initialized.\n")

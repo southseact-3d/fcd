@@ -47,6 +47,12 @@ if FreeCAD.GuiUp:
     translate = FreeCAD.Qt.translate
 
 
+def _addCommandOnce(name, command, known_commands):
+    if name not in known_commands:
+        FreeCADGui.addCommand(name, command)
+        known_commands.add(name)
+
+
 # command class
 class _CommandCompoundFilter:
     "Command to create CompoundFilter feature"
@@ -96,8 +102,9 @@ class _CommandCompoundFilter:
 
 
 if FreeCAD.GuiUp:
-    FreeCADGui.addCommand("Part_CompoundFilter", _CommandCompoundFilter())
-    FreeCADGui.addCommand("PartDesign_PartCompoundFilter", _CommandCompoundFilter())
+    known_commands = set(FreeCADGui.listCommands())
+    _addCommandOnce("Part_CompoundFilter", _CommandCompoundFilter(), known_commands)
+    _addCommandOnce("PartDesign_PartCompoundFilter", _CommandCompoundFilter(), known_commands)
 
 
 # helper
@@ -150,4 +157,3 @@ def cmdCreateCompoundFilter(name):
     FreeCADGui.doCommand("f = None")
 
     FreeCAD.ActiveDocument.commitTransaction()
-

@@ -40,26 +40,27 @@ __all__ = [
     "Utils",
     "SplitAPI",
     "SplitFeatures",
+    "ToleranceFeatures",
 ]
 
 
 def importAll():
     "importAll(): imports all modules of BOPTools package"
-    from . import BOPFeatures
-    from . import GeneralFuseResult
-    from . import JoinAPI
-    from . import JoinFeatures
-    from . import ShapeMerge
-    from . import Utils
-    from . import SplitAPI
-    from . import SplitFeatures
-    from . import ToleranceFeatures
+    import importlib
+
+    package = __name__
+    for modstr in __all__:
+        if modstr not in globals():
+            globals()[modstr] = importlib.import_module(f".{modstr}", package)
 
 
 def reloadAll():
     "reloadAll(): reloads all modules of BOPTools package. Useful for debugging."
+    import importlib
+
+    importAll()
     for modstr in __all__:
-        reload(globals()[modstr])
+        globals()[modstr] = importlib.reload(globals()[modstr])
     import FreeCAD
 
     if FreeCAD.GuiUp:
@@ -68,6 +69,7 @@ def reloadAll():
 
 def addCommands():
     "addCommands(): add all GUI commands of BOPTools package to FreeCAD command manager."
+    importAll()
     JoinFeatures.addCommands()
     SplitFeatures.addCommands()
     ToleranceFeatures.addCommands()

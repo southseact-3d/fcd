@@ -77,15 +77,6 @@ class PartDesignWorkbench(Workbench):
             )
 
         try:
-            import PartDesign.JoinFeatures
-            import PartDesign.SplitFeatures
-        except ImportError as err:
-            App.Console.PrintError(
-                "'PartDesign Join/Split bridge' cannot be loaded. "
-                "{err}\n".format(err=str(err))
-            )
-
-        try:
             import PartGui
 
             from PartDesign import BOPTools as bop

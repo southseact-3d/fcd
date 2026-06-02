@@ -30,7 +30,7 @@ __doc__ = "JoinFeatures functions that operate on shapes."
 import Part
 from . import ShapeMerge
 from .GeneralFuseResult import GeneralFuseResult
-from .Utils import compoundLeaves
+from .Utils import HashableShape, compoundLeaves
 
 
 def shapeOfMaxSize(list_of_shapes):
@@ -83,6 +83,9 @@ def connect(list_of_shapes, tolerance=0.0):
     ao = GeneralFuseResult(list_of_shapes, (pieces, map))
     ao.splitAggregates()
     # print len(ao.pieces)," pieces total"
+    piece_source_counts = {
+        HashableShape(piece): len(ao.sourcesOfPiece(piece)) for piece in ao.pieces
+    }
 
     keepers = []
     all_danglers = []  # debug
@@ -90,7 +93,9 @@ def connect(list_of_shapes, tolerance=0.0):
     # add all biggest dangling pieces
     for src in ao.source_shapes:
         danglers = [
-            piece for piece in ao.piecesFromSource(src) if len(ao.sourcesOfPiece(piece)) == 1
+            piece
+            for piece in ao.piecesFromSource(src)
+            if piece_source_counts[HashableShape(piece)] == 1
         ]
         all_danglers.extend(danglers)
         largest = shapeOfMaxSize(danglers)
@@ -100,7 +105,9 @@ def connect(list_of_shapes, tolerance=0.0):
     touch_test_list = Part.makeCompound(keepers)
     # add all intersection pieces that touch danglers, triple intersection pieces that touch duals, and so on
     for ii in range(2, ao.largestOverlapCount() + 1):
-        list_ii_pieces = [piece for piece in ao.pieces if len(ao.sourcesOfPiece(piece)) == ii]
+        list_ii_pieces = [
+            piece for piece in ao.pieces if piece_source_counts[HashableShape(piece)] == ii
+        ]
         keepers_2_add = []
         for piece in list_ii_pieces:
             if ShapeMerge.isConnected(piece, touch_test_list):

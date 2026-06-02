@@ -48,6 +48,12 @@ if FreeCAD.GuiUp:
     translate = FreeCAD.Qt.translate
 
 
+def _addCommandOnce(name, command, known_commands):
+    if name not in known_commands:
+        FreeCADGui.addCommand(name, command)
+        known_commands.add(name)
+
+
 # command class
 class _CommandExplodeCompound:
     "Command to explode a compound"
@@ -83,8 +89,9 @@ class _CommandExplodeCompound:
 
 
 if FreeCAD.GuiUp:
-    FreeCADGui.addCommand("Part_ExplodeCompound", _CommandExplodeCompound())
-    FreeCADGui.addCommand("PartDesign_PartExplodeCompound", _CommandExplodeCompound())
+    known_commands = set(FreeCADGui.listCommands())
+    _addCommandOnce("Part_ExplodeCompound", _CommandExplodeCompound(), known_commands)
+    _addCommandOnce("PartDesign_PartExplodeCompound", _CommandExplodeCompound(), known_commands)
 
 
 def cmdExplode():
@@ -109,4 +116,3 @@ def cmdExplode():
 
     FreeCAD.ActiveDocument.commitTransaction()
     FreeCADGui.doCommand("App.ActiveDocument.recompute()")
-

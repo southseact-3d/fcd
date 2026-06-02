@@ -48,8 +48,14 @@ if FreeCAD.GuiUp:
         def _fromUtf8(s):
             return s
 
-    translate = FreeCAD.Qt.translate
+translate = FreeCAD.Qt.translate
 # --------------------------/translation-related code -------------------------
+
+
+def _addCommandOnce(name, command, known_commands):
+    if name not in known_commands:
+        FreeCADGui.addCommand(name, command)
+        known_commands.add(name)
 
 
 def getParamRefine():
@@ -485,10 +491,10 @@ class CommandCutout:
 
 
 def addCommands():
-    FreeCADGui.addCommand("Part_JoinCutout", CommandCutout())
-    FreeCADGui.addCommand("Part_JoinEmbed", CommandEmbed())
-    FreeCADGui.addCommand("Part_JoinConnect", CommandConnect())
-    FreeCADGui.addCommand("PartDesign_PartJoinCutout", CommandCutout())
-    FreeCADGui.addCommand("PartDesign_PartJoinEmbed", CommandEmbed())
-    FreeCADGui.addCommand("PartDesign_PartJoinConnect", CommandConnect())
-
+    known_commands = set(FreeCADGui.listCommands())
+    _addCommandOnce("Part_JoinCutout", CommandCutout(), known_commands)
+    _addCommandOnce("Part_JoinEmbed", CommandEmbed(), known_commands)
+    _addCommandOnce("Part_JoinConnect", CommandConnect(), known_commands)
+    _addCommandOnce("PartDesign_PartJoinCutout", CommandCutout(), known_commands)
+    _addCommandOnce("PartDesign_PartJoinEmbed", CommandEmbed(), known_commands)
+    _addCommandOnce("PartDesign_PartJoinConnect", CommandConnect(), known_commands)

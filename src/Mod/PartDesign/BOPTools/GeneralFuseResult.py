@@ -91,33 +91,28 @@ class GeneralFuseResult(FrozenClass):
         self.pieces = compound.childShapes()
 
         # create piece shape index
-        for iPiece in range(len(self.pieces)):
-            ha_piece = HashableShape(self.pieces[iPiece])
-            if not ha_piece in self._piece_to_index:
+        for iPiece, piece in enumerate(self.pieces):
+            ha_piece = HashableShape(piece)
+            if ha_piece not in self._piece_to_index:
                 self._piece_to_index[ha_piece] = iPiece
             else:
                 raise ValueError("GeneralFuseAnalyzer.parse: duplicate piece shape detected.")
         # create source shape index
-        for iSource in range(len(self.source_shapes)):
-            ha_source = HashableShape(self.source_shapes[iSource])
-            if not ha_source in self._source_to_index:
+        for iSource, source in enumerate(self.source_shapes):
+            ha_source = HashableShape(source)
+            if ha_source not in self._source_to_index:
                 self._source_to_index[ha_source] = iSource
             else:
                 raise ValueError("GeneralFuseAnalyzer.parse: duplicate source shape detected.")
 
         # test if map has missing entries
-        map_needs_repairing = False
-        for iSource in range(len(map)):
-            if len(map[iSource]) == 0:
-                map_needs_repairing = True
+        map_needs_repairing = any(len(pieces) == 0 for pieces in map)
 
         if map_needs_repairing:
-            aggregate_types = set(["Wire", "Shell", "CompSolid", "Compound"])
-            nonaggregate_types = set(["Vertex", "Edge", "Face", "Solid"])
+            aggregate_types = {"Wire", "Shell", "CompSolid", "Compound"}
+            nonaggregate_types = {"Vertex", "Edge", "Face", "Solid"}
 
-            types = set()
-            for piece in self.pieces:
-                types.add(piece.ShapeType)
+            types = {piece.ShapeType for piece in self.pieces}
 
             types_to_extract = types.intersection(nonaggregate_types)
 
@@ -150,8 +145,8 @@ class GeneralFuseResult(FrozenClass):
                                 map[iSource].append(self.pieces[iPiece])
 
             # check the map was recovered successfully
-            for iSource in range(len(map)):
-                if len(map[iSource]) == 0:
+            for iSource, pieces in enumerate(map):
+                if len(pieces) == 0:
                     import FreeCAD as App
 
                     App.Console.PrintWarning(
@@ -164,8 +159,7 @@ class GeneralFuseResult(FrozenClass):
         self._pieces_of_source = [[] for i in range(len(self.source_shapes))]
         self._sources_of_piece = [[] for i in range(len(self.pieces))]
         assert len(map) == len(self.source_shapes)
-        for iSource in range(len(self.source_shapes)):
-            list_pieces = map[iSource]
+        for iSource, list_pieces in enumerate(map):
             for piece in list_pieces:
                 iPiece = self.indexOfPiece(piece)
                 self._sources_of_piece[iPiece].append(iSource)
@@ -178,14 +172,14 @@ class GeneralFuseResult(FrozenClass):
         if len(self._element_to_source) > 0:
             return  # already parsed.
 
-        for iPiece in range(len(self.pieces)):
-            piece = self.pieces[iPiece]
+        for iPiece, piece in enumerate(self.pieces):
+            sources = self._sources_of_piece[iPiece]
             for element in piece.Vertexes + piece.Edges + piece.Faces + piece.Solids:
                 el_h = HashableShape(element)
                 if el_h in self._element_to_source:
-                    self._element_to_source[el_h].update(set(self._sources_of_piece[iPiece]))
+                    self._element_to_source[el_h].update(sources)
                 else:
-                    self._element_to_source[el_h] = set(self._sources_of_piece[iPiece])
+                    self._element_to_source[el_h] = set(sources)
 
     def indexOfPiece(self, piece_shape):
         "indexOfPiece(piece_shape): returns index of piece_shape in list of pieces"
@@ -225,7 +219,7 @@ class GeneralFuseResult(FrozenClass):
         compsolids/compounds. Please use explodeCompounds and splitAggregates before using this function.
         """
 
-        return max([len(ilist) for ilist in self._sources_of_piece])
+        return max(len(ilist) for ilist in self._sources_of_piece)
 
     def splitAggregates(self, pieces_to_split=None):
         """splitAggregates(pieces_to_split = None): splits aggregate shapes (wires, shells,
@@ -242,16 +236,14 @@ class GeneralFuseResult(FrozenClass):
 
         if pieces_to_split is None:
             pieces_to_split = self.pieces
-        pieces_to_split = [HashableShape(piece) for piece in pieces_to_split]
-        pieces_to_split = set(pieces_to_split)
+        pieces_to_split = {HashableShape(piece) for piece in pieces_to_split}
 
         self.parse_elements()
         new_data = GeneralFuseReturnBuilder(self.source_shapes)
         changed = False
 
         # split pieces that are not compounds....
-        for iPiece in range(len(self.pieces)):
-            piece = self.pieces[iPiece]
+        for iPiece, piece in enumerate(self.pieces):
 
             if HashableShape(piece) in pieces_to_split:
                 new_pieces = self.makeSplitPieces(piece)
@@ -335,14 +327,16 @@ class GeneralFuseResult(FrozenClass):
 
         # for each joint, test if all bits it's connected to are from same number of sources.
         # If not, this is a joint for splitting
-        # FIXME: this is slow, and maybe can be optimized
         splits = []
+        bits_with_joints = [
+            (bit, joint_extractor(bit)) for bit in bit_extractor(self.gfa_return[0])
+        ]
         for joint in joint_extractor(shape):
             joint_overlap_count = len(self._element_to_source[HashableShape(joint)])
             if joint_overlap_count > 1:
                 # find elements in pieces that are connected to joint
-                for bit in bit_extractor(self.gfa_return[0]):
-                    for joint_bit in joint_extractor(bit):
+                for bit, joint_bits in bits_with_joints:
+                    for joint_bit in joint_bits:
                         if joint_bit.isSame(joint):
                             # bit is connected to joint!
                             bit_overlap_count = len(self._element_to_source[HashableShape(bit)])
@@ -369,10 +363,7 @@ class GeneralFuseResult(FrozenClass):
         After running this, 'self' is filled with new data, where pieces are updated to
         contain the stuff extracted from compounds."""
 
-        has_compounds = False
-        for piece in self.pieces:
-            if piece.ShapeType == "Compound":
-                has_compounds = True
+        has_compounds = any(piece.ShapeType == "Compound" for piece in self.pieces)
         if not has_compounds:
             return
 
@@ -381,8 +372,7 @@ class GeneralFuseResult(FrozenClass):
         new_data = GeneralFuseReturnBuilder(self.source_shapes)
         new_data.hasher_class = HashableShape  # deep hashing not needed here.
 
-        for iPiece in range(len(self.pieces)):
-            piece = self.pieces[iPiece]
+        for iPiece, piece in enumerate(self.pieces):
             if piece.ShapeType == "Compound":
                 for child in compoundLeaves(piece):
                     new_data.addPiece(child, self._sources_of_piece[iPiece])

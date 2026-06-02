@@ -56,16 +56,21 @@ COMMAND_REPLACEMENTS = {
     "Part_CheckGeometry": "PartDesign_PartCheckGeometry",
 }
 
+_COMMAND_PATTERN = re.compile(
+    r"\b({})\b".format(
+        "|".join(
+            re.escape(name) for name in sorted(COMMAND_REPLACEMENTS, key=len, reverse=True)
+        )
+    )
+)
+
 
 def remap_command_name(command_name: str) -> str:
     return COMMAND_REPLACEMENTS.get(command_name, command_name)
 
 
 def rewrite_macro_content(content: str) -> str:
-    rewritten = content
-    for old_name, new_name in COMMAND_REPLACEMENTS.items():
-        rewritten = re.sub(rf"\b{re.escape(old_name)}\b", new_name, rewritten)
-    return rewritten
+    return _COMMAND_PATTERN.sub(lambda match: COMMAND_REPLACEMENTS[match.group(0)], content)
 
 
 def migrate_macro_file(path: str, in_place: bool = False) -> str:
@@ -73,7 +78,7 @@ def migrate_macro_file(path: str, in_place: bool = False) -> str:
     original = source.read_text(encoding="utf-8")
     migrated = rewrite_macro_content(original)
 
-    if in_place:
+    if in_place and migrated != original:
         source.write_text(migrated, encoding="utf-8")
 
     return migrated

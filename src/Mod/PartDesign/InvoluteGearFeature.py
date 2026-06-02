@@ -329,15 +329,31 @@ class _InvoluteGearTaskPanel:
 
     def transferFrom(self):
         "Transfer from the object to the dialog"
-        self.form.spinBox_NumberOfTeeth.setValue(self.obj.NumberOfTeeth)
-        self.form.Quantity_Modules.setText(self.obj.Modules.UserString)
-        self.form.Quantity_PressureAngle.setText(self.obj.PressureAngle.UserString)
-        self.form.comboBox_HighPrecision.setCurrentIndex(0 if self.obj.HighPrecision else 1)
-        self.form.comboBox_ExternalGear.setCurrentIndex(0 if self.obj.ExternalGear else 1)
-        self.form.doubleSpinBox_Addendum.setValue(self.obj.AddendumCoefficient)
-        self.form.doubleSpinBox_Dedendum.setValue(self.obj.DedendumCoefficient)
-        self.form.doubleSpinBox_RootFillet.setValue(self.obj.RootFilletCoefficient)
-        self.form.doubleSpinBox_ProfileShift.setValue(self.obj.ProfileShiftCoefficient)
+        widgets = (
+            self.form.spinBox_NumberOfTeeth,
+            self.form.Quantity_Modules,
+            self.form.Quantity_PressureAngle,
+            self.form.comboBox_HighPrecision,
+            self.form.comboBox_ExternalGear,
+            self.form.doubleSpinBox_Addendum,
+            self.form.doubleSpinBox_Dedendum,
+            self.form.doubleSpinBox_RootFillet,
+            self.form.doubleSpinBox_ProfileShift,
+        )
+        previous_signal_states = [widget.blockSignals(True) for widget in widgets]
+        try:
+            self.form.spinBox_NumberOfTeeth.setValue(self.obj.NumberOfTeeth)
+            self.form.Quantity_Modules.setText(self.obj.Modules.UserString)
+            self.form.Quantity_PressureAngle.setText(self.obj.PressureAngle.UserString)
+            self.form.comboBox_HighPrecision.setCurrentIndex(0 if self.obj.HighPrecision else 1)
+            self.form.comboBox_ExternalGear.setCurrentIndex(0 if self.obj.ExternalGear else 1)
+            self.form.doubleSpinBox_Addendum.setValue(self.obj.AddendumCoefficient)
+            self.form.doubleSpinBox_Dedendum.setValue(self.obj.DedendumCoefficient)
+            self.form.doubleSpinBox_RootFillet.setValue(self.obj.RootFilletCoefficient)
+            self.form.doubleSpinBox_ProfileShift.setValue(self.obj.ProfileShiftCoefficient)
+        finally:
+            for widget, was_blocked in zip(widgets, previous_signal_states):
+                widget.blockSignals(was_blocked)
 
     def getStandardButtons(self):
         return (

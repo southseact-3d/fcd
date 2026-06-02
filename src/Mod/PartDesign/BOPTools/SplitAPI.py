@@ -111,8 +111,8 @@ def xor(list_of_shapes, tolerance=0.0):
     gr.explodeCompounds()
     gr.splitAggregates()
     pieces_to_keep = []
-    for piece in gr.pieces:
-        if len(gr.sourcesOfPiece(piece)) % 2 == 1:
+    for index, piece in enumerate(gr.pieces):
+        if len(gr._sources_of_piece[index]) % 2 == 1:
             pieces_to_keep.append(piece)
     return Part.makeCompound(pieces_to_keep)
 

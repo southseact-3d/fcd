@@ -124,19 +124,24 @@ class Sprocket:
         28: [0.625, 0.400, 0.343, "Motorcycle 530"],
         29: [0.750, 0.400, 0.343, "Motorcycle 630"],
     }
+    SprocketReferenceLabels = None
 
-    def __init__(self, obj):
-        self.Type = "Sprocket"
-        self.indx = 0
-        self.sprockRef = []
-        # As the UI file combobox has been translated the reference field needs populating here
+    @classmethod
+    def getSprocketReferenceLabels(cls):
+        if cls.SprocketReferenceLabels is not None:
+            return cls.SprocketReferenceLabels
+
         tempForm = FreeCADGui.PySideUic.loadUi(
             FreeCAD.getHomePath() + "Mod/PartDesign/SprocketFeature.ui"
         )
-        for sKey in self.SprocketReferenceRollerTable:
-            tempForm.comboBox_SprocketReference.setCurrentIndex(self.indx)
-            self.sprockRef.append(tempForm.comboBox_SprocketReference.currentText())
-            self.indx += 1
+        cls.SprocketReferenceLabels = [
+            tempForm.comboBox_SprocketReference.itemText(index)
+            for index in sorted(cls.SprocketReferenceRollerTable)
+        ]
+        return cls.SprocketReferenceLabels
+
+    def __init__(self, obj):
+        self.Type = "Sprocket"
         self._ensure_properties(obj, is_restore=False)
         obj.addProperty(
             "App::PropertyEnumeration",
@@ -145,7 +150,7 @@ class Sprocket:
             "Sprocket Reference",
             locked=True,
         )
-        obj.SprocketReference = list(self.sprockRef)
+        obj.SprocketReference = list(self.getSprocketReferenceLabels())
         obj.Proxy = self
 
     def onDocumentRestored(self, obj):
@@ -273,11 +278,23 @@ class SprocketTaskPanel:
         """
         Transfer from the object to the dialog
         """
-        self.form.spinBox_NumberOfTeeth.setValue(self.obj.NumberOfTeeth)
-        self.form.Quantity_Pitch.setText(self.obj.Pitch.UserString)
-        self.form.Quantity_RollerDiameter.setText(self.obj.RollerDiameter.UserString)
-        self.form.comboBox_SprocketReference.setCurrentText(self.obj.SprocketReference)
-        self.form.Quantity_Thickness.setText(self.obj.Thickness.UserString)
+        widgets = (
+            self.form.spinBox_NumberOfTeeth,
+            self.form.Quantity_Pitch,
+            self.form.Quantity_RollerDiameter,
+            self.form.comboBox_SprocketReference,
+            self.form.Quantity_Thickness,
+        )
+        previous_signal_states = [widget.blockSignals(True) for widget in widgets]
+        try:
+            self.form.spinBox_NumberOfTeeth.setValue(self.obj.NumberOfTeeth)
+            self.form.Quantity_Pitch.setText(self.obj.Pitch.UserString)
+            self.form.Quantity_RollerDiameter.setText(self.obj.RollerDiameter.UserString)
+            self.form.comboBox_SprocketReference.setCurrentText(self.obj.SprocketReference)
+            self.form.Quantity_Thickness.setText(self.obj.Thickness.UserString)
+        finally:
+            for widget, was_blocked in zip(widgets, previous_signal_states):
+                widget.blockSignals(was_blocked)
 
     def pitchChanged(self, value):
         self.obj.Pitch = value
@@ -289,9 +306,19 @@ class SprocketTaskPanel:
         self.obj.RollerDiameter = str(Sprocket.SprocketReferenceRollerTable[size][1]) + " in"
         self.obj.Thickness = str(Sprocket.SprocketReferenceRollerTable[size][2]) + " in"
         self.obj.SprocketReference = self.obj.getEnumerationsOfProperty("SprocketReference")[size]
-        self.form.Quantity_Pitch.setText(self.obj.Pitch.UserString)
-        self.form.Quantity_RollerDiameter.setText(self.obj.RollerDiameter.UserString)
-        self.form.Quantity_Thickness.setText(self.obj.Thickness.UserString)
+        widgets = (
+            self.form.Quantity_Pitch,
+            self.form.Quantity_RollerDiameter,
+            self.form.Quantity_Thickness,
+        )
+        previous_signal_states = [widget.blockSignals(True) for widget in widgets]
+        try:
+            self.form.Quantity_Pitch.setText(self.obj.Pitch.UserString)
+            self.form.Quantity_RollerDiameter.setText(self.obj.RollerDiameter.UserString)
+            self.form.Quantity_Thickness.setText(self.obj.Thickness.UserString)
+        finally:
+            for widget, was_blocked in zip(widgets, previous_signal_states):
+                widget.blockSignals(was_blocked)
         self.obj.Proxy.execute(self.obj)
         FreeCAD.Gui.SendMsgToActiveView("ViewFit")
 
