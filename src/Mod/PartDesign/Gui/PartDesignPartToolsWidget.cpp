@@ -47,7 +47,7 @@ const QString buttonStyleSheet = QStringLiteral(
 QIcon commandIcon(const char* cmdName)
 {
     auto& cmdMgr = Gui::Application::Instance->commandManager();
-    Gui::Command* cmd = cmdMgr.getCommand(cmdName);
+    Gui::Command* cmd = cmdMgr.getCommandByName(cmdName);
     if (!cmd) {
         return {};
     }
@@ -127,7 +127,7 @@ QWidget* PartDesignPartToolsWidget::createModifyInspectGroup()
 QToolButton* PartDesignPartToolsWidget::createPrimitiveButton(const QString& cmdName)
 {
     auto& cmdMgr = Gui::Application::Instance->commandManager();
-    Gui::Command* cmd = cmdMgr.getCommand(cmdName.toLatin1().constData());
+    Gui::Command* cmd = cmdMgr.getCommandByName(cmdName.toLatin1().constData());
 
     auto* btn = new QToolButton(this);
     btn->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
@@ -153,7 +153,7 @@ QToolButton* PartDesignPartToolsWidget::createPrimitiveButton(const QString& cmd
 QToolButton* PartDesignPartToolsWidget::createDropdownButton(const QString& groupCmdName)
 {
     auto& cmdMgr = Gui::Application::Instance->commandManager();
-    Gui::Command* cmd = cmdMgr.getCommand(groupCmdName.toLatin1().constData());
+    Gui::Command* cmd = cmdMgr.getCommandByName(groupCmdName.toLatin1().constData());
 
     auto* btn = new QToolButton(this);
     btn->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
