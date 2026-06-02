@@ -206,6 +206,9 @@ void Workbench::activated()
 
     createTabBar();
     attachTabBar();
+    if (tabBar) {
+        tabBar->show();
+    }
 
     int savedIndex = (modeHandler->currentMode() == WorkbenchMode::MeshMode) ? 1 : 0;
     tabBar->setCurrentIndex(savedIndex);
@@ -550,6 +553,10 @@ void Workbench::deactivated()
     removeTaskWatcher();
     // reset the active Body
     Gui::Command::doCommand(Gui::Command::Doc, "import PartDesignGui");
+
+    if (tabBar) {
+        tabBar->hide();
+    }
 
     Gui::Workbench::deactivated();
 }

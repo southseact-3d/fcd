@@ -55,6 +55,7 @@
 #include <Gui/ModuleIO.h>
 #include <Gui/View3DInventor.h>
 #include <Gui/View3DInventorViewer.h>
+#include <Gui/WorkbenchManager.h>
 #include <gsl/pointers>
 #include <string>
 
@@ -500,6 +501,31 @@ void StartView::onMdiSubWindowActivated(QMdiSubWindow* subWindow)
     // so we can once again receive paint events
     bool isOurWindow = subWindow && subWindow->isAncestorOf(this);
     setListViewUpdatesEnabled(isOurWindow);
+
+    if (isOurWindow) {
+        // Start page is becoming active: save current workbench and switch to NoneWorkbench
+        // (which has no toolbars), so workbench-specific toolbars from the previous view
+        // don't appear on the Start page.
+        auto* activeWb = Gui::WorkbenchManager::instance()->active();
+        if (activeWb) {
+            _savedWorkbench = activeWb->name();
+        }
+        if (_savedWorkbench != "NoneWorkbench") {
+            Gui::Application::Instance->activateWorkbench("NoneWorkbench");
+        }
+    }
+    else {
+        // Start page is becoming inactive: restore the saved workbench, but only if
+        // the current workbench is still NoneWorkbench (meaning nothing else already
+        // switched it, e.g. newPartDesignFile() which activates PartDesignWorkbench).
+        if (!_savedWorkbench.empty()) {
+            auto* activeWb = Gui::WorkbenchManager::instance()->active();
+            if (activeWb && activeWb->name() == "NoneWorkbench") {
+                Gui::Application::Instance->activateWorkbench(_savedWorkbench.c_str());
+            }
+            _savedWorkbench.clear();
+        }
+    }
 }
 
 void StartView::setListViewUpdatesEnabled(bool enabled)

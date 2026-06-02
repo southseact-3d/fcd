@@ -27,6 +27,7 @@
 #include <Mod/Start/StartGlobal.h>
 #include <Base/Type.h>
 #include <Gui/MDIView.h>
+#include <string>
 
 #include "../App/DisplayedFilesModel.h"
 #include "../App/RecentFilesModel.h"
@@ -119,6 +120,7 @@ private:
     QCheckBox* _showOnStartupCheckBox;
 
     bool isInitialized = false;
+    std::string _savedWorkbench;
 
 };  // namespace StartGui
 
