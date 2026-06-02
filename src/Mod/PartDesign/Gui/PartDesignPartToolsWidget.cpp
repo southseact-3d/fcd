@@ -25,11 +25,12 @@
 
 #include "PartDesignPartToolsWidget.h"
 
-#include <QActionGroup>
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QMenu>
+#include <QResizeEvent>
 #include <QToolButton>
+#include <QVBoxLayout>
 
 #include <Gui/Application.h>
 #include <Gui/Command.h>
@@ -41,10 +42,440 @@ using namespace PartDesignGui;
 namespace
 {
 
-const QString buttonStyleSheet = QStringLiteral(
-    "QToolButton { white-space: pre-wrap; text-align: center; }");
+const int MinButtonWidth = 36;
+const int IconSize = 20;
 
-QIcon commandIcon(const char* cmdName)
+const QString labelSheet = QStringLiteral(
+    "QToolButton {"
+    "  border: none;"
+    "  border-top: 1px solid #ccc;"
+    "  padding: 2px 4px;"
+    "  font-size: 10px;"
+    "  color: #555;"
+    "  text-transform: uppercase;"
+    "  letter-spacing: 0.5px;"
+    "}"
+    "QToolButton:hover { color: #0078d4; }"
+);
+
+const QString groupToolSheet = QStringLiteral(
+    "QToolButton {"
+    "  border: 1px solid transparent;"
+    "  border-radius: 3px;"
+    "  padding: 2px;"
+    "}"
+    "QToolButton:hover {"
+    "  background: #d0d0d0;"
+    "  border-color: #aaa;"
+    "}"
+    "QToolButton:pressed {"
+    "  background: #b8b8b8;"
+    "}"
+);
+
+}  // namespace
+
+
+// ============================================================================
+// PartDesignGroupWidget — a labeled tool group (tools on top, label below)
+// ============================================================================
+
+class PartDesignGui::PartDesignGroupWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit PartDesignGroupWidget(QWidget* parent = nullptr)
+        : QWidget(parent)
+    {
+        auto* mainLayout = new QVBoxLayout(this);
+        mainLayout->setContentsMargins(0, 0, 0, 0);
+        mainLayout->setSpacing(0);
+
+        _toolsContainer = new QWidget(this);
+        _toolsLayout = new QHBoxLayout(_toolsContainer);
+        _toolsLayout->setContentsMargins(2, 2, 2, 0);
+        _toolsLayout->setSpacing(1);
+        _toolsLayout->addStretch();
+
+        _labelButton = new QToolButton(this);
+        _labelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        _labelButton->setAutoRaise(true);
+        _labelButton->setStyleSheet(labelSheet);
+        _labelButton->setCursor(Qt::PointingHandCursor);
+        _labelButton->setFixedHeight(20);
+
+        mainLayout->addWidget(_toolsContainer, 1);
+        mainLayout->addWidget(_labelButton, 0);
+    }
+
+    QToolButton* addButton(QToolButton* btn)
+    {
+        btn->setParent(_toolsContainer);
+        btn->setIconSize(QSize(IconSize, IconSize));
+        btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        btn->setAutoRaise(true);
+        btn->setStyleSheet(groupToolSheet);
+        btn->setMinimumWidth(MinButtonWidth);
+        btn->setMaximumWidth(MinButtonWidth + 8);
+        btn->setFixedHeight(IconSize + 8);
+
+        _toolsButtons.append(btn);
+
+        int count = _toolsLayout->count();
+        _toolsLayout->insertWidget(count - 1, btn);
+
+        return btn;
+    }
+
+    QToolButton* labelButton() const { return _labelButton; }
+
+    void setLabelText(const QString& text)
+    {
+        _labelButton->setText(text + QStringLiteral("  \u25BC"));
+    }
+
+    void setMenu(QMenu* menu)
+    {
+        _menu = menu;
+        connect(_labelButton, &QToolButton::clicked, this, &PartDesignGroupWidget::showMenu);
+    }
+
+    const QVector<QToolButton*>& toolButtons() const { return _toolsButtons; }
+
+    void updateVisibility(int availableWidth)
+    {
+        int maxVisible = availableWidth / MinButtonWidth;
+        if (maxVisible < 1) {
+            maxVisible = 1;
+        }
+
+        int visible = 0;
+        for (int i = 0; i < _toolsButtons.size(); ++i) {
+            if (visible < maxVisible) {
+                _toolsButtons[i]->show();
+                visible++;
+            }
+            else {
+                _toolsButtons[i]->hide();
+            }
+        }
+    }
+
+private Q_SLOTS:
+    void showMenu()
+    {
+        if (_menu) {
+            QPoint pos = _labelButton->mapToGlobal(QPoint(0, _labelButton->height()));
+            _menu->exec(pos);
+        }
+    }
+
+private:
+    QWidget* _toolsContainer = nullptr;
+    QHBoxLayout* _toolsLayout = nullptr;
+    QToolButton* _labelButton = nullptr;
+    QMenu* _menu = nullptr;
+    QVector<QToolButton*> _toolsButtons;
+};
+
+
+// ============================================================================
+// PartDesignPartToolsWidget
+// ============================================================================
+
+PartDesignPartToolsWidget::PartDesignPartToolsWidget(QWidget* parent)
+    : QWidget(parent)
+{
+    auto* layout = new QHBoxLayout(this);
+    layout->setContentsMargins(2, 0, 2, 0);
+    layout->setSpacing(4);
+
+    _createGroup = createCreateGroup();
+    _modifyGroup = createModifyGroup();
+    _inspectGroup = createInspectGroup();
+
+    layout->addWidget(_createGroup, 1);
+    layout->addWidget(_modifyGroup, 1);
+    layout->addWidget(_inspectGroup, 1);
+}
+
+void PartDesignPartToolsWidget::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+
+    int totalWidth = event->size().width();
+    int groupWidth = totalWidth / 3;
+
+    if (_createGroup) {
+        _createGroup->updateVisibility(groupWidth);
+    }
+    if (_modifyGroup) {
+        _modifyGroup->updateVisibility(groupWidth);
+    }
+    if (_inspectGroup) {
+        _inspectGroup->updateVisibility(groupWidth);
+    }
+}
+
+PartDesignGroupWidget* PartDesignPartToolsWidget::createCreateGroup()
+{
+    QVector<const char*> commands = {
+        "PartDesign_Pad",
+        "PartDesign_Revolution",
+        "PartDesign_AdditiveLoft",
+        "PartDesign_Pocket",
+        "PartDesign_Hole",
+        "PartDesign_Groove",
+        "PartDesign_PartBox",
+        "PartDesign_PartCylinder",
+        "PartDesign_Boolean",
+    };
+
+    auto* group = createGroup(
+        QStringLiteral("Create"),
+        commands,
+        buildCreateMenu());
+
+    return group;
+}
+
+PartDesignGroupWidget* PartDesignPartToolsWidget::createModifyGroup()
+{
+    QVector<const char*> commands = {
+        "PartDesign_Fillet",
+        "PartDesign_Chamfer",
+        "PartDesign_Draft",
+        "PartDesign_Thickness",
+        "PartDesign_Mirrored",
+        "PartDesign_LinearPattern",
+        "PartDesign_PolarPattern",
+        "PartDesign_MultiTransform",
+    };
+
+    auto* group = createGroup(
+        QStringLiteral("Modify"),
+        commands,
+        buildModifyMenu());
+
+    return group;
+}
+
+PartDesignGroupWidget* PartDesignPartToolsWidget::createInspectGroup()
+{
+    QVector<const char*> commands = {
+        "PartDesign_PartCheckGeometry",
+        "Std_Measure",
+    };
+
+    auto* group = createGroup(
+        QStringLiteral("Inspect"),
+        commands,
+        buildInspectMenu());
+
+    return group;
+}
+
+PartDesignGroupWidget* PartDesignPartToolsWidget::createGroup(
+    const QString& label,
+    const QVector<const char*>& visibleCommands,
+    QMenu* menu)
+{
+    auto* group = new PartDesignGroupWidget(this);
+    group->setLabelText(label);
+    group->setMenu(menu);
+
+    for (const char* cmd : visibleCommands) {
+        auto* btn = createToolButton(cmd);
+        if (btn) {
+            group->addButton(btn);
+        }
+    }
+
+    return group;
+}
+
+QToolButton* PartDesignPartToolsWidget::createToolButton(const char* cmdName)
+{
+    auto& cmdMgr = Gui::Application::Instance->commandManager();
+    Gui::Command* cmd = cmdMgr.getCommandByName(cmdName);
+    if (!cmd) {
+        return nullptr;
+    }
+
+    Gui::Action* action = cmd->getAction();
+    if (!action) {
+        return nullptr;
+    }
+
+    auto* btn = new QToolButton(this);
+    btn->setDefaultAction(action->action());
+    btn->setIcon(commandIcon(cmdName));
+    btn->setToolTip(
+        QApplication::translate(cmd->className(), cmd->getToolTipText()));
+    btn->setText(
+        QApplication::translate(cmd->className(), cmd->getMenuText()));
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setIconSize(QSize(IconSize, IconSize));
+    btn->setAutoRaise(true);
+    btn->setStyleSheet(groupToolSheet);
+
+    return btn;
+}
+
+QMenu* PartDesignPartToolsWidget::buildCreateMenu()
+{
+    auto* menu = new QMenu(this);
+
+    auto& cmdMgr = Gui::Application::Instance->commandManager();
+
+    auto addMenuItem = [menu, &cmdMgr](const char* cmdName) {
+        Gui::Command* cmd = cmdMgr.getCommandByName(cmdName);
+        if (cmd) {
+            Gui::Action* action = cmd->getAction();
+            if (action) {
+                menu->addAction(action->action());
+            }
+        }
+    };
+
+    auto addSeparator = [menu]() {
+        menu->addSeparator();
+    };
+
+    auto addSectionHeader = [menu](const QString& text) {
+        auto* action = new QAction(text, menu);
+        action->setEnabled(false);
+        QFont font = action->font();
+        font.setPointSize(9);
+        font.setWeight(QFont::DemiBold);
+        action->setFont(font);
+        menu->addAction(action);
+    };
+
+    // Additive section
+    addSectionHeader(QObject::tr("ADDITIVE"));
+    addMenuItem("PartDesign_Pad");
+    addMenuItem("PartDesign_Revolution");
+    addMenuItem("PartDesign_AdditiveLoft");
+    addMenuItem("PartDesign_AdditivePipe");
+    addMenuItem("PartDesign_AdditiveHelix");
+    addMenuItem("PartDesign_CompPrimitiveAdditive");
+
+    addSeparator();
+
+    // Subtractive section
+    addSectionHeader(QObject::tr("SUBTRACTIVE"));
+    addMenuItem("PartDesign_Pocket");
+    addMenuItem("PartDesign_Hole");
+    addMenuItem("PartDesign_Groove");
+    addMenuItem("PartDesign_SubtractiveLoft");
+    addMenuItem("PartDesign_SubtractivePipe");
+    addMenuItem("PartDesign_SubtractiveHelix");
+    addMenuItem("PartDesign_CompPrimitiveSubtractive");
+
+    addSeparator();
+
+    // Primitives section
+    addSectionHeader(QObject::tr("PRIMITIVES"));
+    addMenuItem("PartDesign_PartBox");
+    addMenuItem("PartDesign_PartCylinder");
+    addMenuItem("PartDesign_PartSphere");
+    addMenuItem("PartDesign_PartCone");
+    addMenuItem("PartDesign_PartTorus");
+
+    addSeparator();
+
+    // Boolean section
+    addSectionHeader(QObject::tr("BOOLEAN"));
+    addMenuItem("PartDesign_Boolean");
+    addMenuItem("PartDesign_PartBuilder");
+
+    addSeparator();
+
+    // Helpers section
+    addSectionHeader(QObject::tr("HELPERS"));
+    addMenuItem("PartDesign_Body");
+    addMenuItem("PartDesign_CompDatums");
+    addMenuItem("PartDesign_Clone");
+    addMenuItem("PartDesign_SubShapeBinder");
+
+    return menu;
+}
+
+QMenu* PartDesignPartToolsWidget::buildModifyMenu()
+{
+    auto* menu = new QMenu(this);
+
+    auto& cmdMgr = Gui::Application::Instance->commandManager();
+
+    auto addMenuItem = [menu, &cmdMgr](const char* cmdName) {
+        Gui::Command* cmd = cmdMgr.getCommandByName(cmdName);
+        if (cmd) {
+            Gui::Action* action = cmd->getAction();
+            if (action) {
+                menu->addAction(action->action());
+            }
+        }
+    };
+
+    auto addSeparator = [menu]() {
+        menu->addSeparator();
+    };
+
+    auto addSectionHeader = [menu](const QString& text) {
+        auto* action = new QAction(text, menu);
+        action->setEnabled(false);
+        QFont font = action->font();
+        font.setPointSize(9);
+        font.setWeight(QFont::DemiBold);
+        action->setFont(font);
+        menu->addAction(action);
+    };
+
+    // Dress-Up section
+    addSectionHeader(QObject::tr("DRESS-UP"));
+    addMenuItem("PartDesign_Fillet");
+    addMenuItem("PartDesign_Chamfer");
+    addMenuItem("PartDesign_Draft");
+    addMenuItem("PartDesign_Thickness");
+
+    addSeparator();
+
+    // Transform section
+    addSectionHeader(QObject::tr("TRANSFORM"));
+    addMenuItem("PartDesign_Mirrored");
+    addMenuItem("PartDesign_LinearPattern");
+    addMenuItem("PartDesign_PolarPattern");
+    addMenuItem("PartDesign_MultiTransform");
+
+    return menu;
+}
+
+QMenu* PartDesignPartToolsWidget::buildInspectMenu()
+{
+    auto* menu = new QMenu(this);
+
+    auto& cmdMgr = Gui::Application::Instance->commandManager();
+
+    auto addMenuItem = [menu, &cmdMgr](const char* cmdName) {
+        Gui::Command* cmd = cmdMgr.getCommandByName(cmdName);
+        if (cmd) {
+            Gui::Action* action = cmd->getAction();
+            if (action) {
+                menu->addAction(action->action());
+            }
+        }
+    };
+
+    addMenuItem("PartDesign_PartCheckGeometry");
+    addMenuItem("Std_Measure");
+    addMenuItem("Sketcher_ValidateSketch");
+
+    return menu;
+}
+
+QIcon PartDesignPartToolsWidget::commandIcon(const char* cmdName)
 {
     auto& cmdMgr = Gui::Application::Instance->commandManager();
     Gui::Command* cmd = cmdMgr.getCommandByName(cmdName);
@@ -58,127 +489,4 @@ QIcon commandIcon(const char* cmdName)
     return {};
 }
 
-}  // namespace
-
-PartDesignPartToolsWidget::PartDesignPartToolsWidget(QWidget* parent)
-    : QWidget(parent)
-{
-    auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(2, 0, 2, 0);
-    layout->setSpacing(2);
-
-    // Group 1: Primitives (equal stretch)
-    layout->addWidget(createPrimitiveGroup(), 1);
-
-    // Group 2: Create dropdown (equal stretch)
-    layout->addWidget(createCreateGroup(), 1);
-
-    // Group 3: Modify + Inspect dropdowns (equal stretch)
-    layout->addWidget(createModifyInspectGroup(), 1);
-}
-
-QWidget* PartDesignPartToolsWidget::createPrimitiveGroup()
-{
-    auto* group = new QWidget(this);
-    auto* layout = new QHBoxLayout(group);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(2);
-
-    const char* primitives[] = {
-        "PartDesign_PartBox",
-        "PartDesign_PartCylinder",
-        "PartDesign_PartSphere",
-        "PartDesign_PartCone",
-        "PartDesign_PartTorus",
-    };
-
-    for (const char* cmd : primitives) {
-        layout->addWidget(createPrimitiveButton(QString::fromLatin1(cmd)));
-    }
-
-    return group;
-}
-
-QWidget* PartDesignPartToolsWidget::createCreateGroup()
-{
-    auto* group = new QWidget(this);
-    auto* layout = new QHBoxLayout(group);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-
-    layout->addWidget(createDropdownButton(QStringLiteral("PartDesign_CompCreate")));
-
-    return group;
-}
-
-QWidget* PartDesignPartToolsWidget::createModifyInspectGroup()
-{
-    auto* group = new QWidget(this);
-    auto* layout = new QHBoxLayout(group);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(4);
-
-    layout->addWidget(createDropdownButton(QStringLiteral("PartDesign_CompModify")));
-    layout->addWidget(createDropdownButton(QStringLiteral("PartDesign_CompInspect")));
-
-    return group;
-}
-
-QToolButton* PartDesignPartToolsWidget::createPrimitiveButton(const QString& cmdName)
-{
-    auto& cmdMgr = Gui::Application::Instance->commandManager();
-    Gui::Command* cmd = cmdMgr.getCommandByName(cmdName.toLatin1().constData());
-
-    auto* btn = new QToolButton(this);
-    btn->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    btn->setIconSize(QSize(20, 20));
-    btn->setStyleSheet(buttonStyleSheet);
-    btn->setAutoRaise(true);
-
-    if (cmd) {
-        Gui::Action* action = cmd->getAction();
-        if (action) {
-            btn->setDefaultAction(action->action());
-        }
-        btn->setIcon(commandIcon(cmdName.toLatin1().constData()));
-        btn->setToolTip(
-            QApplication::translate(cmd->className(), cmd->getToolTipText()));
-        btn->setText(
-            QApplication::translate(cmd->className(), cmd->getMenuText()));
-    }
-
-    return btn;
-}
-
-QToolButton* PartDesignPartToolsWidget::createDropdownButton(const QString& groupCmdName)
-{
-    auto& cmdMgr = Gui::Application::Instance->commandManager();
-    Gui::Command* cmd = cmdMgr.getCommandByName(groupCmdName.toLatin1().constData());
-
-    auto* btn = new QToolButton(this);
-    btn->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    btn->setIconSize(QSize(20, 20));
-    btn->setStyleSheet(buttonStyleSheet);
-    btn->setAutoRaise(true);
-    btn->setPopupMode(QToolButton::MenuButtonPopup);
-
-    if (cmd) {
-        Gui::ActionGroup* groupAction =
-            qobject_cast<Gui::ActionGroup*>(cmd->getAction());
-        if (groupAction) {
-            btn->setDefaultAction(groupAction->action());
-
-            auto* menu = new QMenu(btn);
-            menu->addActions(groupAction->groupAction()->actions());
-            btn->setMenu(menu);
-
-            btn->setIcon(groupAction->action()->icon());
-            btn->setToolTip(
-                QApplication::translate(cmd->className(), cmd->getToolTipText()));
-            btn->setText(
-                QApplication::translate(cmd->className(), cmd->getMenuText()));
-        }
-    }
-
-    return btn;
-}
+#include "PartDesignPartToolsWidget.moc"
