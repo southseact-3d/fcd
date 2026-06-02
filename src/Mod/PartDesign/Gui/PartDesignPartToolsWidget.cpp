@@ -221,7 +221,7 @@ void PartDesignPartToolsWidget::resizeEvent(QResizeEvent* event)
 PartDesignGroupWidget* PartDesignPartToolsWidget::createCreateGroup()
 {
     QVector<const char*> commands = {
-        "PartDesign_Pad",
+        "PartDesign_Extrude",
         "PartDesign_Revolution",
         "PartDesign_AdditiveLoft",
         "PartDesign_Pocket",
@@ -355,6 +355,7 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
 
     // Additive section
     addSectionHeader(QObject::tr("ADDITIVE"));
+    addMenuItem("PartDesign_Extrude");
     addMenuItem("PartDesign_Pad");
     addMenuItem("PartDesign_Revolution");
     addMenuItem("PartDesign_AdditiveLoft");
