@@ -53,6 +53,7 @@ namespace sp = std::placeholders;
     //
     qApp->translate("Workbench", "&Part Design");
     qApp->translate("Workbench", "Datums");
+    qApp->translate("Workbench", "Extrude");
     qApp->translate("Workbench", "Additive Features");
     qApp->translate("Workbench", "Subtractive Features");
     qApp->translate("Workbench", "Dress-Up Features");
@@ -669,7 +670,9 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "PartDesign_ShapeBinder"
           << "PartDesign_SubShapeBinder"
           << "PartDesign_Clone"
-          << "Separator" << additives << "PartDesign_CompPrimitiveAdditive"
+          << "Separator"
+          << "PartDesign_Extrude"
+          << additives << "PartDesign_CompPrimitiveAdditive"
           << "Separator" << subtractives << "PartDesign_CompPrimitiveSubtractive"
           << "Separator" << dressups << "Separator" << transformations << "Separator"
           << "PartDesign_Boolean"

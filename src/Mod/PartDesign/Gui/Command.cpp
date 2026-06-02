@@ -2817,6 +2817,51 @@ bool CmdPartDesignPocket::isActive()
 }
 
 //===========================================================================
+// PartDesign_Extrude
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignExtrude)
+
+CmdPartDesignExtrude::CmdPartDesignExtrude()
+    : Command("PartDesign_Extrude")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Extrude");
+    sToolTipText
+        = QT_TR_NOOP("Extrudes the selected sketch or profile (choose additive or subtractive)");
+    sWhatsThis = "PartDesign_Extrude";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Extrude";
+    sAccel = "";
+}
+
+void CmdPartDesignExtrude::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    QMessageBox msgBox(Gui::getMainWindow());
+    msgBox.setWindowTitle(tr("Extrude"));
+    msgBox.setText(tr("Select extrude type:"));
+    msgBox.setIcon(QMessageBox::Question);
+    auto* padBtn = msgBox.addButton(tr("Pad (Add Material)"), QMessageBox::AcceptRole);
+    auto* pocketBtn = msgBox.addButton(tr("Pocket (Remove Material)"), QMessageBox::RejectRole);
+    msgBox.addButton(QMessageBox::Cancel);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == padBtn) {
+        prepareProfileBased(this, "Pad", 10.0);
+    }
+    else if (msgBox.clickedButton() == pocketBtn) {
+        prepareProfileBased(this, "Pocket", 5.0);
+    }
+}
+
+bool CmdPartDesignExtrude::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // PartDesign_Hole
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignHole)
@@ -4427,6 +4472,7 @@ void CreatePartDesignCommands()
 
     rcCmdMgr.addCommand(new CmdPartDesignPad());
     rcCmdMgr.addCommand(new CmdPartDesignPocket());
+    rcCmdMgr.addCommand(new CmdPartDesignExtrude());
     rcCmdMgr.addCommand(new CmdPartDesignHole());
     rcCmdMgr.addCommand(new CmdPartDesignRevolution());
     rcCmdMgr.addCommand(new CmdPartDesignGroove());
