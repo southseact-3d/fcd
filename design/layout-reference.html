@@ -6,18 +6,18 @@
 <title>Tungsten CAD - Part Design Workbench Layout Reference</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #ddd; font-size: 13px; user-select: none; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; color: #222; font-size: 13px; user-select: none; }
 
   /* ── Title bar ── */
-  .titlebar { background: #2d2d2d; padding: 4px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #444; }
-  .titlebar span { font-size: 12px; color: #ccc; }
+  .titlebar { background: #e8e8e8; padding: 4px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ccc; }
+  .titlebar span { font-size: 12px; color: #444; }
   .titlebar .win-btns span { display: inline-block; width: 28px; text-align: center; padding: 2px 0; cursor: pointer; border-radius: 4px; }
-  .titlebar .win-btns span:hover { background: #444; }
+  .titlebar .win-btns span:hover { background: #ccc; }
 
   /* ── Menu bar ── */
-  .menubar { background: #2d2d2d; display: flex; padding: 0 4px; border-bottom: 1px solid #3a3a3a; }
-  .menubar .menu-item { padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; }
-  .menubar .menu-item:hover { background: #3d3d3d; }
+  .menubar { background: #ebebeb; display: flex; padding: 0 4px; border-bottom: 1px solid #ccc; }
+  .menubar .menu-item { padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; color: #333; }
+  .menubar .menu-item:hover { background: #ddd; }
   .menubar .menu-item.active { background: #0078d4; color: #fff; }
 
   /* ── Toolbar row ── */
@@ -29,7 +29,7 @@
 
   .tb-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px 4px; border-radius: 4px; cursor: pointer; min-width: 36px; gap: 1px; border: 1px solid transparent; }
   .tb-btn:hover { background: #d0d0d0; border-color: #aaa; }
-  .tb-btn:active { background: #b0b0b0; }
+  .tb-btn:active { background: #b8b8b8; }
   .tb-btn .icon { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
   .tb-btn .label { font-size: 10px; color: #333; text-align: center; line-height: 1.1; white-space: pre-wrap; max-width: 52px; }
 
@@ -47,38 +47,65 @@
   .ic-brown { background: #795548; color: #fff; }
   .ic-pink { background: #E91E63; color: #fff; }
 
-  /* Dropdown button */
+  /* ── Toolbar group with label below (for Create/Modify/Inspect) ── */
+  .tb-group-labeled {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .tb-group-labeled .group-tools {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 2px 4px 2px 4px;
+    flex: 1;
+  }
+  .tb-group-labeled .group-label {
+    font-size: 10px;
+    color: #555;
+    text-align: center;
+    padding: 1px 6px 2px 6px;
+    border-top: 1px solid #ccc;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .tb-group-labeled .group-label:hover { color: #0078d4; }
+  .tb-group-labeled .group-label .gl-arrow { font-size: 7px; color: #888; }
+  .tb-group-labeled:hover .group-tools { background: rgba(0,0,0,0.04); border-radius: 3px 3px 0 0; }
+
+  /* ── Dropdown button ── */
   .tb-dropdown { position: relative; }
   .tb-dropdown .arrow { font-size: 8px; color: #666; margin-top: -1px; }
 
   /* ── Tab bar ── */
-  .tabbar { background: #2d2d2d; display: flex; padding: 0 4px; border-bottom: 1px solid #3a3a3a; }
-  .tab { padding: 6px 14px; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 12px; background: #383838; color: #aaa; border: 1px solid #444; border-bottom: none; margin-right: 2px; }
-  .tab.active { background: #1a1a1a; color: #fff; border-color: #0078d4; border-bottom-color: #1a1a1a; position: relative; top: 1px; }
+  .tabbar { background: #e0e0e0; display: flex; padding: 0 4px; border-bottom: 1px solid #ccc; }
+  .tab { padding: 6px 14px; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 12px; background: #d0d0d0; color: #555; border: 1px solid #bbb; border-bottom: none; margin-right: 2px; }
+  .tab.active { background: #f5f5f5; color: #111; border-color: #0078d4; border-bottom-color: #f5f5f5; position: relative; top: 1px; }
 
   /* ── 3D viewport ── */
-  .viewport { position: relative; width: 100%; height: 500px; background: #2b2b2b; overflow: hidden; }
+  .viewport { position: relative; width: 100%; height: 500px; background: #d8d8d8; overflow: hidden; }
   .viewport canvas { width: 100%; height: 100%; }
-
-  /* Grid */
-  .grid-overlay { position: absolute; inset: 0; pointer-events: none; }
-  .grid-overlay svg { width: 100%; height: 100%; }
 
   /* Axes */
   .axis-label { position: absolute; font-size: 12px; font-weight: bold; }
-  .axis-x { color: #f44; right: 10px; bottom: 50%; }
-  .axis-y { color: #4f4; top: 10px; left: 50%; }
-  .axis-z { color: #44f; top: 50%; left: 10px; }
 
   /* Nav cube */
   .nav-cube { position: absolute; top: 12px; right: 12px; width: 80px; height: 80px; }
   .nav-cube svg { width: 100%; height: 100%; }
 
   /* Coordinate display */
-  .coord-display { position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: #aaa; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 4px; }
+  .coord-display { position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: #555; background: rgba(255,255,255,0.7); padding: 2px 8px; border-radius: 4px; border: 1px solid #ccc; }
 
   /* ── Status bar ── */
-  .statusbar { background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 2px 12px; border-top: 1px solid #444; font-size: 11px; color: #999; height: 24px; }
+  .statusbar { background: #e8e8e8; display: flex; align-items: center; justify-content: space-between; padding: 2px 12px; border-top: 1px solid #ccc; font-size: 11px; color: #555; height: 24px; }
   .statusbar .left { display: flex; gap: 16px; }
   .statusbar .right { display: flex; gap: 16px; align-items: center; }
   .statusbar .indicator { display: inline-flex; align-items: center; gap: 4px; }
@@ -86,17 +113,50 @@
   .dot-green { background: #4CAF50; }
 
   /* ── Section labels ── */
-  .section-label { background: #333; color: #aaa; padding: 4px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #444; }
-  .design-note { background: #1a2a1a; color: #8c8; padding: 8px 12px; font-size: 12px; border: 1px solid #3a5a3a; border-radius: 6px; margin: 8px 12px; line-height: 1.5; }
-  .design-note strong { color: #afa; }
-  .design-note code { background: #2a3a2a; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+  .section-label { background: #e0e0e0; color: #666; padding: 4px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ccc; }
+  .design-note { background: #f0f8f0; color: #446644; padding: 8px 12px; font-size: 12px; border: 1px solid #aaccaa; border-radius: 6px; margin: 8px 12px; line-height: 1.5; }
+  .design-note strong { color: #226622; }
+  .design-note code { background: #ddeedd; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
 
-  /* ── Responsive width indicator ── */
-  .width-info { position: absolute; bottom: 30px; left: 12px; font-size: 10px; color: #666; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 3px; }
+  /* ── Width indicator ── */
+  .width-info { position: absolute; bottom: 30px; left: 12px; font-size: 10px; color: #888; background: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 3px; }
 
   /* ── Annotation ── */
   .anno { position: absolute; border: 2px dashed #0078d4; border-radius: 4px; pointer-events: none; }
-  .anno-label { position: absolute; top: -18px; left: 0; font-size: 10px; color: #0078d4; background: #1a1a1a; padding: 0 4px; white-space: nowrap; }
+  .anno-label { position: absolute; top: -18px; left: 0; font-size: 10px; color: #0078d4; background: #f5f5f5; padding: 0 4px; white-space: nowrap; }
+
+  /* ── Dropdown menus ── */
+  .dropdown-menu {
+    position: fixed;
+    background: #fafafa;
+    border: 1px solid #bbb;
+    box-shadow: 2px 4px 12px rgba(0,0,0,0.18);
+    z-index: 1000;
+    min-width: 200px;
+    padding: 4px 0;
+    border-radius: 6px;
+  }
+  .dd-section-header {
+    padding: 6px 14px 2px 14px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #888;
+    font-weight: 600;
+  }
+  .dd-item {
+    padding: 6px 16px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #222;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dd-item:hover { background: #0078d4; color: #fff; }
+  .dd-item:hover .dd-icon { color: #fff; }
+  .dd-icon { font-size: 13px; width: 16px; text-align: center; color: #666; }
+  .dd-sep { height: 1px; background: #ddd; margin: 4px 8px; }
 </style>
 </head>
 <body>
@@ -126,7 +186,7 @@
 <div class="design-note">
   <strong>DESIGN GOAL:</strong> All Part Design toolbars consolidated into <strong>2 rows</strong> at the top.<br>
   Row 1 = File ops + Part helpers + View + Workbench selector<br>
-  Row 2 = All modeling tools (primitives, additive, subtractive, dress-up, transform, modify, inspect)<br>
+  Row 2 = Three grouped dropdown menus: <strong>Create</strong>, <strong>Modify</strong>, <strong>Inspect</strong> — each opens a dropdown with its tools.<br>
   The <code>PartDesignPartToolsWidget</code> uses 3 equal-stretch sections with responsive width.
 </div>
 
@@ -152,7 +212,7 @@
 
   <!-- Workbench selector -->
   <div class="tb-group">
-    <div class="tb-btn" style="min-width: 100px; border: 1px solid #aaa; background: #fff; border-radius: 3px;">
+    <div class="tb-btn" style="min-width: 100px; border: 1px solid #bbb; background: #fff; border-radius: 3px;">
       <div style="font-size: 11px; color: #333; display: flex; align-items: center; gap: 4px;">
         <span class="icon ic-blue" style="width:16px;height:16px;border-radius:2px;font-size:10px;">&#9881;</span>
         Part Design &#9660;
@@ -193,100 +253,55 @@
   </div>
 </div>
 
-<!-- ═══════════ ROW 2: All Modeling + Part Tools ═══════════ -->
-<div class="section-label">Row 2 — Modeling Features + Dress-Up + Transform + Primitives + Modify + Inspect</div>
-<div class="toolbar-row row2">
+<!-- ═══════════ ROW 2: Create / Modify / Inspect grouped dropdowns ═══════════ -->
+<div class="section-label">Row 2 — Create, Modify, Inspect</div>
+<div class="toolbar-row row2" style="gap: 2px; padding: 2px 8px; align-items: stretch;">
 
-  <!-- Additive features -->
-  <div class="tb-group">
-    <div class="tb-btn"><div class="icon ic-green">&#9650;</div><div class="label">Pad</div></div>
-    <div class="tb-btn"><div class="icon ic-green">&#8635;</div><div class="label">Revolve</div></div>
-    <div class="tb-btn"><div class="icon ic-green">&#128200;</div><div class="label">Additive<br>Loft</div></div>
-    <div class="tb-btn"><div class="icon ic-green">&#128666;</div><div class="label">Additive<br>Pipe</div></div>
-    <div class="tb-btn"><div class="icon ic-green">&#127922;</div><div class="label">Additive<br>Helix</div></div>
-    <div class="tb-btn tb-dropdown"><div class="icon ic-green">&#9650;</div><div class="label">Additive<br>Primitive</div><div class="arrow">&#9660;</div></div>
-  </div>
-  <div class="tb-sep"></div>
-
-  <!-- Subtractive features -->
-  <div class="tb-group">
-    <div class="tb-btn"><div class="icon ic-red">&#9660;</div><div class="label">Pocket</div></div>
-    <div class="tb-btn"><div class="icon ic-red">&#9681;</div><div class="label">Hole</div></div>
-    <div class="tb-btn"><div class="icon ic-red">&#8634;</div><div class="label">Groove</div></div>
-    <div class="tb-btn"><div class="icon ic-red">&#128200;</div><div class="label">Subtractive<br>Loft</div></div>
-    <div class="tb-btn"><div class="icon ic-red">&#128666;</div><div class="label">Subtractive<br>Pipe</div></div>
-    <div class="tb-btn"><div class="icon ic-red">&#127922;</div><div class="label">Subtractive<br>Helix</div></div>
-    <div class="tb-btn tb-dropdown"><div class="icon ic-red">&#9660;</div><div class="label">Subtractive<br>Primitive</div><div class="arrow">&#9660;</div></div>
-  </div>
-  <div class="tb-sep"></div>
-
-  <!-- Boolean -->
-  <div class="tb-group">
-    <div class="tb-btn"><div class="icon ic-indigo">&#8853;</div><div class="label">Boolean</div></div>
-  </div>
-  <div class="tb-sep"></div>
-
-  <!-- Dress-up -->
-  <div class="tb-group">
-    <div class="tb-btn"><div class="icon ic-amber">&#9672;</div><div class="label">Fillet</div></div>
-    <div class="tb-btn"><div class="icon ic-amber">&#11045;</div><div class="label">Chamfer</div></div>
-    <div class="tb-btn"><div class="icon ic-orange">&#9651;</div><div class="label">Draft</div></div>
-    <div class="tb-btn"><div class="icon ic-brown">&#9717;</div><div class="label">Thick-<br>ness</div></div>
-  </div>
-  <div class="tb-sep"></div>
-
-  <!-- Transform -->
-  <div class="tb-group">
-    <div class="tb-btn"><div class="icon ic-cyan">&#9716;</div><div class="label">Mirrored</div></div>
-    <div class="tb-btn"><div class="icon ic-cyan">&#8596;</div><div class="label">Linear<br>Pattern</div></div>
-    <div class="tb-btn"><div class="icon ic-cyan">&#128260;</div><div class="label">Polar<br>Pattern</div></div>
-    <div class="tb-btn"><div class="icon ic-cyan">&#9881;</div><div class="label">Multi-<br>Transform</div></div>
-  </div>
-  <div class="tb-sep"></div>
-
-  <!-- ── Part Tools: 3 equal-stretch sections ── -->
-  <div class="tb-group" style="flex: 1; justify-content: space-around;">
-
-    <!-- Primitives -->
-    <div class="tb-group">
+  <!-- CREATE group: tools on top, label underneath -->
+  <div class="tb-group-labeled" id="grpCreate" onclick="toggleDropdown('dropdownCreate', this)">
+    <div class="group-tools">
+      <div class="tb-btn"><div class="icon ic-green">&#9650;</div><div class="label">Pad</div></div>
+      <div class="tb-btn"><div class="icon ic-green">&#8635;</div><div class="label">Revolve</div></div>
+      <div class="tb-btn"><div class="icon ic-green">&#128200;</div><div class="label">Loft</div></div>
+      <div class="tb-btn"><div class="icon ic-red">&#9660;</div><div class="label">Pocket</div></div>
+      <div class="tb-btn"><div class="icon ic-red">&#9681;</div><div class="label">Hole</div></div>
+      <div class="tb-btn"><div class="icon ic-red">&#8634;</div><div class="label">Groove</div></div>
       <div class="tb-btn"><div class="icon ic-amber">&#9632;</div><div class="label">Box</div></div>
       <div class="tb-btn"><div class="icon ic-amber">&#9673;</div><div class="label">Cylinder</div></div>
-      <div class="tb-btn"><div class="icon ic-amber">&#9898;</div><div class="label">Sphere</div></div>
-      <div class="tb-btn"><div class="icon ic-amber">&#9651;</div><div class="label">Cone</div></div>
-      <div class="tb-btn"><div class="icon ic-amber">&#9898;</div><div class="label">Torus</div></div>
+      <div class="tb-btn"><div class="icon ic-indigo">&#8853;</div><div class="label">Boolean</div></div>
     </div>
-    <div class="tb-sep"></div>
-
-    <!-- Create -->
-    <div class="tb-group">
-      <div class="tb-btn tb-dropdown" style="min-width: 64px;">
-        <div class="icon ic-green">&#10010;</div>
-        <div class="label">Create</div>
-        <div class="arrow">&#9660;</div>
-      </div>
-    </div>
-    <div class="tb-sep"></div>
-
-    <!-- Modify -->
-    <div class="tb-group">
-      <div class="tb-btn tb-dropdown" style="min-width: 64px;">
-        <div class="icon ic-blue">&#9998;</div>
-        <div class="label">Modify</div>
-        <div class="arrow">&#9660;</div>
-      </div>
-    </div>
-    <div class="tb-sep"></div>
-
-    <!-- Inspect -->
-    <div class="tb-group">
-      <div class="tb-btn tb-dropdown" style="min-width: 64px;">
-        <div class="icon ic-grey">&#128269;</div>
-        <div class="label">Inspect</div>
-        <div class="arrow">&#9660;</div>
-      </div>
-    </div>
-
+    <div class="group-label">Create <span class="gl-arrow">&#9660;</span></div>
   </div>
+
+  <div class="tb-sep" style="height: auto; align-self: stretch; margin: 4px 4px;"></div>
+
+  <!-- MODIFY group: tools on top, label underneath -->
+  <div class="tb-group-labeled" id="grpModify" onclick="toggleDropdown('dropdownModify', this)">
+    <div class="group-tools">
+      <div class="tb-btn"><div class="icon ic-amber">&#9672;</div><div class="label">Fillet</div></div>
+      <div class="tb-btn"><div class="icon ic-amber">&#11045;</div><div class="label">Chamfer</div></div>
+      <div class="tb-btn"><div class="icon ic-orange">&#9651;</div><div class="label">Draft</div></div>
+      <div class="tb-btn"><div class="icon ic-brown">&#9717;</div><div class="label">Thickness</div></div>
+      <div class="tb-btn"><div class="icon ic-cyan">&#9716;</div><div class="label">Mirrored</div></div>
+      <div class="tb-btn"><div class="icon ic-cyan">&#8596;</div><div class="label">Linear</div></div>
+      <div class="tb-btn"><div class="icon ic-cyan">&#128260;</div><div class="label">Polar</div></div>
+      <div class="tb-btn"><div class="icon ic-cyan">&#9881;</div><div class="label">Multi-Xform</div></div>
+    </div>
+    <div class="group-label">Modify <span class="gl-arrow">&#9660;</span></div>
+  </div>
+
+  <div class="tb-sep" style="height: auto; align-self: stretch; margin: 4px 4px;"></div>
+
+  <!-- INSPECT group: tools on top, label underneath -->
+  <div class="tb-group-labeled" id="grpInspect" onclick="toggleDropdown('dropdownInspect', this)">
+    <div class="group-tools">
+      <div class="tb-btn"><div class="icon ic-grey">&#9745;</div><div class="label">Check</div></div>
+      <div class="tb-btn"><div class="icon ic-grey">&#8596;</div><div class="label">Distance</div></div>
+      <div class="tb-btn"><div class="icon ic-grey">&#8736;</div><div class="label">Angle</div></div>
+    </div>
+    <div class="group-label">Inspect <span class="gl-arrow">&#9660;</span></div>
+  </div>
+
 </div>
 
 <!-- ═══════════ TAB BAR ═══════════ -->
@@ -300,25 +315,20 @@
   <canvas id="gridCanvas"></canvas>
 
   <!-- Axis labels -->
-  <div class="axis-label axis-x" style="color: #e44;">X</div>
-  <div class="axis-label axis-y" style="color: #4e4; left: 50%; top: 8px;">Y</div>
-  <div class="axis-label" style="color: #44e; left: 8px; top: 50%;">Z</div>
+  <div class="axis-label axis-x" style="color: #c33; right: 10px; bottom: 50%;">X</div>
+  <div class="axis-label axis-y" style="color: #393; top: 8px; left: 50%;">Y</div>
+  <div class="axis-label" style="color: #339; left: 8px; top: 50%;">Z</div>
 
   <!-- Nav cube -->
   <div class="nav-cube">
     <svg viewBox="0 0 100 100">
-      <!-- Isometric cube wireframe -->
-      <g transform="translate(50,50)" stroke="#888" stroke-width="1.2" fill="none" opacity="0.6">
-        <!-- Front face -->
-        <polygon points="-20,-10 10,-28 30,-18 0,0" fill="rgba(100,100,100,0.15)"/>
-        <!-- Top face -->
-        <polygon points="-20,-10 -5,-40 15,-30 10,-28" fill="rgba(140,140,140,0.15)"/>
-        <!-- Right face -->
-        <polygon points="10,-28 15,-30 35,-20 30,-18" fill="rgba(120,120,120,0.15)"/>
-        <!-- Labels -->
-        <text x="-8" y="-14" fill="#aaa" font-size="8" text-anchor="middle">FRONT</text>
-        <text x="0" y="-32" fill="#aaa" font-size="7" text-anchor="middle">TOP</text>
-        <text x="22" y="-22" fill="#aaa" font-size="7" text-anchor="middle">RIGHT</text>
+      <g transform="translate(50,50)" stroke="#888" stroke-width="1.2" fill="none" opacity="0.7">
+        <polygon points="-20,-10 10,-28 30,-18 0,0" fill="rgba(180,180,180,0.25)"/>
+        <polygon points="-20,-10 -5,-40 15,-30 10,-28" fill="rgba(200,200,200,0.25)"/>
+        <polygon points="10,-28 15,-30 35,-20 30,-18" fill="rgba(190,190,190,0.25)"/>
+        <text x="-8" y="-14" fill="#666" font-size="8" text-anchor="middle">FRONT</text>
+        <text x="0" y="-32" fill="#666" font-size="7" text-anchor="middle">TOP</text>
+        <text x="22" y="-22" fill="#666" font-size="7" text-anchor="middle">RIGHT</text>
       </g>
     </svg>
   </div>
@@ -341,39 +351,64 @@
   </div>
 </div>
 
-<!-- ═══════════ DROPDOWN MENUS (shown on click) ═══════════ -->
+<!-- ═══════════ DROPDOWN OVERLAY ═══════════ -->
 <div id="dropdownOverlay" style="display:none; position:fixed; inset:0; z-index:999;" onclick="closeAllDropdowns()"></div>
 
+<!-- ═══════════ CREATE DROPDOWN ═══════════ -->
 <div id="dropdownCreate" class="dropdown-menu" style="display:none;">
-  <div class="dd-item">Part Primitives</div>
-  <div class="dd-item">Part Builder</div>
-</div>
-
-<div id="dropdownModify" class="dropdown-menu" style="display:none;">
-  <div class="dd-item">Fillet</div>
-  <div class="dd-item">Chamfer</div>
-  <div class="dd-item">Draft</div>
-  <div class="dd-item">Thickness</div>
+  <div class="dd-section-header">Additive</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#4CAF50;">&#9650;</span> Pad</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#4CAF50;">&#8635;</span> Revolve</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#4CAF50;">&#128200;</span> Additive Loft</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#4CAF50;">&#128666;</span> Additive Pipe</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#4CAF50;">&#127922;</span> Additive Helix</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#4CAF50;">&#9650;</span> Additive Primitive &#9660;</div>
   <div class="dd-sep"></div>
-  <div class="dd-item">Boolean Operation</div>
-  <div class="dd-item">Mirror</div>
-  <div class="dd-item">Linear Pattern</div>
-  <div class="dd-item">Polar Pattern</div>
-  <div class="dd-item">Multi-Transform</div>
+  <div class="dd-section-header">Subtractive</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#9660;</span> Pocket</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#9681;</span> Hole</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#8634;</span> Groove</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#128200;</span> Subtractive Loft</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#128666;</span> Subtractive Pipe</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#127922;</span> Subtractive Helix</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#f44336;">&#9660;</span> Subtractive Primitive &#9660;</div>
+  <div class="dd-sep"></div>
+  <div class="dd-section-header">Primitives</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#9632;</span> Box</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#9673;</span> Cylinder</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#9898;</span> Sphere</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#9651;</span> Cone</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#9898;</span> Torus</div>
+  <div class="dd-sep"></div>
+  <div class="dd-section-header">Boolean</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#3F51B5;">&#8853;</span> Boolean Operation</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#9C27B0;">&#128260;</span> Part Builder</div>
 </div>
 
+<!-- ═══════════ MODIFY DROPDOWN ═══════════ -->
+<div id="dropdownModify" class="dropdown-menu" style="display:none;">
+  <div class="dd-section-header">Dress-Up</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#9672;</span> Fillet</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FFC107;">&#11045;</span> Chamfer</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#FF9800;">&#9651;</span> Draft</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#795548;">&#9717;</span> Thickness</div>
+  <div class="dd-sep"></div>
+  <div class="dd-section-header">Transform</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#00BCD4;">&#9716;</span> Mirrored</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#00BCD4;">&#8596;</span> Linear Pattern</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#00BCD4;">&#128260;</span> Polar Pattern</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#00BCD4;">&#9881;</span> Multi-Transform</div>
+  <div class="dd-sep"></div>
+  <div class="dd-section-header">Mirror</div>
+  <div class="dd-item"><span class="dd-icon" style="color:#607D8B;">&#9716;</span> Mirror</div>
+</div>
+
+<!-- ═══════════ INSPECT DROPDOWN ═══════════ -->
 <div id="dropdownInspect" class="dropdown-menu" style="display:none;">
-  <div class="dd-item">Check Geometry</div>
-  <div class="dd-item">Measure Distance</div>
-  <div class="dd-item">Measure Angle</div>
+  <div class="dd-item"><span class="dd-icon">&#9745;</span> Check Geometry</div>
+  <div class="dd-item"><span class="dd-icon">&#8596;</span> Measure Distance</div>
+  <div class="dd-item"><span class="dd-icon">&#8736;</span> Measure Angle</div>
 </div>
-
-<style>
-  .dropdown-menu { position: fixed; background: #f0f0f0; border: 1px solid #aaa; box-shadow: 2px 2px 8px rgba(0,0,0,0.3); z-index: 1000; min-width: 180px; padding: 4px 0; border-radius: 4px; }
-  .dd-item { padding: 6px 16px; cursor: pointer; font-size: 12px; color: #222; }
-  .dd-item:hover { background: #0078d4; color: #fff; }
-  .dd-sep { height: 1px; background: #ccc; margin: 4px 8px; }
-</style>
 
 <script>
   // Draw grid
@@ -389,7 +424,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Grid
-    ctx.strokeStyle = '#3a3a3a';
+    ctx.strokeStyle = '#c0c0c0';
     ctx.lineWidth = 0.5;
     const step = 30;
     for (let x = cx % step; x < canvas.width; x += step) {
@@ -401,11 +436,9 @@
 
     // Axes
     ctx.lineWidth = 1.5;
-    // X axis (red)
-    ctx.strokeStyle = '#e44';
+    ctx.strokeStyle = '#c33';
     ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
-    // Y axis (green) — in FreeCAD XY is ground plane, Z is up
-    ctx.strokeStyle = '#4e4';
+    ctx.strokeStyle = '#393';
     ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
   }
 
@@ -415,30 +448,22 @@
   // Dropdown toggle
   function toggleDropdown(id, el) {
     event.stopPropagation();
+    const wasOpen = document.getElementById(id).style.display === 'block';
     closeAllDropdowns();
-    const dd = document.getElementById(id);
-    const rect = el.getBoundingClientRect();
-    dd.style.left = rect.left + 'px';
-    dd.style.top = rect.bottom + 'px';
-    dd.style.display = 'block';
-    document.getElementById('dropdownOverlay').style.display = 'block';
+    if (!wasOpen) {
+      const dd = document.getElementById(id);
+      const rect = el.getBoundingClientRect();
+      dd.style.left = rect.left + 'px';
+      dd.style.top = rect.bottom + 4 + 'px';
+      dd.style.display = 'block';
+      document.getElementById('dropdownOverlay').style.display = 'block';
+    }
   }
 
   function closeAllDropdowns() {
     document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
     document.getElementById('dropdownOverlay').style.display = 'none';
   }
-
-  // Attach dropdowns
-  document.querySelectorAll('.tb-dropdown').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const label = this.querySelector('.label').textContent.trim();
-      if (label === 'Create') toggleDropdown('dropdownCreate', this);
-      else if (label === 'Modify') toggleDropdown('dropdownModify', this);
-      else if (label === 'Inspect') toggleDropdown('dropdownInspect', this);
-    });
-  });
 </script>
 
 </body>

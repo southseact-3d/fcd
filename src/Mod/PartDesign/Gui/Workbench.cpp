@@ -733,70 +733,15 @@ Gui::MenuItem* Workbench::setupMenuBar() const
 Gui::ToolBarItem* Workbench::setupToolBars() const
 {
     Gui::ToolBarItem* root = StdWorkbench::setupToolBars();
+
+    // Part Design Part Tools — replaced at activation with the custom
+    // Create/Modify/Inspect grouped widget. We declare a minimal toolbar
+    // here so that the toolbar exists and can be found by name; the actual
+    // content is swapped in by Workbench::activated().
     Gui::ToolBarItem* part = new Gui::ToolBarItem(root);
-    part->setCommand("Part Design Helper Features");
-    part->setCustomIconSize(20);
-
-    *part << "PartDesign_Body"
-          << "PartDesign_CompSketches"
-          << "Sketcher_ValidateSketch"
-          << "PartDesign_SubShapeBinder"
-          << "PartDesign_Clone";
-
-    part = new Gui::ToolBarItem(root);
-    part->setCommand("Part Design Modeling Features");
-    part->setCustomIconSize(20);
-
-    *part << "PartDesign_Pad"
-          << "PartDesign_Revolution"
-          << "PartDesign_AdditiveLoft"
-          << "PartDesign_AdditivePipe"
-          << "PartDesign_AdditiveHelix"
-          << "PartDesign_CompPrimitiveAdditive"
-          << "Separator"
-          << "PartDesign_Pocket"
-          << "PartDesign_Hole"
-          << "PartDesign_Groove"
-          << "PartDesign_SubtractiveLoft"
-          << "PartDesign_SubtractivePipe"
-          << "PartDesign_SubtractiveHelix"
-          << "PartDesign_CompPrimitiveSubtractive"
-          << "Separator"
-          << "PartDesign_Boolean";
-
-    part = new Gui::ToolBarItem(root);
-
-    part->setCommand("Part Design Dress-Up Features");
-    part->setCustomIconSize(20);
-    *part << "PartDesign_Fillet"
-          << "PartDesign_Chamfer"
-          << "PartDesign_Draft"
-          << "PartDesign_Thickness";
-
-    part = new Gui::ToolBarItem(root);
-    part->setCommand("Part Design Transformation Features");
-    part->setCustomIconSize(20);
-
-    *part << "PartDesign_Mirrored"
-          << "PartDesign_LinearPattern"
-          << "PartDesign_PolarPattern"
-          << "PartDesign_MultiTransform";
-
-    part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Part Tools");
     part->setCustomIconSize(20);
-
-    *part << "PartDesign_PartBox"
-          << "PartDesign_PartCylinder"
-          << "PartDesign_PartSphere"
-          << "PartDesign_PartCone"
-          << "PartDesign_PartTorus"
-          << "Separator"
-          << "PartDesign_CompCreate"
-          << "Separator"
-          << "PartDesign_CompModify"
-          << "Separator"
-          << "PartDesign_CompInspect";
+    *part << "PartDesign_Pad";
 
     Gui::ToolBarItem* mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
     mesh->setCommand("Mesh Tools");

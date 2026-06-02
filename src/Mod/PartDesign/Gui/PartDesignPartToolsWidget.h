@@ -27,11 +27,15 @@
 #define PARTDESIGN_PARTTOOLSWIDGET_H
 
 #include <QWidget>
+#include <QVector>
 
 class QToolButton;
+class QMenu;
 
 namespace PartDesignGui
 {
+
+class PartDesignGroupWidget;
 
 class PartDesignPartToolsWidget : public QWidget
 {
@@ -40,13 +44,30 @@ class PartDesignPartToolsWidget : public QWidget
 public:
     explicit PartDesignPartToolsWidget(QWidget* parent = nullptr);
 
-private:
-    QWidget* createPrimitiveGroup();
-    QWidget* createCreateGroup();
-    QWidget* createModifyInspectGroup();
+protected:
+    void resizeEvent(QResizeEvent* event) override;
 
-    QToolButton* createPrimitiveButton(const QString& cmdName);
-    QToolButton* createDropdownButton(const QString& groupCmdName);
+private:
+    PartDesignGroupWidget* createCreateGroup();
+    PartDesignGroupWidget* createModifyGroup();
+    PartDesignGroupWidget* createInspectGroup();
+
+    QToolButton* createToolButton(const char* cmdName);
+
+    QMenu* buildCreateMenu();
+    QMenu* buildModifyMenu();
+    QMenu* buildInspectMenu();
+
+    static QIcon commandIcon(const char* cmdName);
+
+    PartDesignGroupWidget* createGroup(
+        const QString& label,
+        const QVector<const char*>& visibleCommands,
+        QMenu* menu);
+
+    PartDesignGroupWidget* _createGroup = nullptr;
+    PartDesignGroupWidget* _modifyGroup = nullptr;
+    PartDesignGroupWidget* _inspectGroup = nullptr;
 };
 
 }  // namespace PartDesignGui

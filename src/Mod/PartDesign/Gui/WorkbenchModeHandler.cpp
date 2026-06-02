@@ -83,46 +83,25 @@ void WorkbenchModeHandler::switchToMode(WorkbenchMode mode)
 
     auto toolBarManager = Gui::ToolBarManager::getInstance();
 
+    QStringList designToolbars = {
+        QStringLiteral("Part Design Part Tools")
+    };
+
+    QStringList meshToolbars = {
+        QStringLiteral("Mesh Tools"),
+        QStringLiteral("Mesh Modify"),
+        QStringLiteral("Mesh Boolean"),
+        QStringLiteral("Mesh Cutting"),
+        QStringLiteral("Mesh Segmentation"),
+        QStringLiteral("Mesh Analyze")
+    };
+
     if (mode == WorkbenchMode::MeshMode) {
-        QStringList designToolbars = {
-            QStringLiteral("Part Design Helper Features"),
-            QStringLiteral("Part Design Modeling Features"),
-            QStringLiteral("Part Design Dress-Up Features"),
-            QStringLiteral("Part Design Transformation Features"),
-            QStringLiteral("Part Design Part Tools")
-        };
-
-        QStringList meshToolbars = {
-            QStringLiteral("Mesh Tools"),
-            QStringLiteral("Mesh Modify"),
-            QStringLiteral("Mesh Boolean"),
-            QStringLiteral("Mesh Cutting"),
-            QStringLiteral("Mesh Segmentation"),
-            QStringLiteral("Mesh Analyze")
-        };
-
         toolBarManager->setState(designToolbars, Gui::ToolBarManager::State::SaveState);
         toolBarManager->setState(designToolbars, Gui::ToolBarManager::State::ForceHidden);
         toolBarManager->setState(meshToolbars, Gui::ToolBarManager::State::ForceAvailable);
     }
     else {
-        QStringList designToolbars = {
-            QStringLiteral("Part Design Helper Features"),
-            QStringLiteral("Part Design Modeling Features"),
-            QStringLiteral("Part Design Dress-Up Features"),
-            QStringLiteral("Part Design Transformation Features"),
-            QStringLiteral("Part Design Part Tools")
-        };
-
-        QStringList meshToolbars = {
-            QStringLiteral("Mesh Tools"),
-            QStringLiteral("Mesh Modify"),
-            QStringLiteral("Mesh Boolean"),
-            QStringLiteral("Mesh Cutting"),
-            QStringLiteral("Mesh Segmentation"),
-            QStringLiteral("Mesh Analyze")
-        };
-
         toolBarManager->setState(meshToolbars, Gui::ToolBarManager::State::SaveState);
         toolBarManager->setState(meshToolbars, Gui::ToolBarManager::State::ForceHidden);
         toolBarManager->setState(designToolbars, Gui::ToolBarManager::State::ForceAvailable);
