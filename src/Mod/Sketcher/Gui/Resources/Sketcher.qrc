@@ -101,6 +101,7 @@
     <qresource>
         <file>icons/general/Sketcher_EditSketch.svg</file>
         <file>icons/general/Sketcher_LeaveSketch.svg</file>
+        <file>icons/general/Sketcher_FinishSketch.svg</file>
         <file>icons/general/Sketcher_MapSketch.svg</file>
         <file>icons/general/Sketcher_MergeSketch.svg</file>
         <file>icons/general/Sketcher_MirrorSketch.svg</file>

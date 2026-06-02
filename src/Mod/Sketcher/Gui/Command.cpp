@@ -501,11 +501,11 @@ CmdSketcherLeaveSketch::CmdSketcherLeaveSketch()
 {
     sAppModule = "Sketcher";
     sGroup = "Sketcher";
-    sMenuText = QT_TR_NOOP("Leave Sketch");
+    sMenuText = QT_TR_NOOP("Finish Sketch");
     sToolTipText = QT_TR_NOOP("Exits the active sketch");
     sWhatsThis = "Sketcher_LeaveSketch";
     sStatusTip = sToolTipText;
-    sPixmap = "Sketcher_LeaveSketch";
+    sPixmap = "Sketcher_FinishSketch";
     eType = 0;
 }
 

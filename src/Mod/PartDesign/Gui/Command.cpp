@@ -4187,8 +4187,8 @@ public:
     {
         sAppModule = "PartDesign";
         sGroup = "PartDesign";
-        sMenuText = QT_TR_NOOP("Create Datum");
-        sToolTipText = QT_TR_NOOP("Creates a datum object or local coordinate system");
+        sMenuText = QT_TR_NOOP("Create Sketch");
+        sToolTipText = QT_TR_NOOP("Creates a sketch or datum object");
         sWhatsThis = "PartDesign_CompDatums";
         sStatusTip = sToolTipText;
         eType = ForEdit;
@@ -4222,8 +4222,8 @@ public:
     {
         sAppModule = "PartDesign";
         sGroup = "PartDesign";
-        sMenuText = QT_TR_NOOP("Create Datum");
-        sToolTipText = QT_TR_NOOP("Creates a datum object or local coordinate system");
+        sMenuText = QT_TR_NOOP("Create Sketch");
+        sToolTipText = QT_TR_NOOP("Creates a sketch or datum object");
         sWhatsThis = "PartDesign_CompDatums";
         sStatusTip = sToolTipText;
         eType = ForEdit;
