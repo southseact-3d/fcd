@@ -1,7 +1,7 @@
 ﻿/*
 declaration.nsh
 
-Configuration and variables of FreeCAD installer
+Configuration and variables of Tungsten CAD installer
 */
 
 #--------------------------------
@@ -12,7 +12,7 @@ Configuration and variables of FreeCAD installer
 #--------------------------------
 # Names and version
 
-!define APP_NAME "FreeCAD"
+!define APP_NAME "Tungsten CAD"
 !define APP_VERSION_NUMBER "${APP_VERSION_MAJOR}.${APP_VERSION_MINOR}.${APP_VERSION_PATCH}.${APP_VERSION_BUILD}"
 # For the proposed install folder we use the scheme "FreeCAD 0.18" 
 # however for the Registry, we need the scheme "FreeCAD 0.18.x" in order
@@ -20,7 +20,7 @@ Configuration and variables of FreeCAD installer
 !define APP_SERIES_NAME "${APP_VERSION_MAJOR}.${APP_VERSION_MINOR}"
 !define APP_SERIES_KEY "${APP_VERSION_MAJOR}${APP_VERSION_MINOR}${APP_VERSION_PATCH}${APP_VERSION_EMERGENCY}"
 !define APP_SERIES_KEY2 "${APP_VERSION_MAJOR}.${APP_VERSION_MINOR}.${APP_VERSION_PATCH}${APP_EMERGENCY_DOT}${APP_VERSION_EMERGENCY}"
-!define APP_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${APP_NAME}.exe"
+!define APP_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\FreeCAD.exe"
 !define APP_DIR "${APP_NAME} ${APP_SERIES_NAME}"
 # Fixme: FC should use different preferences folder for every release
 !define APP_DIR_USERDATA ${APP_NAME}
@@ -33,8 +33,8 @@ Configuration and variables of FreeCAD installer
 !define APP_WIKI_INFO "${APP_NAME} Wiki"
 !define APP_COPYRIGHT "${APP_NAME} is Copyright © 2001-${COPYRIGHT_YEAR} by the ${APP_NAME} Team"
 
-!define APP_RUN "bin\${APP_NAME}.exe"
-!define BIN_FREECAD "${APP_NAME}.exe"
+!define APP_RUN "bin\FreeCAD.exe"
+!define BIN_FREECAD "FreeCAD.exe"
 
 !define APP_REGKEY "SOFTWARE\${APP_NAME}${APP_SERIES_KEY}" # like "FreeCAD0180"
 !define APP_REGKEY_SETUP "${APP_REGKEY}\Setup"
