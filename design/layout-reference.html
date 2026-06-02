@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tungsten CAD - Part Design Workbench Layout Reference</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #ddd; font-size: 13px; user-select: none; }
+
+  /* ── Title bar ── */
+  .titlebar { background: #2d2d2d; padding: 4px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #444; }
+  .titlebar span { font-size: 12px; color: #ccc; }
+  .titlebar .win-btns span { display: inline-block; width: 28px; text-align: center; padding: 2px 0; cursor: pointer; border-radius: 4px; }
+  .titlebar .win-btns span:hover { background: #444; }
+
+  /* ── Menu bar ── */
+  .menubar { background: #2d2d2d; display: flex; padding: 0 4px; border-bottom: 1px solid #3a3a3a; }
+  .menubar .menu-item { padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+  .menubar .menu-item:hover { background: #3d3d3d; }
+  .menubar .menu-item.active { background: #0078d4; color: #fff; }
+
+  /* ── Toolbar row ── */
+  .toolbar-row { background: #f0f0f0; display: flex; align-items: center; padding: 2px 4px; gap: 1px; border-bottom: 1px solid #ccc; min-height: 42px; flex-wrap: nowrap; overflow-x: auto; }
+  .toolbar-row.row2 { background: #e8e8e8; }
+
+  .tb-group { display: flex; align-items: center; gap: 1px; padding: 0 2px; flex-shrink: 0; }
+  .tb-sep { width: 1px; height: 28px; background: #bbb; margin: 0 4px; flex-shrink: 0; }
+
+  .tb-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px 4px; border-radius: 4px; cursor: pointer; min-width: 36px; gap: 1px; border: 1px solid transparent; }
+  .tb-btn:hover { background: #d0d0d0; border-color: #aaa; }
+  .tb-btn:active { background: #b0b0b0; }
+  .tb-btn .icon { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .tb-btn .label { font-size: 10px; color: #333; text-align: center; line-height: 1.1; white-space: pre-wrap; max-width: 52px; }
+
+  /* Icon colors */
+  .ic-blue { background: #2196F3; color: #fff; }
+  .ic-green { background: #4CAF50; color: #fff; }
+  .ic-orange { background: #FF9800; color: #fff; }
+  .ic-red { background: #f44336; color: #fff; }
+  .ic-purple { background: #9C27B0; color: #fff; }
+  .ic-teal { background: #009688; color: #fff; }
+  .ic-indigo { background: #3F51B5; color: #fff; }
+  .ic-amber { background: #FFC107; color: #333; }
+  .ic-cyan { background: #00BCD4; color: #fff; }
+  .ic-grey { background: #607D8B; color: #fff; }
+  .ic-brown { background: #795548; color: #fff; }
+  .ic-pink { background: #E91E63; color: #fff; }
+
+  /* Dropdown button */
+  .tb-dropdown { position: relative; }
+  .tb-dropdown .arrow { font-size: 8px; color: #666; margin-top: -1px; }
+
+  /* ── Tab bar ── */
+  .tabbar { background: #2d2d2d; display: flex; padding: 0 4px; border-bottom: 1px solid #3a3a3a; }
+  .tab { padding: 6px 14px; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 12px; background: #383838; color: #aaa; border: 1px solid #444; border-bottom: none; margin-right: 2px; }
+  .tab.active { background: #1a1a1a; color: #fff; border-color: #0078d4; border-bottom-color: #1a1a1a; position: relative; top: 1px; }
+
+  /* ── 3D viewport ── */
+  .viewport { position: relative; width: 100%; height: 500px; background: #2b2b2b; overflow: hidden; }
+  .viewport canvas { width: 100%; height: 100%; }
+
+  /* Grid */
+  .grid-overlay { position: absolute; inset: 0; pointer-events: none; }
+  .grid-overlay svg { width: 100%; height: 100%; }
+
+  /* Axes */
+  .axis-label { position: absolute; font-size: 12px; font-weight: bold; }
+  .axis-x { color: #f44; right: 10px; bottom: 50%; }
+  .axis-y { color: #4f4; top: 10px; left: 50%; }
+  .axis-z { color: #44f; top: 50%; left: 10px; }
+
+  /* Nav cube */
+  .nav-cube { position: absolute; top: 12px; right: 12px; width: 80px; height: 80px; }
+  .nav-cube svg { width: 100%; height: 100%; }
+
+  /* Coordinate display */
+  .coord-display { position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: #aaa; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 4px; }
+
+  /* ── Status bar ── */
+  .statusbar { background: #2d2d2d; display: flex; align-items: center; justify-content: space-between; padding: 2px 12px; border-top: 1px solid #444; font-size: 11px; color: #999; height: 24px; }
+  .statusbar .left { display: flex; gap: 16px; }
+  .statusbar .right { display: flex; gap: 16px; align-items: center; }
+  .statusbar .indicator { display: inline-flex; align-items: center; gap: 4px; }
+  .statusbar .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-green { background: #4CAF50; }
+
+  /* ── Section labels ── */
+  .section-label { background: #333; color: #aaa; padding: 4px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #444; }
+  .design-note { background: #1a2a1a; color: #8c8; padding: 8px 12px; font-size: 12px; border: 1px solid #3a5a3a; border-radius: 6px; margin: 8px 12px; line-height: 1.5; }
+  .design-note strong { color: #afa; }
+  .design-note code { background: #2a3a2a; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+
+  /* ── Responsive width indicator ── */
+  .width-info { position: absolute; bottom: 30px; left: 12px; font-size: 10px; color: #666; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 3px; }
+
+  /* ── Annotation ── */
+  .anno { position: absolute; border: 2px dashed #0078d4; border-radius: 4px; pointer-events: none; }
+  .anno-label { position: absolute; top: -18px; left: 0; font-size: 10px; color: #0078d4; background: #1a1a1a; padding: 0 4px; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ TITLE BAR ═══════════ -->
+<div class="titlebar">
+  <span>Tungsten CAD 1.2.0dev</span>
+  <div class="win-btns">
+    <span>&#8722;</span><span>&#9633;</span><span>&#10005;</span>
+  </div>
+</div>
+
+<!-- ═══════════ MENU BAR ═══════════ -->
+<div class="menubar">
+  <div class="menu-item">File</div>
+  <div class="menu-item">Edit</div>
+  <div class="menu-item">View</div>
+  <div class="menu-item">Tools</div>
+  <div class="menu-item">Macro</div>
+  <div class="menu-item">Sketch</div>
+  <div class="menu-item active">Part Design</div>
+  <div class="menu-item">Windows</div>
+  <div class="menu-item">Help</div>
+</div>
+
+<!-- ═══════════ DESIGN NOTES ═══════════ -->
+<div class="design-note">
+  <strong>DESIGN GOAL:</strong> All Part Design toolbars consolidated into <strong>2 rows</strong> at the top.<br>
+  Row 1 = File ops + Part helpers + View + Workbench selector<br>
+  Row 2 = All modeling tools (primitives, additive, subtractive, dress-up, transform, modify, inspect)<br>
+  The <code>PartDesignPartToolsWidget</code> uses 3 equal-stretch sections with responsive width.
+</div>
+
+<!-- ═══════════ ROW 1: Standard + Helper + View ═══════════ -->
+<div class="section-label">Row 1 — Standard, Helpers, View</div>
+<div class="toolbar-row">
+
+  <!-- File ops -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-grey">&#128196;</div><div class="label">New</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#128194;</div><div class="label">Open</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#128190;</div><div class="label">Save</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Undo/Redo -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-grey">&#8630;</div><div class="label">Undo</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#8631;</div><div class="label">Redo</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#8634;</div><div class="label">Recompute</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Workbench selector -->
+  <div class="tb-group">
+    <div class="tb-btn" style="min-width: 100px; border: 1px solid #aaa; background: #fff; border-radius: 3px;">
+      <div style="font-size: 11px; color: #333; display: flex; align-items: center; gap: 4px;">
+        <span class="icon ic-blue" style="width:16px;height:16px;border-radius:2px;font-size:10px;">&#9881;</span>
+        Part Design &#9660;
+      </div>
+    </div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Part Design Helper Features -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-blue">&#9638;</div><div class="label">New Body</div></div>
+    <div class="tb-btn"><div class="icon ic-blue">&#9998;</div><div class="label">Create<br>Datum</div></div>
+    <div class="tb-btn"><div class="icon ic-teal">&#10003;</div><div class="label">Validate<br>Sketch</div></div>
+    <div class="tb-btn"><div class="icon ic-amber">&#128279;</div><div class="label">Sub-Shape<br>Binder</div></div>
+    <div class="tb-btn"><div class="icon ic-purple">&#128260;</div><div class="label">Clone</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- View -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-grey">&#128269;</div><div class="label">Fit All</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#128269;+</div><div class="label">Fit<br>Select</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#127912;</div><div class="label">Standard<br>Views</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#9678;</div><div class="label">Align to<br>Select</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-grey">&#9783;</div><div class="label">Draw<br>Style</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#128433;</div><div class="label">Selection<br>Filter</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">&#127795;</div><div class="label">Tree View<br>Actions</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-green">&#10010;</div><div class="label">New Part</div></div>
+    <div class="tb-btn"><div class="icon ic-grey">?</div><div class="label">What's<br>This?</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ ROW 2: All Modeling + Part Tools ═══════════ -->
+<div class="section-label">Row 2 — Modeling Features + Dress-Up + Transform + Primitives + Modify + Inspect</div>
+<div class="toolbar-row row2">
+
+  <!-- Additive features -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-green">&#9650;</div><div class="label">Pad</div></div>
+    <div class="tb-btn"><div class="icon ic-green">&#8635;</div><div class="label">Revolve</div></div>
+    <div class="tb-btn"><div class="icon ic-green">&#128200;</div><div class="label">Additive<br>Loft</div></div>
+    <div class="tb-btn"><div class="icon ic-green">&#128666;</div><div class="label">Additive<br>Pipe</div></div>
+    <div class="tb-btn"><div class="icon ic-green">&#127922;</div><div class="label">Additive<br>Helix</div></div>
+    <div class="tb-btn tb-dropdown"><div class="icon ic-green">&#9650;</div><div class="label">Additive<br>Primitive</div><div class="arrow">&#9660;</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Subtractive features -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-red">&#9660;</div><div class="label">Pocket</div></div>
+    <div class="tb-btn"><div class="icon ic-red">&#9681;</div><div class="label">Hole</div></div>
+    <div class="tb-btn"><div class="icon ic-red">&#8634;</div><div class="label">Groove</div></div>
+    <div class="tb-btn"><div class="icon ic-red">&#128200;</div><div class="label">Subtractive<br>Loft</div></div>
+    <div class="tb-btn"><div class="icon ic-red">&#128666;</div><div class="label">Subtractive<br>Pipe</div></div>
+    <div class="tb-btn"><div class="icon ic-red">&#127922;</div><div class="label">Subtractive<br>Helix</div></div>
+    <div class="tb-btn tb-dropdown"><div class="icon ic-red">&#9660;</div><div class="label">Subtractive<br>Primitive</div><div class="arrow">&#9660;</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Boolean -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-indigo">&#8853;</div><div class="label">Boolean</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Dress-up -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-amber">&#9672;</div><div class="label">Fillet</div></div>
+    <div class="tb-btn"><div class="icon ic-amber">&#11045;</div><div class="label">Chamfer</div></div>
+    <div class="tb-btn"><div class="icon ic-orange">&#9651;</div><div class="label">Draft</div></div>
+    <div class="tb-btn"><div class="icon ic-brown">&#9717;</div><div class="label">Thick-<br>ness</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- Transform -->
+  <div class="tb-group">
+    <div class="tb-btn"><div class="icon ic-cyan">&#9716;</div><div class="label">Mirrored</div></div>
+    <div class="tb-btn"><div class="icon ic-cyan">&#8596;</div><div class="label">Linear<br>Pattern</div></div>
+    <div class="tb-btn"><div class="icon ic-cyan">&#128260;</div><div class="label">Polar<br>Pattern</div></div>
+    <div class="tb-btn"><div class="icon ic-cyan">&#9881;</div><div class="label">Multi-<br>Transform</div></div>
+  </div>
+  <div class="tb-sep"></div>
+
+  <!-- ── Part Tools: 3 equal-stretch sections ── -->
+  <div class="tb-group" style="flex: 1; justify-content: space-around;">
+
+    <!-- Primitives -->
+    <div class="tb-group">
+      <div class="tb-btn"><div class="icon ic-amber">&#9632;</div><div class="label">Box</div></div>
+      <div class="tb-btn"><div class="icon ic-amber">&#9673;</div><div class="label">Cylinder</div></div>
+      <div class="tb-btn"><div class="icon ic-amber">&#9898;</div><div class="label">Sphere</div></div>
+      <div class="tb-btn"><div class="icon ic-amber">&#9651;</div><div class="label">Cone</div></div>
+      <div class="tb-btn"><div class="icon ic-amber">&#9898;</div><div class="label">Torus</div></div>
+    </div>
+    <div class="tb-sep"></div>
+
+    <!-- Create -->
+    <div class="tb-group">
+      <div class="tb-btn tb-dropdown" style="min-width: 64px;">
+        <div class="icon ic-green">&#10010;</div>
+        <div class="label">Create</div>
+        <div class="arrow">&#9660;</div>
+      </div>
+    </div>
+    <div class="tb-sep"></div>
+
+    <!-- Modify -->
+    <div class="tb-group">
+      <div class="tb-btn tb-dropdown" style="min-width: 64px;">
+        <div class="icon ic-blue">&#9998;</div>
+        <div class="label">Modify</div>
+        <div class="arrow">&#9660;</div>
+      </div>
+    </div>
+    <div class="tb-sep"></div>
+
+    <!-- Inspect -->
+    <div class="tb-group">
+      <div class="tb-btn tb-dropdown" style="min-width: 64px;">
+        <div class="icon ic-grey">&#128269;</div>
+        <div class="label">Inspect</div>
+        <div class="arrow">&#9660;</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ TAB BAR ═══════════ -->
+<div class="tabbar">
+  <div class="tab active">Design</div>
+  <div class="tab">Mesh</div>
+</div>
+
+<!-- ═══════════ 3D VIEWPORT ═══════════ -->
+<div class="viewport" id="viewport">
+  <canvas id="gridCanvas"></canvas>
+
+  <!-- Axis labels -->
+  <div class="axis-label axis-x" style="color: #e44;">X</div>
+  <div class="axis-label axis-y" style="color: #4e4; left: 50%; top: 8px;">Y</div>
+  <div class="axis-label" style="color: #44e; left: 8px; top: 50%;">Z</div>
+
+  <!-- Nav cube -->
+  <div class="nav-cube">
+    <svg viewBox="0 0 100 100">
+      <!-- Isometric cube wireframe -->
+      <g transform="translate(50,50)" stroke="#888" stroke-width="1.2" fill="none" opacity="0.6">
+        <!-- Front face -->
+        <polygon points="-20,-10 10,-28 30,-18 0,0" fill="rgba(100,100,100,0.15)"/>
+        <!-- Top face -->
+        <polygon points="-20,-10 -5,-40 15,-30 10,-28" fill="rgba(140,140,140,0.15)"/>
+        <!-- Right face -->
+        <polygon points="10,-28 15,-30 35,-20 30,-18" fill="rgba(120,120,120,0.15)"/>
+        <!-- Labels -->
+        <text x="-8" y="-14" fill="#aaa" font-size="8" text-anchor="middle">FRONT</text>
+        <text x="0" y="-32" fill="#aaa" font-size="7" text-anchor="middle">TOP</text>
+        <text x="22" y="-22" fill="#aaa" font-size="7" text-anchor="middle">RIGHT</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Coordinate display -->
+  <div class="coord-display">311.18 mm x 100.00 mm</div>
+  <div class="width-info">Viewport — 3D with grid on Z-plane (XY)</div>
+</div>
+
+<!-- ═══════════ STATUS BAR ═══════════ -->
+<div class="statusbar">
+  <div class="left">
+    <div class="indicator"><div class="dot dot-green"></div> Ready</div>
+  </div>
+  <div class="right">
+    <span>&#9745; Z-plane grid</span>
+    <span>47</span>
+    <span>CAD</span>
+    <span>311.18 mm x 100.00 mm</span>
+  </div>
+</div>
+
+<!-- ═══════════ DROPDOWN MENUS (shown on click) ═══════════ -->
+<div id="dropdownOverlay" style="display:none; position:fixed; inset:0; z-index:999;" onclick="closeAllDropdowns()"></div>
+
+<div id="dropdownCreate" class="dropdown-menu" style="display:none;">
+  <div class="dd-item">Part Primitives</div>
+  <div class="dd-item">Part Builder</div>
+</div>
+
+<div id="dropdownModify" class="dropdown-menu" style="display:none;">
+  <div class="dd-item">Fillet</div>
+  <div class="dd-item">Chamfer</div>
+  <div class="dd-item">Draft</div>
+  <div class="dd-item">Thickness</div>
+  <div class="dd-sep"></div>
+  <div class="dd-item">Boolean Operation</div>
+  <div class="dd-item">Mirror</div>
+  <div class="dd-item">Linear Pattern</div>
+  <div class="dd-item">Polar Pattern</div>
+  <div class="dd-item">Multi-Transform</div>
+</div>
+
+<div id="dropdownInspect" class="dropdown-menu" style="display:none;">
+  <div class="dd-item">Check Geometry</div>
+  <div class="dd-item">Measure Distance</div>
+  <div class="dd-item">Measure Angle</div>
+</div>
+
+<style>
+  .dropdown-menu { position: fixed; background: #f0f0f0; border: 1px solid #aaa; box-shadow: 2px 2px 8px rgba(0,0,0,0.3); z-index: 1000; min-width: 180px; padding: 4px 0; border-radius: 4px; }
+  .dd-item { padding: 6px 16px; cursor: pointer; font-size: 12px; color: #222; }
+  .dd-item:hover { background: #0078d4; color: #fff; }
+  .dd-sep { height: 1px; background: #ccc; margin: 4px 8px; }
+</style>
+
+<script>
+  // Draw grid
+  function drawGrid() {
+    const canvas = document.getElementById('gridCanvas');
+    const vp = document.getElementById('viewport');
+    canvas.width = vp.clientWidth;
+    canvas.height = vp.clientHeight;
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Grid
+    ctx.strokeStyle = '#3a3a3a';
+    ctx.lineWidth = 0.5;
+    const step = 30;
+    for (let x = cx % step; x < canvas.width; x += step) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = cy % step; y < canvas.height; y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Axes
+    ctx.lineWidth = 1.5;
+    // X axis (red)
+    ctx.strokeStyle = '#e44';
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
+    // Y axis (green) — in FreeCAD XY is ground plane, Z is up
+    ctx.strokeStyle = '#4e4';
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
+  }
+
+  window.addEventListener('resize', drawGrid);
+  window.addEventListener('load', drawGrid);
+
+  // Dropdown toggle
+  function toggleDropdown(id, el) {
+    event.stopPropagation();
+    closeAllDropdowns();
+    const dd = document.getElementById(id);
+    const rect = el.getBoundingClientRect();
+    dd.style.left = rect.left + 'px';
+    dd.style.top = rect.bottom + 'px';
+    dd.style.display = 'block';
+    document.getElementById('dropdownOverlay').style.display = 'block';
+  }
+
+  function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
+    document.getElementById('dropdownOverlay').style.display = 'none';
+  }
+
+  // Attach dropdowns
+  document.querySelectorAll('.tb-dropdown').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const label = this.querySelector('.label').textContent.trim();
+      if (label === 'Create') toggleDropdown('dropdownCreate', this);
+      else if (label === 'Modify') toggleDropdown('dropdownModify', this);
+      else if (label === 'Inspect') toggleDropdown('dropdownInspect', this);
+    });
+  });
+</script>
+
+</body>
+</html>
