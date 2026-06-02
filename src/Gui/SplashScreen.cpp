@@ -322,29 +322,21 @@ QPixmap SplashScreen::splashImage()
         QString version = QStringLiteral("%1.%2.%3%4").arg(major, minor, point, suffix);
         QString position, fontFamily;
 
-        std::map<std::string, std::string>::const_iterator te = App::Application::Config().find(
-            "SplashInfoExeName"
-        );
-        std::map<std::string, std::string>::const_iterator tv = App::Application::Config().find(
-            "SplashInfoVersion"
-        );
-        std::map<std::string, std::string>::const_iterator tp = App::Application::Config().find(
-            "SplashInfoPosition"
-        );
-        std::map<std::string, std::string>::const_iterator tf = App::Application::Config().find(
-            "SplashInfoFont"
-        );
-        if (te != App::Application::Config().end()) {
-            title = QString::fromStdString(te->second);
+        const auto exeNameIt = App::Application::Config().find("SplashInfoExeName");
+        const auto versionIt = App::Application::Config().find("SplashInfoVersion");
+        const auto positionIt = App::Application::Config().find("SplashInfoPosition");
+        const auto fontIt = App::Application::Config().find("SplashInfoFont");
+        if (exeNameIt != App::Application::Config().end()) {
+            title = QString::fromStdString(exeNameIt->second);
         }
-        if (tv != App::Application::Config().end()) {
-            version = QString::fromStdString(tv->second);
+        if (versionIt != App::Application::Config().end()) {
+            version = QString::fromStdString(versionIt->second);
         }
-        if (tp != App::Application::Config().end()) {
-            position = QString::fromStdString(tp->second);
+        if (positionIt != App::Application::Config().end()) {
+            position = QString::fromStdString(positionIt->second);
         }
-        if (tf != App::Application::Config().end()) {
-            fontFamily = QString::fromStdString(tf->second);
+        if (fontIt != App::Application::Config().end()) {
+            fontFamily = QString::fromStdString(fontIt->second);
         }
 
         QPainter painter;
@@ -360,8 +352,10 @@ QPixmap SplashScreen::splashImage()
         fontExe.setPointSizeF(20.0);
         QFontMetrics metricExe(fontExe);
         int l = QtTools::horizontalAdvance(metricExe, title);
-        if (title == QLatin1String("FreeCAD")) {
-            l = 0.0;  // "FreeCAD" text is already part of the splashscreen, version goes below it
+        const bool splashHasProductName = title == QLatin1String("FreeCAD")
+            || title == QLatin1String("Tungsten CAD");
+        if (splashHasProductName) {
+            l = 0.0;  // Product name text is already part of the splashscreen, version goes below it
         }
         int w = splash_image.width();
         int h = splash_image.height();
@@ -387,8 +381,7 @@ QPixmap SplashScreen::splashImage()
         if (color.isValid()) {
             painter.setPen(color);
             painter.setFont(fontExe);
-            if (title != QLatin1String("FreeCAD")) {
-                // FreeCAD's Splashscreen already contains the EXE name, no need to draw it
+            if (!splashHasProductName) {
                 painter.drawText(x, y, title);
             }
             painter.setFont(fontVer);
