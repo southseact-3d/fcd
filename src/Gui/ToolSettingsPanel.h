@@ -26,6 +26,7 @@
 #ifndef GUI_TOOLSETTINGSPANEL_H
 #define GUI_TOOLSETTINGSPANEL_H
 
+#include <FCGlobal.h>
 #include <QWidget>
 #include <QScrollArea>
 
