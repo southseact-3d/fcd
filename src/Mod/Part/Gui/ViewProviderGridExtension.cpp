@@ -23,6 +23,7 @@
  ***************************************************************************/
 
 #include <limits>
+#include <cmath>
 
 #include <Inventor/nodes/SoDepthBuffer.h>
 #include <Inventor/nodes/SoDrawStyle.h>
@@ -112,7 +113,7 @@ private:
     Base::Vector3d getCamCenterInSketchCoordinates() const;
 
     SbVec3f camCenterPointOnFocalPlane;
-    float camMaxDimension;
+    double camMaxDimension;
 
     Base::Vector3d gridOrigin;
     Base::Rotation gridRotation;
@@ -134,7 +135,7 @@ private:
 
 GridExtensionP::GridExtensionP(ViewProviderGridExtension* vp)
     : camCenterPointOnFocalPlane(SbVec3f(0., 0., 0.))
-    , camMaxDimension(200.)
+    , camMaxDimension(200.0)
     , vp(vp)
     , GridRoot(nullptr)
 {
@@ -178,7 +179,7 @@ void GridExtensionP::getClosestGridPoint(double& x, double& y) const
 
 bool GridExtensionP::checkCameraZoomChange(const Gui::View3DInventorViewer* viewer)
 {
-    float newCamMaxDimension = viewer->getMaxDimension();
+    double newCamMaxDimension = static_cast<double>(viewer->getMaxDimension());
     if (fabs(newCamMaxDimension - camMaxDimension) > 0) {  // ie if user zoomed.
         camMaxDimension = newCamMaxDimension;
         return true;
@@ -189,12 +190,12 @@ bool GridExtensionP::checkCameraZoomChange(const Gui::View3DInventorViewer* view
 
 bool GridExtensionP::checkCameraTranslationChange(const Gui::View3DInventorViewer* viewer)
 {
-    // Then we check if user moved by more than 10% of camera dimension (must be after updating
+    // Then we check if user moved by more than half a grid square (must be after updating
     // camera dimension).
     SbVec3f newCamCenterPointOnFocalPlane = viewer->getCenterPointOnFocalPlane();
 
     if ((camCenterPointOnFocalPlane - newCamCenterPointOnFocalPlane).length()
-        > 0.1 * camMaxDimension) {
+        > 0.5 * computedGridValue) {
         camCenterPointOnFocalPlane = newCamCenterPointOnFocalPlane;
         return true;
     }
@@ -206,8 +207,9 @@ void GridExtensionP::computeGridSize(const Gui::View3DInventorViewer* viewer)
 {
 
     auto capGridSize = [](auto& value) {
-        value = std::max(static_cast<float>(value), std::numeric_limits<float>::min());
-        value = std::min(static_cast<float>(value), std::numeric_limits<float>::max());
+        using T = decltype(value);
+        value = std::max(value, static_cast<T>(std::numeric_limits<float>::min()));
+        value = std::min(value, static_cast<T>(std::numeric_limits<float>::max()));
     };
 
     if (!vp->GridAuto.getValue()) {
@@ -226,17 +228,29 @@ void GridExtensionP::computeGridSize(const Gui::View3DInventorViewer* viewer)
 
     int numberOfLines = static_cast<int>(std::max(pixelWidth, pixelHeight)) / GridSizePixelThreshold;
 
-    // If number of subdivision is 1, grid auto spacing can't work as it uses it as a factor
-    // In such case, we apply a default factor of 10
-    auto safeGridNumberSubdivision = GridNumberSubdivision <= 1 ? 10 : GridNumberSubdivision;
+    // Compute ideal grid spacing so lines appear ~GridSizePixelThreshold pixels apart
+    double idealSpacing = camMaxDimension / numberOfLines;
 
-    computedGridValue = vp->GridSize.getValue()
-        * pow(safeGridNumberSubdivision,
-              1
-                  + floor(
-                      log(camMaxDimension / numberOfLines / vp->GridSize.getValue())
-                      / log(safeGridNumberSubdivision)
-                  ));
+    // Round to nearest nice number: 1, 2, 5 × 10^k
+    // This ensures grid size transitions are never more than 2×, avoiding the "too big squares"
+    // problem that occurs with pure power-of-N scaling.
+    auto niceRound = [](double value) -> double {
+        if (value <= 0.0) return 1.0;
+        double exp = std::floor(std::log10(value));
+        double base = value / std::pow(10.0, exp);
+        double nice;
+        if (base < 1.5)
+            nice = 1.0;
+        else if (base < 3.5)
+            nice = 2.0;
+        else if (base < 7.5)
+            nice = 5.0;
+        else
+            nice = 10.0;
+        return nice * std::pow(10.0, exp);
+    };
+
+    computedGridValue = niceRound(idealSpacing);
 
     // cap the grid size
     capGridSize(computedGridValue);
@@ -334,7 +348,7 @@ void GridExtensionP::createGridPart(
     int vlines = static_cast<int>(gridDimension / computedGridValue);  // total number of vertical lines
     int nlines = 2 * vlines;                                           // total number of lines
 
-    if (nlines > 2000) {
+    if (nlines > 10000) {
         if (!isTooManySegmentsNotified) {
             Base::Console().warning(
                 "The grid is too dense, so it is being disabled. Consider zooming in or changing "
@@ -373,7 +387,7 @@ void GridExtensionP::createGridPart(
     maxY = minY + gridDimension;
 
     // vertical lines
-    int i_offset_x = static_cast<int>(minX / computedGridValue);
+    int i_offset_x = static_cast<int>(std::floor(minX / computedGridValue));
     for (int i = 0; i < vlines; i++) {
         int iStep = (i + i_offset_x);
         if (((iStep % numberSubdiv == 0) && divLines)
@@ -391,7 +405,7 @@ void GridExtensionP::createGridPart(
     }
 
     // horizontal lines
-    int i_offset_y = static_cast<int>(minY / computedGridValue) - vlines;
+    int i_offset_y = static_cast<int>(std::floor(minY / computedGridValue)) - vlines;
     for (int i = vlines; i < nlines; i++) {
         int iStep = (i + i_offset_y);
         if (((iStep % numberSubdiv == 0) && divLines)
