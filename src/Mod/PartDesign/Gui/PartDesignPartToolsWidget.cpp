@@ -221,6 +221,7 @@ void PartDesignPartToolsWidget::resizeEvent(QResizeEvent* event)
 PartDesignGroupWidget* PartDesignPartToolsWidget::createCreateGroup()
 {
     QVector<const char*> commands = {
+        "PartDesign_NewSketch",
         "PartDesign_Pad",
         "PartDesign_Revolution",
         "PartDesign_AdditiveLoft",
@@ -352,6 +353,12 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
         action->setFont(font);
         menu->addAction(action);
     };
+
+    // Sketch section
+    addSectionHeader(QObject::tr("SKETCH"));
+    addMenuItem("PartDesign_NewSketch");
+
+    addSeparator();
 
     // Additive section
     addSectionHeader(QObject::tr("ADDITIVE"));
