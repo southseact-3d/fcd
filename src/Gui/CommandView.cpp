@@ -77,6 +77,7 @@
 #include "Tools.h"
 #include "Tree.h"
 #include "TreeParams.h"
+#include "Timeline.h"
 #include "Utilities.h"
 #include "View3DInventor.h"
 #include "View3DInventorViewer.h"
@@ -4372,6 +4373,44 @@ bool StdCmdClarifySelection::isActive()
 }
 
 //===========================================================================
+// Std_ToggleTimeline
+//===========================================================================
+DEF_STD_CMD_AC(StdCmdToggleTimeline)
+
+StdCmdToggleTimeline::StdCmdToggleTimeline()
+    : Command("Std_ToggleTimeline")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Toggle &Timeline");
+    sToolTipText = QT_TR_NOOP("Toggles the visibility of the parametric timeline");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_ToggleTimeline";
+    sPixmap = "Std_ToggleTimeline";
+    eType = Alter3DView;
+}
+
+void StdCmdToggleTimeline::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    MainWindow* mw = getMainWindow();
+    if (mw) {
+        Timeline* timeline = mw->getTimeline();
+        if (timeline) {
+            bool visible = !timeline->isVisible();
+            timeline->setVisible(visible);
+            if (_pcAction) {
+                _pcAction->setBlockedChecked(visible);
+            }
+        }
+    }
+}
+
+bool StdCmdToggleTimeline::isActive()
+{
+    return true;
+}
+
+//===========================================================================
 // Instantiation
 //===========================================================================
 
@@ -4455,6 +4494,7 @@ void CreateViewStdCommands()
     rcCmdMgr.addCommand(new StdCmdSelBoundingBox());
     rcCmdMgr.addCommand(new StdCmdTreeViewActions());
     rcCmdMgr.addCommand(new StdCmdDockOverlay());
+    rcCmdMgr.addCommand(new StdCmdToggleTimeline());
 
     auto hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/View"

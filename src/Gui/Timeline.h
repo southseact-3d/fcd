@@ -33,9 +33,15 @@
 #include <QMenu>
 #include <QFrame>
 #include <QIcon>
+#include <QTimer>
+#include <QSet>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <vector>
 #include <string>
-#include <memory>
+#include <map>
+#include <sstream>
+#include <set>
 
 namespace App
 {
@@ -46,8 +52,9 @@ class DocumentObject;
 namespace Gui
 {
 
-class TimelineItem;
+class TimelineWidgetItem;
 class TimelineSlider;
+class TimelineGroup;
 
 struct TimelineOperation
 {
@@ -57,8 +64,11 @@ struct TimelineOperation
     QIcon icon;
     int index;
     bool isCurrent;
+    bool isSuppressed;
+    bool isRolledBack;
     std::string documentName;
     std::string objectName;
+    int groupIndex; // -1 if not in a group
 };
 
 class TimelineWidgetItem : public QToolButton
@@ -69,20 +79,65 @@ public:
     explicit TimelineWidgetItem(const TimelineOperation& op, QWidget* parent = nullptr);
     void setIcon(const QIcon& icon);
     void setCurrent(bool current);
+    void setSuppressed(bool suppressed);
+    void setRolledBack(bool rolledBack);
     bool isCurrent() const { return m_isCurrent; }
+    bool isSuppressed() const { return m_isSuppressed; }
     const TimelineOperation& operation() const { return m_operation; }
 
 Q_SIGNALS:
     void editRequested(const TimelineOperation& op);
     void deleteRequested(const TimelineOperation& op);
+    void suppressToggled(const TimelineOperation& op, bool suppressed);
+    void rollbackHere(const TimelineOperation& op);
+    void dragStarted(int index);
+    void dragDropped(int fromIndex, int toIndex);
 
 protected:
     void contextMenuEvent(QContextMenuEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 
 private:
+    void updateStyle();
     TimelineOperation m_operation;
     bool m_isCurrent;
+    bool m_isSuppressed;
+    QPoint m_dragStartPosition;
+};
+
+class TimelineGroup : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit TimelineGroup(const QString& name, int startIndex, QWidget* parent = nullptr);
+
+    void addWidget(TimelineWidgetItem* widget);
+    void removeWidget(TimelineWidgetItem* widget);
+    const std::vector<TimelineWidgetItem*>& widgets() const { return m_widgets; }
+    QString groupName() const { return m_name; }
+    int startIndex() const { return m_startIndex; }
+    bool isExpanded() const { return m_expanded; }
+
+    void setExpanded(bool expanded);
+    void setName(const QString& name);
+
+Q_SIGNALS:
+    void groupExpanded(const QString& name, bool expanded);
+
+private:
+    QString m_name;
+    int m_startIndex;
+    bool m_expanded;
+    QToolButton* m_expandButton;
+    QLabel* m_nameLabel;
+    QWidget* m_contentWidget;
+    QHBoxLayout* m_contentLayout;
+    std::vector<TimelineWidgetItem*> m_widgets;
 };
 
 class Timeline : public QWidget
@@ -102,15 +157,22 @@ public:
 
     int operationCount() const;
 
+    bool isPlaying() const;
+
 public Q_SLOTS:
     void goToStart();
     void goToEnd();
     void goToPrevious();
     void goToNext();
+    void startPlayback();
+    void stopPlayback();
     void onOperationEdited(const TimelineOperation& op);
     void onOperationDeleted(const TimelineOperation& op);
+    void onOperationSuppressToggled(const TimelineOperation& op, bool suppressed);
+    void onOperationRollbackHere(const TimelineOperation& op);
     void onSliderMoved(int position);
     void onSliderReleased();
+    void onDragDropped(int fromIndex, int toIndex);
 
 Q_SIGNALS:
     void positionChanged(int position);
@@ -119,12 +181,15 @@ Q_SIGNALS:
 
 private:
     void setupUI();
+    void setupPlaybackControls();
     void loadOperationIcons();
     void updateOperationsList();
     void updateSliderRange();
     void applyStateAtPosition(int position);
     void restoreFullState();
     QIcon getIconForOperation(const std::string& type) const;
+    bool canMoveOperation(int fromIndex, int toIndex) const;
+    void performReorder(int fromIndex, int toIndex);
 
     TimelineSlider* m_slider;
     QScrollArea* m_operationsScroll;
@@ -135,14 +200,24 @@ private:
     QToolButton* m_btnEnd;
     QToolButton* m_btnPrev;
     QToolButton* m_btnNext;
+    QToolButton* m_btnPlay;
 
     std::vector<TimelineOperation> m_operations;
     std::vector<TimelineWidgetItem*> m_operationWidgets;
+    std::map<int, TimelineGroup*> m_groups; // startIndex -> group
     App::Document* m_document;
     int m_currentPosition;
     bool m_isDragging;
+    bool m_isPlaying;
+    QTimer* m_playbackTimer;
 
     std::map<std::string, QIcon> m_operationIcons;
+    QSet<App::DocumentObject*> m_timelineSuppressedObjects;
+
+    fastsignals::scoped_connection connectNewObject;
+    fastsignals::scoped_connection connectDelObject;
+    fastsignals::scoped_connection connectUndo;
+    fastsignals::scoped_connection connectRedo;
 };
 
 class TimelineSlider : public QSlider

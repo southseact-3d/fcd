@@ -230,6 +230,11 @@ public:
 
     bool isRestoringWindowState() const;
 
+    /**
+     * Returns the parametric timeline widget.
+     */
+    Timeline* getTimeline() const;
+
 public Q_SLOTS:
     /**
      * Updates the standard actions of a text editor such as Cut, Copy, Paste, Undo and Redo.
