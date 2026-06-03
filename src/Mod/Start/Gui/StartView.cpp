@@ -55,6 +55,7 @@
 #include <Gui/ModuleIO.h>
 #include <Gui/View3DInventor.h>
 #include <Gui/View3DInventorViewer.h>
+#include <Gui/Workbench.h>
 #include <Gui/WorkbenchManager.h>
 #include <gsl/pointers>
 #include <string>
