@@ -1859,13 +1859,26 @@ QDockWidget QTabBar { /*tabbar in dockwidget */
 
 QTabBar#mdiAreaTabBar::tab:bottom:selected {
   background-color: @ActiveTabBackgroundColor;
-  border-top: @ActiveTabBackgroundColor;
+  border-top: 2px solid @ActiveTabBackgroundColor;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  padding: 6px 16px;
+  margin-top: 2px;
 }
 
 /*tabbar for files. */
 QTabBar#mdiAreaTabBar {
-  qproperty-drawBase: 1;/*tabbar for files. */
+  qproperty-drawBase: 0;
   background-color: @PrimaryColor;
+}
+
+QTabBar#mdiAreaTabBar::tab:bottom {
+  padding: 4px 12px;
+  margin-top: 2px;
+}
+
+QTabBar#mdiAreaTabBar::tab:bottom:hover {
+  background-color: @ButtonTopBackgroundColor;
 }
 
 QTabBar {

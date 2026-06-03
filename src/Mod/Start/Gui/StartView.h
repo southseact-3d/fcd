@@ -84,6 +84,7 @@ public:
 protected:
     void changeEvent(QEvent* e) override;
     void showEvent(QShowEvent* event) override;
+    void closeEvent(QCloseEvent* e) override;
 
     void configureNewFileButtons(QLayout* layout) const;
     static void configureFileCardWidget(QListView* fileCardWidget);

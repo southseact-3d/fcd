@@ -133,6 +133,7 @@
 #include "Workbench.h"
 #include "WorkbenchManager.h"
 #include "WorkbenchSelector.h"
+#include <Mod/Start/Gui/StartView.h>
 #include <App/Property.h>
 #include <App/PropertyContainer.h>
 
@@ -1330,6 +1331,16 @@ void MainWindow::addWindow(MDIView* view)
         QAction* action = menu->addAction(tr("Close All"));
         connect(action, &QAction::triggered, d->mdiArea, &QMdiArea::closeAllSubWindows);
         d->mdiArea->addSubWindow(child);
+
+        // Remove close button for Start tab
+        if (qobject_cast<StartGui::StartView*>(view)) {
+            auto* tabBar = d->mdiArea->findChild<QTabBar*>();
+            if (tabBar) {
+                int index = tabBar->count() - 1;
+                tabBar->setTabButton(index, QTabBar::RightSide, nullptr);
+                tabBar->setTabButton(index, QTabBar::LeftSide, nullptr);
+            }
+        }
     }
 
     connect(view, &MDIView::message, this, &MainWindow::showMessage);
