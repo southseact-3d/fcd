@@ -49,6 +49,7 @@ class CommandManager;
 class Document;
 class MacroManager;
 class MDIView;
+class Timeline;
 
 namespace DockWnd
 {
