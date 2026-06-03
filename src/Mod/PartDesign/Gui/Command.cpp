@@ -2840,11 +2840,11 @@ void CmdPartDesignExtrude::activated(int iMsg)
     Q_UNUSED(iMsg);
 
     QMessageBox msgBox(Gui::getMainWindow());
-    msgBox.setWindowTitle(tr("Extrude"));
-    msgBox.setText(tr("Select extrude type:"));
+    msgBox.setWindowTitle(QObject::tr("Extrude"));
+    msgBox.setText(QObject::tr("Select extrude type:"));
     msgBox.setIcon(QMessageBox::Question);
-    auto* padBtn = msgBox.addButton(tr("Pad (Add Material)"), QMessageBox::AcceptRole);
-    auto* pocketBtn = msgBox.addButton(tr("Pocket (Remove Material)"), QMessageBox::RejectRole);
+    auto* padBtn = msgBox.addButton(QObject::tr("Pad (Add Material)"), QMessageBox::AcceptRole);
+    auto* pocketBtn = msgBox.addButton(QObject::tr("Pocket (Remove Material)"), QMessageBox::RejectRole);
     msgBox.addButton(QMessageBox::Cancel);
     msgBox.exec();
 
