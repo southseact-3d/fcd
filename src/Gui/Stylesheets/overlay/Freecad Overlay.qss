@@ -3,6 +3,42 @@ Gui--TaskView--TaskView QScrollArea {
   border: none;
  }
 
+/* Tool Settings Panel — overlay in bottom-right of 3D viewport */
+Gui--ToolSettingsPanel {
+  background-color: @PrimaryColor;
+  border: 1px solid @GeneralBorderColor;
+  border-radius: 6px;
+}
+
+Gui--ToolSettingsPanel QScrollArea {
+  background-color: transparent;
+  border: none;
+}
+
+Gui--ToolSettingsPanel QFrame#buttonBar {
+  background-color: @PrimaryColor;
+  border-top: 1px solid @GeneralBorderColor;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+Gui--ToolSettingsPanel QDialogButtonBox QPushButton {
+  background-color: @ButtonTopBackgroundColor;
+  border: 1px solid @GeneralBorderColor;
+  border-radius: 3px;
+  padding: 4px 12px;
+  min-width: 60px;
+  color: @TextForegroundColor;
+}
+
+Gui--ToolSettingsPanel QDialogButtonBox QPushButton:hover {
+  background-color: @ThemeAccentColor1;
+}
+
+Gui--ToolSettingsPanel QDialogButtonBox QPushButton:pressed {
+  background-color: @ButtonBottomBackgroundColor;
+}
+
 QTabWidget::pane{
   background-color: transparent;
   border: transparent;

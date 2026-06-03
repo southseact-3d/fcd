@@ -1396,6 +1396,7 @@ SET(FreeCADGui_CPP_SRCS
     Namespace.h
     resource.cpp
     Control.cpp
+    ToolSettingsPanel.cpp
     SpaceballEvent.cpp
     StatusBarLabel.cpp
     PreferencePackManager.cpp
@@ -1440,6 +1441,7 @@ SET(FreeCADGui_SRCS
     PreCompiled.h
     QtAll.h
     Control.h
+    ToolSettingsPanel.h
     SpaceballEvent.h
     PreferencePackManager.h
     Thumbnail.h

@@ -43,6 +43,8 @@ class Document;
 
 namespace Gui
 {
+class ToolSettingsPanel;
+
 namespace TaskView
 {
 class TaskDialog;
@@ -64,18 +66,26 @@ public:
      *  These methods are used to control the TaskDialog stuff.
      */
     //@{
-    /// This method starts a task dialog in the task view
+    /// This method starts a task dialog in the tool settings panel
     void showDialog(Gui::TaskView::TaskDialog* dlg);
     Gui::TaskView::TaskDialog* activeDialog() const;
     // void closeDialog();
     //@}
 
     /** @name task view handling
+     *  Kept for backward compatibility; always returns nullptr.
      */
     //@{
     Gui::TaskView::TaskView* taskPanel() const;
     /// raising the model view
     void showModelView();
+    //@}
+
+    /** @name tool settings panel
+     */
+    //@{
+    /// Returns the tool settings panel, creating it if necessary
+    Gui::ToolSettingsPanel* toolSettingsPanel() const;
     //@}
 
     /*!
@@ -98,11 +108,13 @@ public Q_SLOTS:
     void accept();
     void reject();
     void closeDialog();
-    /// raises the task view panel
+    /// raises the task view panel (no-op, kept for compatibility)
     void showTaskView();
 
 private Q_SLOTS:
-    /// This get called by the TaskView when the Dialog is finished
+    /// This get called by the ToolSettingsPanel when the Dialog is finished
+    void onDialogAccepted();
+    void onDialogRejected();
     void closedDialog();
 
 private:
@@ -125,6 +137,9 @@ private:
     QTabBar* findTabBar(QDockWidget*) const;
     void aboutToShowDialog(QDockWidget* widget);
     void aboutToHideDialog(QDockWidget* widget);
+    void ensureToolSettingsPanel();
+
+    mutable Gui::ToolSettingsPanel* _toolSettingsPanel;
 
     static ControlSingleton* _pcSingleton;
 };

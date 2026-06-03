@@ -41,6 +41,7 @@ class DocumentObject;
 namespace Gui
 {
 class MDIView;
+class ToolSettingsPanel;
 namespace TaskView
 {
 
@@ -249,6 +250,7 @@ private:
 
     friend class TaskDialogPy;
     friend class TaskView;
+    friend class ToolSettingsPanel;
 };
 
 }  // namespace TaskView
