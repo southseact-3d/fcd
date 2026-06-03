@@ -195,3 +195,32 @@ Gui--OverlayToolButton[objectName="OBTN AutoMode"] {
 Gui--OverlayToolButton[objectName="OBTN AutoMode"]:hover {
   image: url(qss:@IconsLocationFolderName/mode-@StylesheetIconsColor.svg);
 }
+
+/* Model Sidebar — compact tree view for Bodies and Sketches */
+Gui--ModelSidebar {
+  background-color: @PrimaryColor;
+  border: none;
+  font-size: 11px;
+}
+
+Gui--ModelSidebar::item {
+  padding: 3px 4px;
+  border: none;
+}
+
+Gui--ModelSidebar::item:selected {
+  background-color: rgba(0, 120, 212, 0.3);
+}
+
+Gui--ModelSidebar::item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+Gui--ModelSidebar::branch {
+  background: transparent;
+}
+
+/* Style the dock widget container */
+QDockWidget#Body\ List {
+  background-color: @PrimaryColor;
+}
