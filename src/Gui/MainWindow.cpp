@@ -314,7 +314,7 @@ struct MainWindowP
     QLabel* actionLabel;
     InputHintWidget* hintLabel;
     QLabel* rightSideLabel;
-    QCheckBox* xPlaneGridToggle;
+
     QTimer* actionTimer;
     QTimer* statusTimer;
     QTimer* activityTimer;
@@ -461,16 +461,6 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
     d->hintLabel->setWindowTitle(tr("Input Hints"));
 
     statusBar()->addWidget(d->hintLabel);
-
-    // toggle for Z-plane grid (XY plane at z=0)
-    d->xPlaneGridToggle = new QCheckBox(tr("Z-plane grid"), statusBar());
-    d->xPlaneGridToggle->setChecked(Gui::View3DInventorViewer::isXPlaneGridEnabled());
-    connect(d->xPlaneGridToggle, &QCheckBox::toggled, this, [this](bool checked) {
-        Gui::View3DInventorViewer::setXPlaneGridEnabled(checked);
-        // Force a redraw on all views.
-        Gui::Application::Instance->onUpdate();
-    });
-    statusBar()->addPermanentWidget(d->xPlaneGridToggle);
 
     // right side label
     d->rightSideLabel = new StatusBarLabel(statusBar(), "QuickMeasureEnabled");
