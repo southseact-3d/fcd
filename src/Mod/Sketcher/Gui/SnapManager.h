@@ -100,6 +100,7 @@ class SnapManager
         void updateSnapToObjectParameter(const std::string& parametername);
         void updateSnapToGridParameter(const std::string& parametername);
         void updateSnapAngleParameter(const std::string& parametername);
+        void updateSnapToObjectToleranceParameter(const std::string& parametername);
 
         static ParameterGrp::handle getParameterGrpHandle();
 
@@ -148,6 +149,8 @@ private:
     double lastMouseAngle;
 
     double snapAngle;
+
+    double snapToObjectTolerance;
 
     /// Observer to track all the needed parameters.
     std::unique_ptr<SnapManager::ParameterObserver> pObserver;
