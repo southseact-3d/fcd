@@ -591,7 +591,6 @@ void MainWindow::initDockWindows(bool show)
     updateTreeView(show);
     updatePropertyView(show);
     updateComboView(show);
-    updateTaskView(show);
     updateDAGView(show);
     updateBodyListView(show);
 }
@@ -602,7 +601,6 @@ void MainWindow::setupDockWindows()
     setupReportView();
     setupPythonConsole();
     setupSelectionView();
-    setupTaskView();
 
     initDockWindows(false);
 
@@ -616,27 +614,7 @@ void MainWindow::setupDockWindows()
 
 bool MainWindow::setupTaskView()
 {
-    // Task view
-    if (d->hiddenDockWindows.find("Std_TaskView") == std::string::npos) {
-        // clang-format off
-        auto group = App::GetApplication().GetUserParameter()
-                      .GetGroup("BaseApp")
-                     ->GetGroup("Preferences")
-                     ->GetGroup("DockWindows")
-                     ->GetGroup("TaskView");
-        // clang-format on
-        auto taskView = new Gui::TaskView::TaskView(this);
-        bool restore = group->GetBool("RestoreWidth", taskView->shouldRestoreWidth());
-        taskView->setRestoreWidth(restore);
-        taskView->setObjectName(QStringLiteral("Tasks"));
-        taskView->setWindowTitle(QDockWidget::tr("Tasks"));
-        taskView->setMinimumWidth(210);
-
-        DockWindowManager* pDockMgr = DockWindowManager::instance();
-        pDockMgr->registerDockWindow("Std_TaskView", taskView);
-        return true;
-    }
-
+    // Tasks dock widget removed; tool settings now shown in the 3D viewport overlay.
     return false;
 }
 
@@ -785,28 +763,8 @@ bool MainWindow::updatePropertyView(bool show)
 
 bool MainWindow::updateTaskView(bool show)
 {
-    // Task List (task watcher).
-    if (d->hiddenDockWindows.find("Std_TaskWatcher") == std::string::npos) {
-        // work through parameter.
-        ParameterGrp::handle group = App::GetApplication().GetUserParameter().GetGroup(
-            "BaseApp/Preferences/DockWindows/TaskWatcher"
-        );
-        bool enabled = group->GetBool("Enabled", false);
-        group->SetBool("Enabled", enabled);  // ensure entry exists.
-        _updateDockWidget("Std_TaskWatcher", enabled, show, Qt::RightDockWidgetArea, [](QWidget* widget) {
-            if (widget) {
-                return widget;
-            }
-
-            widget = new TaskView::TaskView(getMainWindow());
-            widget->setObjectName(QStringLiteral("Task List"));
-            widget->setWindowTitle(QDockWidget::tr("Task List"));
-            return widget;
-        });
-
-        return enabled;
-    }
-
+    // Task watcher dock widget removed; tool settings now shown in the 3D viewport overlay.
+    Q_UNUSED(show);
     return false;
 }
 
