@@ -30,7 +30,6 @@
 #include <QAbstractItemModel>
 #include <vector>
 
-#include <Base/Handled.h>
 #include <Gui/Selection/Selection.h>
 
 namespace App

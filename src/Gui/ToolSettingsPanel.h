@@ -33,6 +33,7 @@
 class QFrame;
 class QGridLayout;
 class QVBoxLayout;
+class QAbstractButton;
 class QDialogButtonBox;
 
 namespace Gui
