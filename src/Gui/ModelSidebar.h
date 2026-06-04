@@ -39,6 +39,8 @@ class DocumentObject;
 
 namespace Gui
 {
+class Document;
+class ViewProvider;
 class ViewProviderDocumentObject;
 
 /** A tree model that shows Bodies and Sketches from the active document.

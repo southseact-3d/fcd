@@ -30,8 +30,10 @@
 
 #include <App/Document.h>
 #include <App/DocumentObject.h>
+#include <Base/Type.h>
 #include <Gui/Application.h>
 #include <Gui/Command.h>
+#include <Gui/CommandT.h>
 #include <Gui/Document.h>
 #include <Gui/ViewProviderDocumentObject.h>
 #include <Gui/MainWindow.h>
@@ -181,14 +183,7 @@ void ModelSidebarModel::refresh()
     _sketchesRoot->children.clear();
     _topLevel.clear();
 
-    auto* app = App::GetApplication::Instance();
-    if (!app) {
-        _empty = true;
-        _topLevel.push_back(std::make_unique<Item>());
-        _topLevel.back()->name = tr("No bodies");
-        endResetModel();
-        return;
-    }
+    auto& app = App::GetApplication();
 
     auto* guiApp = Gui::Application::Instance;
     if (!guiApp) {
@@ -200,7 +195,7 @@ void ModelSidebarModel::refresh()
     }
 
     // Iterate all documents and their objects
-    std::vector<App::Document*> docs = app->getDocuments();
+    std::vector<App::Document*> docs = app.getDocuments();
     for (App::Document* doc : docs) {
         std::vector<App::DocumentObject*> objs = doc->getObjects();
         for (App::DocumentObject* obj : objs) {
@@ -329,7 +324,7 @@ void ModelSidebarModel::connectSignals()
     guiApp->signalNewDocument.connect([this](const Gui::Document& doc, bool isMain) {
         onNewDocument(doc, isMain);
     });
-    guiApp->signalDeletedDocument.connect([this](const Gui::Document& doc) {
+    guiApp->signalDeleteDocument.connect([this](const Gui::Document& doc) {
         onDeletedDocument(doc);
     });
     guiApp->signalActiveDocument.connect([this](const Gui::Document& doc) {
@@ -350,14 +345,14 @@ bool ModelSidebarModel::isRelevantObject(App::DocumentObject* obj) const
 bool ModelSidebarModel::isBody(App::DocumentObject* obj) const
 {
     if (!obj) return false;
-    return obj->getTypeId().isDerivedFrom("PartDesign::Body")
-        || obj->getTypeId().isDerivedFrom("Part::Body");
+    return obj->getTypeId().isDerivedFrom(Base::Type::fromName("PartDesign::Body"))
+        || obj->getTypeId().isDerivedFrom(Base::Type::fromName("Part::Body"));
 }
 
 bool ModelSidebarModel::isSketch(App::DocumentObject* obj) const
 {
     if (!obj) return false;
-    return obj->getTypeId().isDerivedFrom("Sketcher::SketchObject");
+    return obj->getTypeId().isDerivedFrom(Base::Type::fromName("Sketcher::SketchObject"));
 }
 
 ModelSidebarModel::Item* ModelSidebarModel::itemFromIndex(const QModelIndex& index) const
@@ -390,7 +385,6 @@ ModelSidebar::ModelSidebar(QWidget* parent)
 
     // Compact styling
     setIndentation(16);
-    setSpacing(2);
 
     header()->setStretchLastSection(true);
     header()->setVisible(false);
