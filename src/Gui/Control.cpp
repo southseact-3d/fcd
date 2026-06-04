@@ -225,12 +225,13 @@ void ControlSingleton::closeDialog()
     if (_toolSettingsPanel) {
         _toolSettingsPanel->hidePanel();
     }
-    if (ActiveDialog) {
-        ActiveDialog->closed();
-        ActiveDialog->emitDestructionSignal();
-        delete ActiveDialog;
-    }
+    auto* dlg = ActiveDialog;
     ActiveDialog = nullptr;
+    if (dlg) {
+        dlg->closed();
+        dlg->emitDestructionSignal();
+        delete dlg;
+    }
 }
 
 void ControlSingleton::onDialogAccepted()

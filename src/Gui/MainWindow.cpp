@@ -55,6 +55,7 @@
 #include <QWhatsThis>
 #include <QWindow>
 #include <QPushButton>
+#include <QVBoxLayout>
 #include "ModelSidebar.h"
 
 
@@ -844,14 +845,15 @@ bool MainWindow::updateBodyListView(bool show)
                 return widget;
             }
 
-            auto bodyListDock = new QDockWidget(nullptr, getMainWindow());
-            bodyListDock->setObjectName(QStringLiteral("Body List"));
-            bodyListDock->setWindowTitle(QDockWidget::tr("Model"));
+            auto bodyListWidget = new QWidget(getMainWindow());
+            bodyListWidget->setObjectName(QStringLiteral("Body List"));
+            bodyListWidget->setWindowTitle(QDockWidget::tr("Model Sidebar"));
+            auto* bodyLayout = new QVBoxLayout(bodyListWidget);
+            bodyLayout->setContentsMargins(0, 0, 0, 0);
+            auto sidebar = new ModelSidebar(bodyListWidget);
+            bodyLayout->addWidget(sidebar);
 
-            auto sidebar = new ModelSidebar(bodyListDock);
-            bodyListDock->setWidget(sidebar);
-
-            widget = bodyListDock;
+            widget = bodyListWidget;
             return widget;
         });
 
