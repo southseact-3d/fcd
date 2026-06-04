@@ -90,8 +90,12 @@ class PartDesignWorkbench(Workbench):
 
             from PartDesign import BOPTools as bop
 
-            bop.importAll()
-            bop.addCommands()
+            # Defer importAll and addCommands to first workbench activation
+            # to avoid loading all BOPTools modules at startup
+            if not hasattr(bop, '_initialized'):
+                bop.importAll()
+                bop.addCommands()
+                bop._initialized = True
             PartGui.BOPTools = bop
         except Exception as err:
             App.Console.PrintError(

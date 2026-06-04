@@ -37,6 +37,7 @@
 #include <QObject>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QPointer>
 
 #include "PartDesignPartToolsWidget.h"
 #include "Utils.h"
@@ -89,6 +90,7 @@ TYPESYSTEM_SOURCE(PartDesignGui::Workbench, Gui::StdWorkbench)
 Workbench::Workbench()
     : tabBar(nullptr)
     , tabBarAttached(false)
+    , cachedPartToolsWidget(nullptr)
 {
     modeHandler = std::make_unique<WorkbenchModeHandler>();
 }
@@ -222,9 +224,12 @@ void Workbench::activated()
         auto* toolbar = mainWin->findChild<QToolBar*>(
             QStringLiteral("Part Design Part Tools"));
         if (toolbar) {
+            // Reuse cached widget if it still exists and is valid
+            if (!cachedPartToolsWidget || !cachedPartToolsWidget.data()) {
+                cachedPartToolsWidget = new PartDesignPartToolsWidget(toolbar);
+            }
             toolbar->clear();
-            auto* widget = new PartDesignPartToolsWidget(toolbar);
-            toolbar->addWidget(widget);
+            toolbar->addWidget(cachedPartToolsWidget);
         }
     }
 }

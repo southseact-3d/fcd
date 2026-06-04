@@ -103,4 +103,27 @@ macro(SetGlobalCompilerAndLinkerSettings)
         endif()
     endif(MINGW)
 
+    # == Link-Time Optimization (LTO) for release builds ========================
+    option(FREECAD_ENABLE_LTO "Enable Link-Time Optimization in release builds" ON)
+    if(FREECAD_ENABLE_LTO)
+        include(CheckIPOSupported)
+        check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
+        if(ipo_supported)
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE)
+            message(STATUS "LTO enabled for release builds")
+        else()
+            message(STATUS "LTO not supported by compiler: ${ipo_output}")
+        endif()
+    endif()
+
+    # == Symbol visibility settings ==============================================
+    # Hide symbols by default and only export explicit dllexport/visibility attributes.
+    # This reduces binary size and speeds up dynamic linking.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT MINGW)
+        set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+        set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+        message(STATUS "Symbol visibility set to hidden (GCC/Clang)")
+    endif()
+
 endmacro(SetGlobalCompilerAndLinkerSettings)
