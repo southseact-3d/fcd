@@ -232,6 +232,7 @@ class _InvoluteGearTaskPanel:
 
     def __init__(self, obj, mode):
         self.obj = obj
+        self._debounce_timer = None
 
         self.form = FreeCADGui.PySideUic.loadUi(str(pathlib.Path(__file__).with_suffix(".ui")))
         self.form.setWindowIcon(QtGui.QIcon(":/icons/PartDesign_InternalExternalGear.svg"))
@@ -242,9 +243,7 @@ class _InvoluteGearTaskPanel:
 
             def assigner(value):
                 setattr(self.obj, property_name, value)
-                self.obj.Proxy.execute(self.obj)
-                if fitView:
-                    FreeCAD.Gui.SendMsgToActiveView("ViewFit")
+                self._debounced_execute(fitView)
 
             return assigner
 
@@ -281,6 +280,23 @@ class _InvoluteGearTaskPanel:
 
         if mode == 0:  # fresh created
             self.obj.Proxy.execute(self.obj)  # calculate once
+            FreeCAD.Gui.SendMsgToActiveView("ViewFit")
+
+    def _debounced_execute(self, fitView=False):
+        """Debounced execute to avoid recomputing on every rapid parameter change."""
+        if self._debounce_timer is not None:
+            self._debounce_timer.stop()
+        else:
+            self._debounce_timer = QtCore.QTimer()
+            self._debounce_timer.setSingleShot(True)
+            self._debounce_timer.setInterval(150)
+            self._debounce_timer.timeout.connect(self._execute_debounced)
+        self._pending_fit_view = fitView
+        self._debounce_timer.start()
+
+    def _execute_debounced(self):
+        self.obj.Proxy.execute(self.obj)
+        if getattr(self, '_pending_fit_view', False):
             FreeCAD.Gui.SendMsgToActiveView("ViewFit")
 
     def assignToolTipsFromPropertyDocs(self):

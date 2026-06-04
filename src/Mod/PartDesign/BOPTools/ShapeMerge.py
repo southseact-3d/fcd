@@ -77,59 +77,67 @@ def splitIntoGroupsBySharing(list_of_shapes, element_extractor, split_connection
 
     split_connections = set([HashableShape(element) for element in split_connections])
 
-    groups = (
-        []
-    )  # list of tuples (shapes,elements). Shapes is a list of plain shapes. Elements is a set of HashableShapes - all elements of shapes in the group, excluding split_connections.
+    # Union-find data structure for efficient group tracking
+    parent = list(range(len(list_of_shapes)))
+    rank = [0] * len(list_of_shapes)
 
-    # add shapes to the list of groups, one by one. If not connected to existing groups,
-    # new group is created. If connected, shape is added to groups, and the groups are joined.
-    for shape in list_of_shapes:
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]  # path compression
+            x = parent[x]
+        return x
+
+    def union(x, y):
+        rx, ry = find(x), find(y)
+        if rx == ry:
+            return
+        if rank[rx] < rank[ry]:
+            rx, ry = ry, rx
+        parent[ry] = rx
+        if rank[rx] == rank[ry]:
+            rank[rx] += 1
+
+    # Track which elements belong to which root group
+    element_to_root = {}  # HashableShape -> root index
+
+    for idx, shape in enumerate(list_of_shapes):
         shape_elements = set([HashableShape(element) for element in element_extractor(shape)])
         shape_elements.difference_update(split_connections)
-        # search if shape is connected to any groups
-        connected_to = []
-        not_in_connected_to = []
-        for iGroup in range(len(groups)):
-            connected = False
-            for element in shape_elements:
-                if element in groups[iGroup][1]:
-                    connected_to.append(iGroup)
-                    connected = True
-                    break
+
+        # Check if any element connects to an existing group
+        connected_roots = set()
+        for element in shape_elements:
+            if element in element_to_root:
+                connected_roots.add(find(element_to_root[element]))
+
+        # Merge all connected groups
+        roots_list = list(connected_roots)
+        for i in range(1, len(roots_list)):
+            union(roots_list[0], roots_list[i])
+
+        # Determine the final root for this shape
+        final_root = find(idx) if connected_roots else idx
+        if connected_roots:
+            final_root = find(roots_list[0])
+
+        # Update element-to-root mapping
+        for element in shape_elements:
+            if element not in element_to_root:
+                element_to_root[element] = final_root
             else:
-                # `break` not invoked, so `connected` is false
-                not_in_connected_to.append(iGroup)
+                # Union the existing root with the new one
+                union(element_to_root[element], final_root)
+                element_to_root[element] = find(final_root)
 
-        # test if we need to join groups
-        if len(connected_to) > 1:
-            # shape bridges a gap between some groups. Join them into one.
-            # rebuilding list of groups. First, add the new "supergroup", then add the rest
-            groups_new = []
+    # Build result groups from union-find structure
+    groups_map = {}
+    for idx in range(len(list_of_shapes)):
+        root = find(idx)
+        if root not in groups_map:
+            groups_map[root] = []
+        groups_map[root].append(list_of_shapes[idx])
 
-            supergroup = (list(), set())
-            for iGroup in connected_to:
-                supergroup[0].extend(groups[iGroup][0])  # merge lists of shapes
-                supergroup[1].update(groups[iGroup][1])  # merge lists of elements
-            groups_new.append(supergroup)
-
-            l_groups = len(groups)
-            groups_new.extend(
-                [groups[i_group] for i_group in not_in_connected_to if i_group < l_groups]
-            )
-            groups = groups_new
-            connected_to = [0]
-
-        # add shape to the group it is connected to (if to many, the groups should have been unified by the above code snippet)
-        if len(connected_to) > 0:
-            iGroup = connected_to[0]
-            groups[iGroup][0].append(shape)
-            groups[iGroup][1].update(shape_elements)
-        else:
-            newgroup = ([shape], shape_elements)
-            groups.append(newgroup)
-
-    # done. Discard unnecessary data and return result.
-    return [shapes for shapes, elements in groups]
+    return list(groups_map.values())
 
 
 def mergeSolids(

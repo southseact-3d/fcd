@@ -221,6 +221,7 @@ class SprocketTaskPanel:
 
     def __init__(self, obj, mode):
         self.obj = obj
+        self._debounce_timer = None
 
         self.form = FreeCADGui.PySideUic.loadUi(
             FreeCAD.getHomePath() + "Mod/PartDesign/SprocketFeature.ui"
@@ -259,6 +260,23 @@ class SprocketTaskPanel:
             self.obj.Proxy.execute(self.obj)  # calculate once
             FreeCAD.Gui.SendMsgToActiveView("ViewFit")
 
+    def _debounced_execute(self, fit_view=False):
+        """Debounced execute to avoid recomputing on every rapid parameter change."""
+        if self._debounce_timer is not None:
+            self._debounce_timer.stop()
+        else:
+            self._debounce_timer = QtCore.QTimer()
+            self._debounce_timer.setSingleShot(True)
+            self._debounce_timer.setInterval(150)
+            self._debounce_timer.timeout.connect(self._execute_debounced)
+        self._pending_fit_view = fit_view
+        self._debounce_timer.start()
+
+    def _execute_debounced(self):
+        self.obj.Proxy.execute(self.obj)
+        if getattr(self, '_pending_fit_view', False):
+            FreeCAD.Gui.SendMsgToActiveView("ViewFit")
+
     def transferTo(self):
         """
         Transfer from the dialog to the object
@@ -281,8 +299,7 @@ class SprocketTaskPanel:
 
     def pitchChanged(self, value):
         self.obj.Pitch = value
-        self.obj.Proxy.execute(self.obj)
-        FreeCAD.Gui.SendMsgToActiveView("ViewFit")
+        self._debounced_execute(fit_view=True)
 
     def sprocketReferenceChanged(self, size):
         self.obj.Pitch = str(Sprocket.SprocketReferenceRollerTable[size][0]) + " in"
@@ -292,21 +309,19 @@ class SprocketTaskPanel:
         self.form.Quantity_Pitch.setText(self.obj.Pitch.UserString)
         self.form.Quantity_RollerDiameter.setText(self.obj.RollerDiameter.UserString)
         self.form.Quantity_Thickness.setText(self.obj.Thickness.UserString)
-        self.obj.Proxy.execute(self.obj)
-        FreeCAD.Gui.SendMsgToActiveView("ViewFit")
+        self._debounced_execute(fit_view=True)
 
     def rollerDiameterChanged(self, value):
         self.obj.RollerDiameter = value
-        self.obj.Proxy.execute(self.obj)
+        self._debounced_execute()
 
     def numTeethChanged(self, value):
         self.obj.NumberOfTeeth = value
-        self.obj.Proxy.execute(self.obj)
-        FreeCAD.Gui.SendMsgToActiveView("ViewFit")
+        self._debounced_execute(fit_view=True)
 
     def thicknessChanged(self, value):
         self.obj.Thickness = str(value)
-        self.obj.Proxy.execute(self.obj)
+        self._debounced_execute()
 
     def getStandardButtons(self):
         return (

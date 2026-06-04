@@ -78,6 +78,7 @@ private:
     std::unique_ptr<WorkbenchModeHandler> modeHandler;
     PartDesignTabBar* tabBar;
     bool tabBarAttached;
+    QPointer<QWidget> cachedPartToolsWidget;
 };
 
 }  // namespace PartDesignGui

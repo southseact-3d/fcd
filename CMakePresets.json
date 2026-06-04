@@ -55,6 +55,14 @@
           "CMAKE_BUILD_TYPE": {
             "type": "STRING",
             "value": "Release"
+          },
+          "ENABLE_DEVELOPER_TESTS": {
+            "type": "BOOL",
+            "value": "OFF"
+          },
+          "FREECAD_ENABLE_LTO": {
+            "type": "BOOL",
+            "value": "ON"
           }
         }
       },
@@ -236,7 +244,17 @@
         "inherits": [
           "release",
           "conda"
-        ]
+        ],
+        "cacheVariables": {
+          "ENABLE_DEVELOPER_TESTS": {
+            "type": "BOOL",
+            "value": "OFF"
+          },
+          "FREECAD_ENABLE_LTO": {
+            "type": "BOOL",
+            "value": "ON"
+          }
+        }
       },
       {
         "name": "conda-linux-debug",
