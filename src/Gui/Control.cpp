@@ -197,10 +197,12 @@ Gui::TaskView::TaskDialog* ControlSingleton::activeDialog() const
 void ControlSingleton::accept()
 {
     if (_toolSettingsPanel && _toolSettingsPanel->hasActiveDialog()) {
-        // Route through the task dialog's own accept logic
         if (ActiveDialog) {
-            ActiveDialog->accept();
+            bool success = ActiveDialog->accept();
             qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+            if (success) {
+                closeDialog();
+            }
         }
     }
 }
@@ -209,8 +211,11 @@ void ControlSingleton::reject()
 {
     if (_toolSettingsPanel && _toolSettingsPanel->hasActiveDialog()) {
         if (ActiveDialog) {
-            ActiveDialog->reject();
+            bool success = ActiveDialog->reject();
             qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+            if (success) {
+                closeDialog();
+            }
         }
     }
 }
@@ -219,6 +224,11 @@ void ControlSingleton::closeDialog()
 {
     if (_toolSettingsPanel) {
         _toolSettingsPanel->hidePanel();
+    }
+    if (ActiveDialog) {
+        ActiveDialog->closed();
+        ActiveDialog->emitDestructionSignal();
+        delete ActiveDialog;
     }
     ActiveDialog = nullptr;
 }

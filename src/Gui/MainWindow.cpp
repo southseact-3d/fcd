@@ -603,7 +603,7 @@ void MainWindow::setupDockWindows()
     setupPythonConsole();
     setupSelectionView();
 
-    initDockWindows(false);
+    initDockWindows(true);
 
     std::vector<QTabWidget::TabPosition> tabPos
         = {QTabWidget::North, QTabWidget::South, QTabWidget::West, QTabWidget::East};

@@ -87,6 +87,8 @@ Q_SIGNALS:
 protected:
     /** Reposition on parent resize. */
     bool eventFilter(QObject* obj, QEvent* event) override;
+    /** Handle Escape key to close dialog. */
+    void keyPressEvent(QKeyEvent* event) override;
 
 private:
     void setupUi();

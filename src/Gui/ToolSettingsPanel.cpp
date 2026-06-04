@@ -28,6 +28,7 @@
 #include <QEvent>
 #include <QFrame>
 #include <QGridLayout>
+#include <QKeyEvent>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QVBoxLayout>
@@ -78,6 +79,7 @@ void ToolSettingsPanel::setupUi()
     setObjectName(QStringLiteral("ToolSettingsPanel"));
     setMinimumWidth(PanelMinWidth);
     setMaximumWidth(PanelMaxWidth);
+    setMinimumHeight(200);
 
     _mainLayout = new QVBoxLayout(this);
     _mainLayout->setContentsMargins(PanelMargin, PanelMargin, PanelMargin, PanelMargin);
@@ -148,6 +150,7 @@ void ToolSettingsPanel::showDialog(TaskView::TaskDialog* dlg)
     dlg->open();
 
     // Position and show
+    adjustSize();
     updatePosition();
     show();
     raise();
@@ -209,7 +212,8 @@ void ToolSettingsPanel::updatePosition()
     // Calculate desired size
     int panelWidth = qMin(PanelMaxWidth, vpWidth - 2 * PanelMargin);
     panelWidth = qMax(panelWidth, PanelMinWidth);
-    int panelHeight = qMin(height(), vpHeight - 2 * PanelMargin);
+    int panelHeight = qMax(height(), minimumHeight());
+    panelHeight = qMin(panelHeight, vpHeight - 2 * PanelMargin);
 
     // Position in bottom-right corner
     int x = vpWidth - panelWidth - PanelMargin;
@@ -244,6 +248,15 @@ void ToolSettingsPanel::onButtonClicked(QAbstractButton* button)
         int index = _buttonBox->buttons().indexOf(button);
         Q_EMIT dialogClicked(index);
     }
+}
+
+void ToolSettingsPanel::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Escape && _activeDialog) {
+        Q_EMIT dialogRejected();
+        return;
+    }
+    QWidget::keyPressEvent(event);
 }
 
 #include "moc_ToolSettingsPanel.cpp"
