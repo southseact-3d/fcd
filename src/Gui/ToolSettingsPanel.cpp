@@ -139,7 +139,7 @@ void ToolSettingsPanel::showDialog(TaskView::TaskDialog* dlg)
 
     // Set up button box
     _buttonBox->setStandardButtons(dlg->getStandardButtons());
-    TaskDialogAttorney::setButtonBox(dlg, _buttonBox);
+    TaskView::TaskDialogAttorney::setButtonBox(dlg, _buttonBox);
     dlg->modifyStandardButtons(_buttonBox);
 
     _buttonBar->setVisible(_buttonBox->standardButtons() != QDialogButtonBox::NoButton);
