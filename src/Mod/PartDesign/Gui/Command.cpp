@@ -2555,22 +2555,14 @@ void prepareProfileBased(
                 break;
             }
         }
-        if (!onlyAllowed) {
-            QMessageBox msgBox(Gui::getMainWindow());
-            msgBox.setText(
-                QObject::tr("Cannot use selected object. Selected object must belong to the active body")
-            );
-            msgBox.setInformativeText(
-                QObject::tr("Consider using a shape binder or a base feature to reference external geometry in a body")
-            );
-            msgBox.setStandardButtons(QMessageBox::Ok);
-            msgBox.setDefaultButton(QMessageBox::Ok);
-            msgBox.exec();
-        }
-        else {
+        if (onlyAllowed) {
             base_worker(selection.front().getObject(), selection.front().getSubNames());
+            return;
         }
-        return;
+        // If selection is not in the active body, clear it and fall through to the
+        // sketch/dialog flow so the user gets a task panel to work with instead of
+        // a dead-end error.
+        Gui::Selection().clearSelection();
     }
 
     // no face profile was selected, do the extended sketch logic
