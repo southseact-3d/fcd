@@ -105,12 +105,18 @@ public:
 
 private:
     bool distanceCircleCircle(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
+    bool distanceFaceFace(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
     void distanceGeneric(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2);
     void setValues(const gp_Pnt& p1, const gp_Pnt& p2);
     void onChanged(const App::Property* prop) override;
     Handle(Geom_Circle) asCircle(const TopoDS_Shape& shape) const;
     Handle(Geom_Circle) asCircle(const TopoDS_Edge& edge) const;
     Handle(Geom_Circle) asCircle(const TopoDS_Wire& wire) const;
+
+    Base::Vector3d mClickedPosition1;
+    Base::Vector3d mClickedPosition2;
+    bool mHasClickedPosition1 = false;
+    bool mHasClickedPosition2 = false;
 };
 
 
