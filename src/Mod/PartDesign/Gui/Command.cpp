@@ -331,7 +331,7 @@ CmdPartDesignPartCylinder::CmdPartDesignPartCylinder()
     sToolTipText = QT_TR_NOOP("Creates a Part cylinder");
     sWhatsThis = "PartDesign_PartCylinder";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Cylinder";
+    sPixmap = "Part_Cylinder_Parametric";
 }
 
 void CmdPartDesignPartCylinder::activated(int iMsg)
@@ -365,7 +365,7 @@ CmdPartDesignPartSphere::CmdPartDesignPartSphere()
     sToolTipText = QT_TR_NOOP("Creates a Part sphere");
     sWhatsThis = "PartDesign_PartSphere";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Sphere";
+    sPixmap = "Part_Sphere_Parametric";
 }
 
 void CmdPartDesignPartSphere::activated(int iMsg)
@@ -399,7 +399,7 @@ CmdPartDesignPartCone::CmdPartDesignPartCone()
     sToolTipText = QT_TR_NOOP("Creates a Part cone");
     sWhatsThis = "PartDesign_PartCone";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Cone";
+    sPixmap = "Part_Cone_Parametric";
 }
 
 void CmdPartDesignPartCone::activated(int iMsg)
@@ -433,7 +433,7 @@ CmdPartDesignPartTorus::CmdPartDesignPartTorus()
     sToolTipText = QT_TR_NOOP("Creates a Part torus");
     sWhatsThis = "PartDesign_PartTorus";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Torus";
+    sPixmap = "Part_Torus_Parametric";
 }
 
 void CmdPartDesignPartTorus::activated(int iMsg)
@@ -467,7 +467,7 @@ CmdPartDesignPartTube::CmdPartDesignPartTube()
     sToolTipText = QT_TR_NOOP("Creates a Part tube");
     sWhatsThis = "PartDesign_PartTube";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Tube";
+    sPixmap = "Part_Tube_Parametric";
 }
 
 void CmdPartDesignPartTube::activated(int iMsg)
@@ -535,7 +535,7 @@ CmdPartDesignPartBuilder::CmdPartDesignPartBuilder()
     sToolTipText = QT_TR_NOOP("Open shape builder");
     sWhatsThis = "PartDesign_PartBuilder";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Builder";
+    sPixmap = "Part_Shapebuilder";
 }
 
 void CmdPartDesignPartBuilder::activated(int iMsg)
@@ -569,7 +569,7 @@ CmdPartDesignPartBoolean::CmdPartDesignPartBoolean()
     sToolTipText = QT_TR_NOOP("Boolean operation dialog");
     sWhatsThis = "PartDesign_PartBoolean";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_Boolean";
+    sPixmap = "Part_Booleans";
 }
 
 void CmdPartDesignPartBoolean::activated(int iMsg)
@@ -875,7 +875,7 @@ CmdPartDesignPartShapeFromMesh::CmdPartDesignPartShapeFromMesh()
     sToolTipText = QT_TR_NOOP("Convert mesh to shape");
     sWhatsThis = "PartDesign_PartShapeFromMesh";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_ShapeFromMesh";
+    sPixmap = "Part_Shape_from_Mesh";
 }
 
 void CmdPartDesignPartShapeFromMesh::activated(int iMsg)
@@ -1113,7 +1113,7 @@ CmdPartDesignPartEditAttachment::CmdPartDesignPartEditAttachment()
     sToolTipText = QT_TR_NOOP("Edit attachment");
     sWhatsThis = "PartDesign_PartEditAttachment";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_EditAttachment";
+    sPixmap = "Part_Attachment";
 }
 
 void CmdPartDesignPartEditAttachment::activated(int iMsg)
@@ -1181,7 +1181,7 @@ CmdPartDesignPartTransformedCopy::CmdPartDesignPartTransformedCopy()
     sToolTipText = QT_TR_NOOP("Create transformed copy");
     sWhatsThis = "PartDesign_PartTransformedCopy";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_TransformedCopy";
+    sPixmap = "Part_Transformed_Copy";
 }
 
 void CmdPartDesignPartTransformedCopy::activated(int iMsg)
@@ -1215,7 +1215,7 @@ CmdPartDesignPartElementCopy::CmdPartDesignPartElementCopy()
     sToolTipText = QT_TR_NOOP("Create copy of sub-elements");
     sWhatsThis = "PartDesign_PartElementCopy";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_ElementCopy";
+    sPixmap = "Part_Element_Copy";
 }
 
 void CmdPartDesignPartElementCopy::activated(int iMsg)
@@ -1249,7 +1249,7 @@ CmdPartDesignPartRefineShape::CmdPartDesignPartRefineShape()
     sToolTipText = QT_TR_NOOP("Refine shape");
     sWhatsThis = "PartDesign_PartRefineShape";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_RefineShape";
+    sPixmap = "Part_Refine_Shape";
 }
 
 void CmdPartDesignPartRefineShape::activated(int iMsg)
@@ -1317,7 +1317,7 @@ CmdPartDesignPartReverseShape::CmdPartDesignPartReverseShape()
     sToolTipText = QT_TR_NOOP("Reverse shape orientation");
     sWhatsThis = "PartDesign_PartReverseShape";
     sStatusTip = sToolTipText;
-    sPixmap = "Part_ReverseShape";
+    sPixmap = "Part_Reverse_Shape";
 }
 
 void CmdPartDesignPartReverseShape::activated(int iMsg)

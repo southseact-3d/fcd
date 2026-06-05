@@ -14,7 +14,7 @@ class TaskWatcher:
     def __init__(self):
         self.commands = ["Part_Box", "Part_Sphere", "Part_Cylinder"]
         self.title = "Create primitives"
-        self.icon = "Part_Sphere"
+        self.icon = "Part_Sphere_Parametric"
         self.widgets = [MyLineEdit()]
         self.widgets[0].setText("Line edit inside task box")
     def shouldShow(self):
