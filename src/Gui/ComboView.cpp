@@ -55,6 +55,10 @@ ComboView::ComboView(Gui::Document* pcDocument, QWidget* parent)
     // property view
     prop = new PropertyView(this);
     splitter->addWidget(prop);
+
+    setStyleSheet(QStringLiteral(
+        "ComboView, QSplitter, QWidget { background: transparent; }"
+    ));
 }
 
 ComboView::~ComboView() = default;
