@@ -244,6 +244,8 @@ PartDesignGroupWidget* PartDesignPartToolsWidget::createCreateGroup()
 PartDesignGroupWidget* PartDesignPartToolsWidget::createModifyGroup()
 {
     QVector<const char*> commands = {
+        "Std_TransformManip",
+        "PartDesign_PartScale",
         "PartDesign_Fillet",
         "PartDesign_Chamfer",
         "PartDesign_Draft",
@@ -390,6 +392,8 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addMenuItem("PartDesign_PartSphere");
     addMenuItem("PartDesign_PartCone");
     addMenuItem("PartDesign_PartTorus");
+    addMenuItem("PartDesign_PartTube");
+    addMenuItem("PartDesign_PartPrimitives");
 
     addSeparator();
 
@@ -397,6 +401,54 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addSectionHeader(QObject::tr("BOOLEAN"));
     addMenuItem("PartDesign_Boolean");
     addMenuItem("PartDesign_PartBuilder");
+    addMenuItem("PartDesign_PartCut");
+    addMenuItem("PartDesign_PartFuse");
+    addMenuItem("PartDesign_PartCommon");
+    addMenuItem("PartDesign_PartSection");
+
+    addSeparator();
+
+    // Join section
+    addSectionHeader(QObject::tr("JOIN"));
+    addMenuItem("PartDesign_PartJoinConnect");
+    addMenuItem("PartDesign_PartJoinEmbed");
+    addMenuItem("PartDesign_PartJoinCutout");
+
+    addSeparator();
+
+    // Split section
+    addSectionHeader(QObject::tr("SPLIT"));
+    addMenuItem("PartDesign_PartBooleanFragments");
+    addMenuItem("PartDesign_PartSliceApart");
+    addMenuItem("PartDesign_PartSlice");
+    addMenuItem("PartDesign_PartXor");
+
+    addSeparator();
+
+    // Compound section
+    addSectionHeader(QObject::tr("COMPOUND"));
+    addMenuItem("PartDesign_PartCompound");
+    addMenuItem("PartDesign_PartExplodeCompound");
+    addMenuItem("PartDesign_PartCompoundFilter");
+    addMenuItem("PartDesign_PartToleranceSet");
+
+    addSeparator();
+
+    // Modeling section
+    addSectionHeader(QObject::tr("MODELING"));
+    addMenuItem("PartDesign_PartLoft");
+    addMenuItem("PartDesign_PartSweep");
+    addMenuItem("PartDesign_PartMakeFace");
+    addMenuItem("PartDesign_PartShapeFromMesh");
+    addMenuItem("PartDesign_PartSectionCut");
+
+    addSeparator();
+
+    // Copy section
+    addSectionHeader(QObject::tr("COPY"));
+    addMenuItem("PartDesign_PartSimpleCopy");
+    addMenuItem("PartDesign_PartTransformedCopy");
+    addMenuItem("PartDesign_PartElementCopy");
 
     addSeparator();
 
@@ -406,6 +458,14 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addMenuItem("PartDesign_CompDatums");
     addMenuItem("PartDesign_Clone");
     addMenuItem("PartDesign_SubShapeBinder");
+
+    addSeparator();
+
+    // Extras section
+    addSectionHeader(QObject::tr("EXTRAS"));
+    addMenuItem("PartDesign_InvoluteGear");
+    addMenuItem("PartDesign_Sprocket");
+    addMenuItem("PartDesign_MigratePartMacros");
 
     return menu;
 }
@@ -440,6 +500,17 @@ QMenu* PartDesignPartToolsWidget::buildModifyMenu()
         menu->addAction(action);
     };
 
+    // Transform section
+    addSectionHeader(QObject::tr("TRANSFORM"));
+    addMenuItem("Std_TransformManip");
+    addMenuItem("PartDesign_PartScale");
+    addMenuItem("PartDesign_Mirrored");
+    addMenuItem("PartDesign_LinearPattern");
+    addMenuItem("PartDesign_PolarPattern");
+    addMenuItem("PartDesign_MultiTransform");
+
+    addSeparator();
+
     // Dress-Up section
     addSectionHeader(QObject::tr("DRESS-UP"));
     addMenuItem("PartDesign_Fillet");
@@ -449,12 +520,24 @@ QMenu* PartDesignPartToolsWidget::buildModifyMenu()
 
     addSeparator();
 
-    // Transform section
-    addSectionHeader(QObject::tr("TRANSFORM"));
-    addMenuItem("PartDesign_Mirrored");
-    addMenuItem("PartDesign_LinearPattern");
-    addMenuItem("PartDesign_PolarPattern");
-    addMenuItem("PartDesign_MultiTransform");
+    // Shape Operations section
+    addSectionHeader(QObject::tr("SHAPE OPERATIONS"));
+    addMenuItem("PartDesign_PartOffset");
+    addMenuItem("PartDesign_PartOffset2D");
+    addMenuItem("PartDesign_PartThickness");
+    addMenuItem("PartDesign_PartRuledSurface");
+    addMenuItem("PartDesign_PartCrossSections");
+    addMenuItem("PartDesign_PartProjectionOnSurface");
+    addMenuItem("PartDesign_PartEditAttachment");
+
+    addSeparator();
+
+    // Refine & Cleanup section
+    addSectionHeader(QObject::tr("REFINE & CLEANUP"));
+    addMenuItem("PartDesign_PartRefineShape");
+    addMenuItem("PartDesign_PartReverseShape");
+    addMenuItem("PartDesign_PartMakeSolid");
+    addMenuItem("PartDesign_PartDefeaturing");
 
     return menu;
 }
@@ -475,9 +558,32 @@ QMenu* PartDesignPartToolsWidget::buildInspectMenu()
         }
     };
 
+    auto addSeparator = [menu]() {
+        menu->addSeparator();
+    };
+
+    auto addSectionHeader = [menu](const QString& text) {
+        auto* action = new QAction(text, menu);
+        action->setEnabled(false);
+        QFont font = action->font();
+        font.setPointSize(9);
+        font.setWeight(QFont::DemiBold);
+        action->setFont(font);
+        menu->addAction(action);
+    };
+
+    // Analysis section
+    addSectionHeader(QObject::tr("ANALYSIS"));
     addMenuItem("PartDesign_PartCheckGeometry");
     addMenuItem("Std_Measure");
     addMenuItem("Sketcher_ValidateSketch");
+
+    addSeparator();
+
+    // Visualization section
+    addSectionHeader(QObject::tr("VISUALIZATION"));
+    addMenuItem("Materials_InspectAppearance");
+    addMenuItem("Materials_InspectMaterial");
 
     return menu;
 }
