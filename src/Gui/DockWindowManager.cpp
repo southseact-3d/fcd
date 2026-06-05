@@ -548,6 +548,13 @@ void DockWindowManager::setup(DockWindowItems* items)
     }
 
     tabifyDockWidgets(items);
+
+    // Hide dock widgets not listed in the new workbench
+    for (auto* dw : docked) {
+        if (dw && dw->isVisible()) {
+            dw->setVisible(false);
+        }
+    }
 }
 
 void DockWindowManager::tabifyDockWidgets(DockWindowItems* items)

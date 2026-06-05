@@ -792,9 +792,21 @@ bool MainWindow::updateComboView(bool show)
             pcComboView->setObjectName(QStringLiteral("Model"));
             pcComboView->setWindowTitle(QDockWidget::tr("Model"));
             pcComboView->setMinimumWidth(150);
+            pcComboView->setProperty("noOverlay", true);
             widget = pcComboView;
             return widget;
         });
+
+        if (enable) {
+            auto* dockWidget = DockWindowManager::instance()->getDockContainer("Model");
+            if (dockWidget) {
+                dockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+                dockWidget->setTitleBarWidget(new QWidget());
+                dockWidget->setStyleSheet(QStringLiteral(
+                    "QDockWidget { background: transparent; border: none; }"
+                ));
+            }
+        }
 
         return enable;
     }
@@ -833,34 +845,7 @@ bool MainWindow::updateDAGView(bool show)
 
 bool MainWindow::updateBodyListView(bool show)
 {
-    if (d->hiddenDockWindows.find("Std_BodyList") == std::string::npos) {
-        ParameterGrp::handle group = App::GetApplication()
-                                         .GetUserParameter()
-                                         .GetGroup("BaseApp")
-                                         ->GetGroup("Preferences")
-                                         ->GetGroup("DockWindows")
-                                         ->GetGroup("BodyList");
-        bool enabled = group->GetBool("Enabled", true);
-        _updateDockWidget("Std_BodyList", enabled, show, Qt::LeftDockWidgetArea, [](QWidget* widget) {
-            if (widget) {
-                return widget;
-            }
-
-            auto bodyListWidget = new QWidget(getMainWindow());
-            bodyListWidget->setObjectName(QStringLiteral("Body List"));
-            bodyListWidget->setWindowTitle(QDockWidget::tr("Model Sidebar"));
-            auto* bodyLayout = new QVBoxLayout(bodyListWidget);
-            bodyLayout->setContentsMargins(0, 0, 0, 0);
-            auto sidebar = new ModelSidebar(bodyListWidget);
-            bodyLayout->addWidget(sidebar);
-
-            widget = bodyListWidget;
-            return widget;
-        });
-
-        return enabled;
-    }
-
+    Q_UNUSED(show);
     return false;
 }
 

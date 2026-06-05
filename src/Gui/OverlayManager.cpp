@@ -1604,6 +1604,10 @@ void OverlayManager::setOverlayMode(OverlayMode mode)
 
 void OverlayManager::initDockWidget(QDockWidget* dw)
 {
+    if (dw->widget() && dw->widget()->property("noOverlay").toBool()) {
+        return;
+    }
+
     QObject::connect(dw->toggleViewAction(), &QAction::triggered, this, &OverlayManager::onToggleDockWidget);
     QObject::connect(dw, &QDockWidget::visibilityChanged, this, &OverlayManager::onDockVisibleChange);
     QObject::connect(dw, &QDockWidget::featuresChanged, this, &OverlayManager::onDockFeaturesChange);
@@ -1634,6 +1638,9 @@ void OverlayManager::initDockWidget(QDockWidget* dw)
 
 void OverlayManager::setupDockWidget(QDockWidget* dw, int dockArea)
 {
+    if (dw->widget() && dw->widget()->property("noOverlay").toBool()) {
+        return;
+    }
     (void)dockArea;
     d->setupTitleBar(dw);
 }
@@ -1671,6 +1678,10 @@ void OverlayManager::onDockFeaturesChange(QDockWidget::DockWidgetFeatures featur
     auto dw = qobject_cast<QDockWidget*>(sender());
 
     if (!dw) {
+        return;
+    }
+
+    if (dw->widget() && dw->widget()->property("noOverlay").toBool()) {
         return;
     }
 
