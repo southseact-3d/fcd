@@ -31,6 +31,9 @@
 #include <Gui/Command.h>
 #include <Gui/Document.h>
 #include <Gui/MDIView.h>
+#include <Gui/MainWindow.h>
+
+#include "DlgParametricCylinderImp.h"
 
 
 //===========================================================================
@@ -77,18 +80,24 @@ CmdPartCylinder::CmdPartCylinder()
 void CmdPartCylinder::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
-    QString cmd;
-    cmd = qApp->translate("CmdPartCylinder", "Cylinder");
-    openCommand((const char*)cmd.toUtf8());
+    PartGui::DlgParametricCylinderImp dlg(Gui::getMainWindow());
+    if (dlg.exec() == QDialog::Accepted) {
+        QString cmd;
+        cmd = qApp->translate("CmdPartCylinder", "Cylinder");
+        openCommand((const char*)cmd.toUtf8());
 
-    runCommand(Doc, "App.ActiveDocument.addObject(\"Part::Cylinder\",\"Cylinder\")");
-    cmd = QStringLiteral("App.ActiveDocument.ActiveObject.Label = \"%1\"")
-              .arg(qApp->translate("CmdPartCylinder", "Cylinder"));
-    runCommand(Doc, cmd.toUtf8());
-    runCommand(Doc, getAutoGroupCommandStr().toUtf8());
-    commitCommand();
-    updateActive();
-    runCommand(Gui, "Gui.SendMsgToActiveView(\"ViewFit\")");
+        runCommand(Doc, "App.ActiveDocument.addObject(\"Part::Cylinder\",\"Cylinder\")");
+        cmd = QStringLiteral("App.ActiveDocument.ActiveObject.Label = \"%1\"")
+                  .arg(qApp->translate("CmdPartCylinder", "Cylinder"));
+        runCommand(Doc, cmd.toUtf8());
+        doCommand(Doc, "App.ActiveDocument.ActiveObject.Radius = %f", dlg.getRadius());
+        doCommand(Doc, "App.ActiveDocument.ActiveObject.Height = %f", dlg.getHeight());
+        doCommand(Doc, "App.ActiveDocument.ActiveObject.Angle = %f", dlg.getAngle());
+        runCommand(Doc, getAutoGroupCommandStr().toUtf8());
+        commitCommand();
+        updateActive();
+        runCommand(Gui, "Gui.SendMsgToActiveView(\"ViewFit\")");
+    }
 }
 
 bool CmdPartCylinder::isActive()

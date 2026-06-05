@@ -41,6 +41,7 @@ set(PartGui_UIC_SRCS
     DlgImportExportIges.ui
     DlgPartBox.ui
     DlgPartCylinder.ui
+    DlgParametricCylinder.ui
     DlgPartImportIges.ui
     DlgPartImportStep.ui
     DlgPrimitives.ui
@@ -112,6 +113,9 @@ SET(PartGui_SRCS
     DlgPartCylinderImp.cpp
     DlgPartCylinderImp.h
     DlgPartCylinder.ui
+    DlgParametricCylinderImp.cpp
+    DlgParametricCylinderImp.h
+    DlgParametricCylinder.ui
     DlgPartImportIges.ui
     DlgPartImportIgesImp.cpp
     DlgPartImportIgesImp.h
