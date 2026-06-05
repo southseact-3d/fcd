@@ -83,6 +83,9 @@ void WorkbenchComboBox::refreshList(QList<QAction*> actionList)
     auto itemStyle = static_cast<WorkbenchItemStyle>(hGrp->GetInt("WorkbenchSelectorItem", 0));
 
     for (QAction* action : actionList) {
+        if (action->text() == QStringLiteral("<none>")) {
+            continue;
+        }
         QIcon icon = action->icon();
 
         if (icon.isNull() || itemStyle == WorkbenchItemStyle::TextOnly) {
@@ -321,6 +324,9 @@ void WorkbenchTabWidget::updateWorkbenchList()
     }
 
     for (QAction* action : wbActionGroup->getEnabledWbActions()) {
+        if (action->text() == QStringLiteral("<none>")) {
+            continue;
+        }
         addWorkbenchTab(action);
     }
 

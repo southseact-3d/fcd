@@ -672,11 +672,24 @@ void WorkbenchGroup::addTo(QWidget* widget)
     else if (widget->inherits("QMenu")) {
         auto menu = qobject_cast<QMenu*>(widget);
         menu = menu->addMenu(action()->text());
-        menu->addActions(getEnabledWbActions());
+
+        QList<QAction*> filteredActions;
+        for (auto* action : getEnabledWbActions()) {
+            if (action->text() != QStringLiteral("<none>")) {
+                filteredActions.append(action);
+            }
+        }
+        menu->addActions(filteredActions);
 
         connect(this, &WorkbenchGroup::workbenchListRefreshed, this, [menu](QList<QAction*> actions) {
             menu->clear();
-            menu->addActions(actions);
+            QList<QAction*> filtered;
+            for (auto* action : actions) {
+                if (action->text() != QStringLiteral("<none>")) {
+                    filtered.append(action);
+                }
+            }
+            menu->addActions(filtered);
         });
     }
 }
