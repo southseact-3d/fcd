@@ -27,6 +27,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QMessageBox>
+#include <QTimer>
 
 
 #include <App/Document.h>
@@ -53,26 +54,49 @@ TaskBooleanParameters::TaskBooleanParameters(ViewProviderBoolean* BooleanView, Q
     : TaskBox(Gui::BitmapFactory().pixmap("PartDesign_Boolean"), tr("Boolean Parameters"), true, parent)
     , ui(new Ui_TaskBooleanParameters)
     , BooleanView(BooleanView)
+    , selectionMode(none)
 {
-    selectionMode = none;
-
-    // we need a separate container widget to add all controls to
     proxy = new QWidget(this);
     ui->setupUi(proxy);
     QMetaObject::connectSlotsByName(this);
 
-    // clang-format off
-    connect(ui->buttonBodyAdd, &QToolButton::toggled,
-            this, &TaskBooleanParameters::onButtonBodyAdd);
-    connect(ui->buttonBodyRemove, &QToolButton::toggled,
-            this, &TaskBooleanParameters::onButtonBodyRemove);
-    connect(ui->comboType, qOverload<int>(&QComboBox::currentIndexChanged),
-            this, &TaskBooleanParameters::onTypeChanged);
-    // clang-format on
-
     this->groupLayout()->addWidget(proxy);
 
+    // Connect signals
+    connect(ui->buttonChangeTarget, &QPushButton::clicked,
+            this, &TaskBooleanParameters::onButtonChangeTarget);
+    connect(ui->buttonRemoveTool, &QPushButton::clicked,
+            this, &TaskBooleanParameters::onButtonRemoveTool);
+    connect(ui->radioJoin, &QRadioButton::toggled,
+            this, [this](bool checked) { if (checked) onTypeChanged(0); });
+    connect(ui->radioCut, &QRadioButton::toggled,
+            this, [this](bool checked) { if (checked) onTypeChanged(1); });
+    connect(ui->radioIntersect, &QRadioButton::toggled,
+            this, [this](bool checked) { if (checked) onTypeChanged(2); });
+    connect(ui->checkKeepTools, &QCheckBox::checkStateChanged,
+            this, &TaskBooleanParameters::onKeepToolsChanged);
+
+    // Context menu for removing items
+    QAction* action = new QAction(tr("Remove"), this);
+    action->setShortcut(Gui::QtTools::deleteKeySequence());
+    action->setShortcutVisibleInContextMenu(true);
+    ui->listWidgetBodies->addAction(action);
+    connect(action, &QAction::triggered, this, &TaskBooleanParameters::onButtonRemoveTool);
+    ui->listWidgetBodies->setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    // Selection timer to detect when user clicks in 3D view
+    selectionTimer = new QTimer(this);
+    selectionTimer->setSingleShot(true);
+    selectionTimer->setInterval(100);
+    connect(selectionTimer, &QTimer::timeout, this, &TaskBooleanParameters::onSelectionModeTimer);
+
+    // Initialize from current feature state
     PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
+
+    // Set target body label
+    updateTargetLabel();
+
+    // Populate tool bodies list
     std::vector<App::DocumentObject*> bodies = pcBoolean->Group.getValues();
     for (auto body : bodies) {
         QListWidgetItem* item = new QListWidgetItem(ui->listWidgetBodies);
@@ -80,19 +104,138 @@ TaskBooleanParameters::TaskBooleanParameters(ViewProviderBoolean* BooleanView, Q
         item->setData(Qt::UserRole, QString::fromLatin1(body->getNameInDocument()));
     }
 
-    // Create context menu
-    QAction* action = new QAction(tr("Remove"), this);
-    action->setShortcut(Gui::QtTools::deleteKeySequence());
-
-    // display shortcut behind the context menu entry
-    action->setShortcutVisibleInContextMenu(true);
-
-    ui->listWidgetBodies->addAction(action);
-    connect(action, &QAction::triggered, this, &TaskBooleanParameters::onBodyDeleted);
-    ui->listWidgetBodies->setContextMenuPolicy(Qt::ActionsContextMenu);
-
+    // Set operation type
     int index = pcBoolean->Type.getValue();
-    ui->comboType->setCurrentIndex(index);
+    switch (index) {
+        case 0: ui->radioJoin->setChecked(true); break;
+        case 1: ui->radioCut->setChecked(true); break;
+        case 2: ui->radioIntersect->setChecked(true); break;
+        default: ui->radioJoin->setChecked(true); break;
+    }
+
+    // Set Keep Tools checkbox
+    ui->checkKeepTools->setChecked(pcBoolean->KeepTools.getValue());
+
+    // Start in tool selection mode (most common action)
+    enterSelectionMode();
+}
+
+TaskBooleanParameters::~TaskBooleanParameters() = default;
+
+void TaskBooleanParameters::enterSelectionMode()
+{
+    if (selectionMode == toolSelect) {
+        return; // already in tool select mode
+    }
+    selectionMode = toolSelect;
+    Gui::Selection().clearSelection();
+    ui->labelHint->setText(tr("Click bodies in 3D view to add as tools."));
+}
+
+void TaskBooleanParameters::exitSelectionMode()
+{
+    selectionMode = none;
+    ui->labelHint->setText(tr("Click bodies in 3D view to add as tools."));
+}
+
+void TaskBooleanParameters::updateTargetLabel()
+{
+    PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
+    App::DocumentObject* baseFeature = pcBoolean->BaseFeature.getValue();
+
+    if (baseFeature) {
+        ui->labelTargetBody->setText(QString::fromUtf8(baseFeature->Label.getValue()));
+    }
+    else {
+        // Try to get the active body
+        PartDesign::Body* activeBody = PartDesignGui::getBody(false);
+        if (activeBody) {
+            ui->labelTargetBody->setText(QString::fromUtf8(activeBody->Label.getValue()));
+        }
+        else {
+            ui->labelTargetBody->setText(tr("(no body)"));
+        }
+    }
+}
+
+bool TaskBooleanParameters::isBodyInTools(App::DocumentObject* body) const
+{
+    for (int i = 0; i < ui->listWidgetBodies->count(); i++) {
+        QString name = ui->listWidgetBodies->item(i)->data(Qt::UserRole).toString();
+        if (name == QLatin1String(body->getNameInDocument())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void TaskBooleanParameters::addToolBody(App::DocumentObject* body)
+{
+    if (!body || isBodyInTools(body)) {
+        return;
+    }
+
+    PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
+    std::vector<App::DocumentObject*> bodies = pcBoolean->Group.getValues();
+    bodies.push_back(body);
+    pcBoolean->Group.setValues(bodies);
+
+    QListWidgetItem* item = new QListWidgetItem(ui->listWidgetBodies);
+    item->setText(QString::fromUtf8(body->Label.getValue()));
+    item->setData(Qt::UserRole, QString::fromLatin1(body->getNameInDocument()));
+
+    pcBoolean->getDocument()->recomputeFeature(pcBoolean);
+
+    // Hide the newly added body
+    Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
+        Gui::Application::Instance->getViewProvider(body)
+    );
+    if (vp) {
+        vp->hide();
+    }
+
+    // Hide the boolean result if first tool body
+    if (bodies.size() == 1) {
+        BooleanView->show();
+    }
+}
+
+void TaskBooleanParameters::removeToolBody(int row)
+{
+    if (row < 0 || row >= ui->listWidgetBodies->count()) {
+        return;
+    }
+
+    QListWidgetItem* item = ui->listWidgetBodies->item(row);
+    QString internalName = item->data(Qt::UserRole).toString();
+
+    PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
+    std::vector<App::DocumentObject*> bodies = pcBoolean->Group.getValues();
+
+    for (auto it = bodies.begin(); it != bodies.end(); ++it) {
+        if (internalName == QLatin1String((*it)->getNameInDocument())) {
+            App::DocumentObject* removedBody = *it;
+            bodies.erase(it);
+            pcBoolean->Group.setValues(bodies);
+
+            // Show the removed body again
+            Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
+                Gui::Application::Instance->getViewProvider(removedBody)
+            );
+            if (vp) {
+                vp->show();
+            }
+            break;
+        }
+    }
+
+    ui->listWidgetBodies->model()->removeRow(row);
+    pcBoolean->getDocument()->recomputeFeature(pcBoolean);
+
+    // If no more tool bodies, hide the boolean result
+    if (bodies.empty()) {
+        BooleanView->hide();
+    }
 }
 
 void TaskBooleanParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
@@ -106,7 +249,6 @@ void TaskBooleanParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
             return;
         }
 
-        // get the selected object
         PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
         std::string body(msg.pObjectName);
         if (body.empty()) {
@@ -117,130 +259,55 @@ void TaskBooleanParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
             return;
         }
 
-        // if the selected object is not a body then get the body it is part of
+        // If the selected object is not a body then get the body it is part of
         if (!pcBody->isDerivedFrom<PartDesign::Body>()) {
             pcBody = PartDesign::Body::findBodyOf(pcBody);
             if (!pcBody) {
                 return;
             }
-            body = pcBody->getNameInDocument();
         }
 
-        std::vector<App::DocumentObject*> bodies = pcBoolean->Group.getValues();
+        if (selectionMode == targetSelect) {
+            // Set the clicked body as the target
+            if (pcBody != pcBoolean->BaseFeature.getValue()) {
+                // Don't allow target to be a tool body
+                if (isBodyInTools(pcBody)) {
+                    return;
+                }
 
-        if (selectionMode == bodyAdd) {
-            if (std::ranges::find(bodies, pcBody) == bodies.end()) {
-                bodies.push_back(pcBody);
-                pcBoolean->Group.setValues(std::vector<App::DocumentObject*>());
-                pcBoolean->addObjects(bodies);
-
-                QListWidgetItem* item = new QListWidgetItem(ui->listWidgetBodies);
-                item->setText(QString::fromUtf8(pcBody->Label.getValue()));
-                item->setData(Qt::UserRole, QString::fromLatin1(pcBody->getNameInDocument()));
-
+                pcBoolean->BaseFeature.setValue(pcBody);
+                updateTargetLabel();
                 pcBoolean->getDocument()->recomputeFeature(pcBoolean);
-                ui->buttonBodyAdd->setChecked(false);
-                exitSelectionMode();
-
-                // Hide the bodies
-                if (bodies.size() == 1) {
-                    // Hide base body and added body
-                    Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-                        Gui::Application::Instance->getViewProvider(pcBoolean->BaseFeature.getValue())
-                    );
-                    if (vp) {
-                        vp->hide();
-                    }
-                    vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-                        Gui::Application::Instance->getViewProvider(bodies.front())
-                    );
-                    if (vp) {
-                        vp->hide();
-                    }
-                    BooleanView->show();
-                }
-                else {
-                    // Hide newly added body
-                    Gui::ViewProviderDocumentObject* vp
-                        = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-                            Gui::Application::Instance->getViewProvider(bodies.back())
-                        );
-                    if (vp) {
-                        vp->hide();
-                    }
-                }
             }
+            exitSelectionMode();
         }
-        else if (selectionMode == bodyRemove) {
-            if (const auto b = std::ranges::find(bodies, pcBody); b != bodies.end()) {
-                bodies.erase(b);
-                pcBoolean->setObjects(bodies);
-
-                const QString internalName = QString::fromStdString(body);
-                for (int row = 0; row < ui->listWidgetBodies->count(); row++) {
-                    QListWidgetItem* item = ui->listWidgetBodies->item(row);
-                    QString name = item->data(Qt::UserRole).toString();
-                    if (name == internalName) {
-                        ui->listWidgetBodies->takeItem(row);
-                        delete item;
-                        break;
-                    }
-                }
-
-                pcBoolean->getDocument()->recomputeFeature(pcBoolean);
-                ui->buttonBodyRemove->setChecked(false);
-                exitSelectionMode();
-
-                // Make bodies visible again
-                Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-                    Gui::Application::Instance->getViewProvider(pcBody)
-                );
-                if (vp) {
-                    vp->show();
-                }
-                if (bodies.empty()) {
-                    Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-                        Gui::Application::Instance->getViewProvider(pcBoolean->BaseFeature.getValue())
-                    );
-                    if (vp) {
-                        vp->show();
-                    }
-                    BooleanView->hide();
-                }
+        else if (selectionMode == toolSelect) {
+            // Don't allow target body to be added as tool
+            App::DocumentObject* baseFeature = pcBoolean->BaseFeature.getValue();
+            if (pcBody == baseFeature) {
+                return;
             }
+
+            addToolBody(pcBody);
+
+            // Stay in toolSelect mode so user can keep adding bodies
+            Gui::Selection().clearSelection();
         }
     }
 }
 
-void TaskBooleanParameters::onButtonBodyAdd(bool checked)
+void TaskBooleanParameters::onButtonChangeTarget()
 {
-    if (checked) {
-        PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
-        Gui::Document* doc = BooleanView->getDocument();
-        BooleanView->hide();
-        if (pcBoolean->Group.getValues().empty() && pcBoolean->BaseFeature.getValue()) {
-            doc->setHide(pcBoolean->BaseFeature.getValue()->getNameInDocument());
-        }
-        selectionMode = bodyAdd;
-        Gui::Selection().clearSelection();
-    }
-    else {
-        exitSelectionMode();
-    }
+    selectionMode = targetSelect;
+    Gui::Selection().clearSelection();
+    ui->labelHint->setText(tr("Click a body in 3D view to set as target."));
 }
 
-void TaskBooleanParameters::onButtonBodyRemove(bool checked)
+void TaskBooleanParameters::onButtonRemoveTool()
 {
-    if (checked) {
-        Gui::Document* doc = Gui::Application::Instance->activeDocument();
-        if (doc) {
-            BooleanView->show();
-        }
-        selectionMode = bodyRemove;
-        Gui::Selection().clearSelection();
-    }
-    else {
-        exitSelectionMode();
+    int row = ui->listWidgetBodies->currentRow();
+    if (row >= 0) {
+        removeToolBody(row);
     }
 }
 
@@ -250,22 +317,37 @@ void TaskBooleanParameters::onTypeChanged(int index)
 
     switch (index) {
         case 0:
-            pcBoolean->Type.setValue("Fuse");
+            pcBoolean->Type.setValue("Join");
             break;
         case 1:
             pcBoolean->Type.setValue("Cut");
             break;
         case 2:
-            pcBoolean->Type.setValue("Common");
+            pcBoolean->Type.setValue("Intersect");
             break;
         default:
-            pcBoolean->Type.setValue("Fuse");
+            pcBoolean->Type.setValue("Join");
     }
 
-    // Force UI update before starting heavy computation to show user's selection immediately
     QApplication::processEvents();
-
     pcBoolean->getDocument()->recomputeFeature(pcBoolean);
+}
+
+void TaskBooleanParameters::onKeepToolsChanged(int state)
+{
+    PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
+    pcBoolean->KeepTools.setValue(state == Qt::Checked);
+    pcBoolean->getDocument()->recomputeFeature(pcBoolean);
+}
+
+void TaskBooleanParameters::onSelectionModeTimer()
+{
+    // Periodic check when in selection mode (optional, for future use)
+}
+
+bool TaskBooleanParameters::eventFilter(QObject* obj, QEvent* event)
+{
+    return TaskBox::eventFilter(obj, event);
 }
 
 const std::vector<std::string> TaskBooleanParameters::getBodies() const
@@ -279,71 +361,35 @@ const std::vector<std::string> TaskBooleanParameters::getBodies() const
 
 int TaskBooleanParameters::getType() const
 {
-    return ui->comboType->currentIndex();
+    if (ui->radioJoin->isChecked()) return 0;
+    if (ui->radioCut->isChecked()) return 1;
+    if (ui->radioIntersect->isChecked()) return 2;
+    return 0;
 }
 
-void TaskBooleanParameters::onBodyDeleted()
+bool TaskBooleanParameters::getKeepTools() const
+{
+    return ui->checkKeepTools->isChecked();
+}
+
+std::string TaskBooleanParameters::getTargetBody() const
 {
     PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
-    std::vector<App::DocumentObject*> bodies = pcBoolean->Group.getValues();
-    int index = ui->listWidgetBodies->currentRow();
-    if (index < 0 && (size_t)index > bodies.size()) {
-        return;
+    App::DocumentObject* baseFeature = pcBoolean->BaseFeature.getValue();
+    if (baseFeature) {
+        return baseFeature->getNameInDocument();
     }
-
-    App::DocumentObject* body = bodies[index];
-    QString internalName = ui->listWidgetBodies->item(index)->data(Qt::UserRole).toString();
-    for (auto it = bodies.begin(); it != bodies.end(); ++it) {
-        if (internalName == QLatin1String((*it)->getNameInDocument())) {
-            body = *it;
-            bodies.erase(it);
-            break;
-        }
-    }
-
-    ui->listWidgetBodies->model()->removeRow(index);
-    pcBoolean->setObjects(bodies);
-    pcBoolean->getDocument()->recomputeFeature(pcBoolean);
-
-    // Make bodies visible again
-    Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-        Gui::Application::Instance->getViewProvider(body)
-    );
-    if (vp) {
-        vp->show();
-    }
-    if (bodies.empty()) {
-        Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
-            Gui::Application::Instance->getViewProvider(pcBoolean->BaseFeature.getValue())
-        );
-        if (vp) {
-            vp->show();
-        }
-        BooleanView->hide();
-    }
+    return "";
 }
-
-TaskBooleanParameters::~TaskBooleanParameters() = default;
 
 void TaskBooleanParameters::changeEvent(QEvent* e)
 {
     TaskBox::changeEvent(e);
     if (e->type() == QEvent::LanguageChange) {
-        ui->comboType->blockSignals(true);
-        int index = ui->comboType->currentIndex();
         ui->retranslateUi(proxy);
-        ui->comboType->setCurrentIndex(index);
     }
 }
 
-void TaskBooleanParameters::exitSelectionMode()
-{
-    selectionMode = none;
-    Gui::Document* doc = Gui::Application::Instance->activeDocument();
-    if (doc) {
-        doc->setShow(BooleanView->getObject()->getNameInDocument());
-    }
-}
 
 //**************************************************************************
 //**************************************************************************
@@ -381,9 +427,19 @@ bool TaskDlgBooleanParameters::accept()
     BooleanView->Visibility.setValue(true);
 
     try {
+        // Set the target body (BaseFeature)
+        std::string target = parameter->getTargetBody();
+        if (!target.empty()) {
+            std::stringstream str;
+            str << Gui::Command::getObjectCmd(obj) << ".BaseFeature = App.getDocument('"
+                << obj->getDocument()->getName() << "').getObject('" << target << "')";
+            Gui::Command::runCommand(Gui::Command::Doc, str.str().c_str());
+        }
+
+        // Set tool bodies
         std::vector<std::string> bodies = parameter->getBodies();
         if (bodies.empty()) {
-            QMessageBox::warning(parameter, tr("Empty body list"), tr("The body list cannot be empty"));
+            QMessageBox::warning(parameter, tr("Empty body list"), tr("Please select at least one tool body."));
             return false;
         }
         std::stringstream str;
@@ -394,6 +450,12 @@ bool TaskDlgBooleanParameters::accept()
         }
         str << "])";
         Gui::Command::runCommand(Gui::Command::Doc, str.str().c_str());
+
+        // Set Keep Tools
+        bool keepTools = parameter->getKeepTools();
+        std::stringstream keepStr;
+        keepStr << Gui::Command::getObjectCmd(obj) << ".KeepTools = " << (keepTools ? "True" : "False");
+        Gui::Command::runCommand(Gui::Command::Doc, keepStr.str().c_str());
     }
     catch (const Base::Exception& e) {
         QMessageBox::warning(
@@ -404,7 +466,38 @@ bool TaskDlgBooleanParameters::accept()
         return false;
     }
 
+    // Set operation type
     FCMD_OBJ_CMD(obj, "Type = " << parameter->getType());
+
+    // Show/hide bodies based on KeepTools setting
+    PartDesign::Boolean* pcBoolean = BooleanView->getObject<PartDesign::Boolean>();
+    Gui::Document* doc = Gui::Application::Instance->activeDocument();
+    if (doc) {
+        if (!keepTools) {
+            // Hide tool bodies (they are consumed)
+            std::vector<App::DocumentObject*> toolBodies = pcBoolean->Group.getValues();
+            for (auto body : toolBodies) {
+                Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
+                    Gui::Application::Instance->getViewProvider(body)
+                );
+                if (vp) {
+                    vp->hide();
+                }
+            }
+            // Hide the target body too (it's consumed into the result)
+            if (pcBoolean->BaseFeature.getValue()) {
+                Gui::ViewProviderDocumentObject* vp = dynamic_cast<Gui::ViewProviderDocumentObject*>(
+                    Gui::Application::Instance->getViewProvider(pcBoolean->BaseFeature.getValue())
+                );
+                if (vp) {
+                    vp->hide();
+                }
+            }
+        }
+        // Show the boolean result
+        BooleanView->show();
+    }
+
     Gui::Command::doCommand(Gui::Command::Doc, "App.ActiveDocument.recompute()");
     Gui::Command::doCommand(Gui::Command::Gui, "Gui.activeDocument().resetEdit()");
     Gui::Command::commitCommand();
@@ -414,16 +507,16 @@ bool TaskDlgBooleanParameters::accept()
 
 bool TaskDlgBooleanParameters::reject()
 {
-    // Show the bodies again
+    // Show all bodies again
     PartDesign::Boolean* obj = BooleanView->getObject<PartDesign::Boolean>();
     Gui::Document* doc = Gui::Application::Instance->activeDocument();
     if (doc) {
         if (obj->BaseFeature.getValue()) {
             doc->setShow(obj->BaseFeature.getValue()->getNameInDocument());
-            std::vector<App::DocumentObject*> bodies = obj->Group.getValues();
-            for (auto body : bodies) {
-                doc->setShow(body->getNameInDocument());
-            }
+        }
+        std::vector<App::DocumentObject*> bodies = obj->Group.getValues();
+        for (auto body : bodies) {
+            doc->setShow(body->getNameInDocument());
         }
     }
 

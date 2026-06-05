@@ -48,6 +48,9 @@ public:
     /// The type of the boolean operation
     App::PropertyEnumeration Type;
 
+    /// Whether to keep the tool bodies after the operation
+    App::PropertyBool KeepTools;
+
     /** @name methods override feature */
     //@{
     /// Recalculate the feature

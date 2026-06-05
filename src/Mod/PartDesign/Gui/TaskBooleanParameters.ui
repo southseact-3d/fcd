@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>209</width>
-    <height>185</height>
+    <width>280</width>
+    <height>340</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,58 +15,194 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="targetLayout">
      <item>
-      <widget class="QToolButton" name="buttonBodyAdd">
+      <widget class="QLabel" name="labelTarget">
        <property name="text">
-        <string>Add Body</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
+        <string>Target Body:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="buttonBodyRemove">
+      <widget class="QLabel" name="labelTargetBody">
        <property name="text">
-        <string>Remove Body</string>
+        <string>(active body)</string>
        </property>
-       <property name="checkable">
-        <bool>true</bool>
+       <property name="minimumSize">
+        <size>
+         <width>120</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonChangeTarget">
+       <property name="text">
+        <string>Change</string>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QListWidget" name="listWidgetBodies"/>
+    <widget class="Line" name="lineSeparator1">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="comboType">
+    <layout class="QHBoxLayout" name="toolHeaderLayout">
      <item>
-      <property name="text">
-       <string>Fuse</string>
-      </property>
+      <widget class="QLabel" name="labelToolBodies">
+       <property name="text">
+        <string>Tool Bodies:</string>
+       </property>
+      </widget>
      </item>
      <item>
-      <property name="text">
-       <string>Cut</string>
-      </property>
+      <spacer name="toolHeaderSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
-      <property name="text">
-       <string>Common</string>
-      </property>
+      <widget class="QPushButton" name="buttonRemoveTool">
+       <property name="text">
+        <string>Remove</string>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listWidgetBodies">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>100</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="lineSeparator2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelOperation">
+     <property name="text">
+      <string>Operation:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="operationLayout">
+     <item>
+      <widget class="QRadioButton" name="radioJoin">
+       <property name="text">
+        <string>Join</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioCut">
+       <property name="text">
+        <string>Cut</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioIntersect">
+       <property name="text">
+        <string>Intersect</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="keepToolsLayout">
+     <item>
+      <widget class="QCheckBox" name="checkKeepTools">
+       <property name="text">
+        <string>Keep Tools</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="keepToolsSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelHint">
+     <property name="text">
+      <string>Click bodies in 3D view to add as tools.</string>
+     </property>
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: gray;</string>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
  <tabstops>
-  <tabstop>buttonBodyAdd</tabstop>
-  <tabstop>buttonBodyRemove</tabstop>
+  <tabstop>buttonChangeTarget</tabstop>
   <tabstop>listWidgetBodies</tabstop>
-  <tabstop>comboType</tabstop>
+  <tabstop>buttonRemoveTool</tabstop>
+  <tabstop>radioJoin</tabstop>
+  <tabstop>radioCut</tabstop>
+  <tabstop>radioIntersect</tabstop>
+  <tabstop>checkKeepTools</tabstop>
  </tabstops>
  <resources/>
  <connections/>

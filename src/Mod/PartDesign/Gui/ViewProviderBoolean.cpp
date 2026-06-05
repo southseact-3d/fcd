@@ -127,8 +127,8 @@ void ViewProviderBoolean::updateData(const App::Property* prop)
 
         const std::map<std::string_view, Gui::StyleParameters::ParameterDefinition<Base::Color>> lookup {
             {"Cut", StyleParameters::PreviewSubtractiveColor},
-            {"Common", StyleParameters::PreviewCommonColor},
-            {"Fuse", StyleParameters::PreviewAdditiveColor},
+            {"Intersect", StyleParameters::PreviewCommonColor},
+            {"Join", StyleParameters::PreviewAdditiveColor},
         };
 
         if (lookup.contains(type)) {
@@ -236,6 +236,6 @@ void ViewProviderBoolean::updateBasePreviewVisibility()
     auto feature = getObject<PartDesign::Boolean>();
 
     // enable base preview for Common operation only and when the final result is shown
-    pcBasePreviewToggle->on = strcmp(feature->Type.getValueAsString(), "Common") == 0
+    pcBasePreviewToggle->on = strcmp(feature->Type.getValueAsString(), "Intersect") == 0
         && Visibility.getValue();
 }
