@@ -55,6 +55,7 @@ public:
     App::PropertyLinkSub Direction;
     App::PropertyBool Reversed;
     App::PropertyEnumeration Mode;
+    App::PropertyEnumeration Symmetric;
     App::PropertyLength Length;
     App::PropertyLength Offset;
     App::PropertyIntegerConstraint Occurrences;
@@ -64,6 +65,7 @@ public:
     App::PropertyLinkSub Direction2;
     App::PropertyBool Reversed2;
     App::PropertyEnumeration Mode2;
+    App::PropertyEnumeration Symmetric2;
     App::PropertyLength Length2;
     App::PropertyLength Offset2;
     App::PropertyIntegerConstraint Occurrences2;

@@ -55,6 +55,8 @@ SET(FeaturesTransformed_SRCS
     FeatureScaled.cpp
     FeatureMultiTransform.h
     FeatureMultiTransform.cpp
+    FeaturePatternOnPath.h
+    FeaturePatternOnPath.cpp
 )
 SOURCE_GROUP("FeaturesTransformed" FILES ${FeaturesTransformed_SRCS})
 

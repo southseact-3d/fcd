@@ -1763,7 +1763,9 @@ public:
     DrawSketchHandlerRectangularArray(string geoidlist, int origingeoid,
                                       Sketcher::PointPos originpos, int nelements, bool clone,
                                       int rows, int cols, bool constraintSeparation,
-                                      bool equalVerticalHorizontalSpacing)
+                                      bool equalVerticalHorizontalSpacing,
+                                      bool symmetricX = false, bool symmetricY = false,
+                                      bool independentXY = false, double spacingY = 10.0)
         : Mode(STATUS_SEEK_First)
         , snapMode(SnapMode::Free)
         , geoIdList(geoidlist)
@@ -1775,6 +1777,10 @@ public:
         , Cols(cols)
         , ConstraintSeparation(constraintSeparation)
         , EqualVerticalHorizontalSpacing(equalVerticalHorizontalSpacing)
+        , SymmetricX(symmetricX)
+        , SymmetricY(symmetricY)
+        , IndependentXY(independentXY)
+        , SpacingY(spacingY)
         , EditCurve(2)
     {}
 
@@ -1854,17 +1860,38 @@ public:
             Gui::Command::openCommand(QT_TRANSLATE_NOOP("Command", "Create copy of geometry"));
 
             try {
+                double spacingRatio = EqualVerticalHorizontalSpacing ? 1.0 : 0.5;
+                if (IndependentXY) {
+                    double horizLen = vector.Length();
+                    if (horizLen > Precision::Confusion()) {
+                        spacingRatio = SpacingY / horizLen;
+                    }
+                }
+
+                int effectiveRows = Rows;
+                int effectiveCols = Cols;
+                Base::Vector2d effectiveVector = vector;
+
+                if (SymmetricX) {
+                    effectiveCols = Cols * 2 - 1;
+                    effectiveVector.x = vector.x / 2.0;
+                }
+                if (SymmetricY) {
+                    effectiveRows = Rows * 2 - 1;
+                    effectiveVector.y = vector.y / 2.0;
+                }
+
                 Gui::cmdAppObjectArgs(
                     sketchgui->getObject(),
                     "addRectangularArray(%s, App.Vector(%f, %f, 0), %s, %d, %d, %s, %f)",
                     geoIdList.c_str(),
-                    vector.x,
-                    vector.y,
+                    effectiveVector.x,
+                    effectiveVector.y,
                     (Clone ? "True" : "False"),
-                    Cols,
-                    Rows,
+                    effectiveRows,
+                    effectiveCols,
                     (ConstraintSeparation ? "True" : "False"),
-                    (EqualVerticalHorizontalSpacing ? 1.0 : 0.5));
+                    spacingRatio);
                 Gui::Command::commitCommand();
             }
             catch (const Base::Exception& e) {
@@ -1912,6 +1939,10 @@ protected:
     int Cols;
     bool ConstraintSeparation;
     bool EqualVerticalHorizontalSpacing;
+    bool SymmetricX;
+    bool SymmetricY;
+    bool IndependentXY;
+    double SpacingY;
     std::vector<Base::Vector2d> EditCurve;
     std::vector<AutoConstraint> sugConstr1;
 };
@@ -2057,7 +2088,11 @@ void CmdSketcherRectangularArray::activated(int iMsg)
                                                               slad.Rows,
                                                               slad.Cols,
                                                               slad.ConstraintSeparation,
-                                                              slad.EqualVerticalHorizontalSpacing));
+                                                              slad.EqualVerticalHorizontalSpacing,
+                                                              slad.SymmetricX,
+                                                              slad.SymmetricY,
+                                                              slad.IndependentXYSpacing,
+                                                              slad.SpacingY));
     }
 }
 

@@ -56,7 +56,8 @@ namespace PartGui
 enum class PatternType
 {
     Linear,
-    Polar
+    Polar,
+    Path
 };
 
 enum class PatternMode
@@ -105,6 +106,20 @@ public:
         App::PropertyIntegerConstraint* occurrencesProp,
         App::DocumentObject* feature
     );  // Pass feature for context
+
+    /**
+     * @brief Binds the symmetric distribution property to the Symmetric combobox.
+     *
+     * @param symmetricProp Reference to the Symmetric property (PropertyEnumeration).
+     */
+    void bindSymmetricProperty(App::PropertyEnumeration* symmetricProp);
+
+    /**
+     * @brief Binds the object type property to the ObjectType combobox.
+     *
+     * @param objectTypeProp Reference to the ObjectType property (PropertyEnumeration).
+     */
+    void bindObjectTypeProperty(App::PropertyEnumeration* objectTypeProp);
 
 
     /**
@@ -174,6 +189,8 @@ private Q_SLOTS:
     void onDirectionChanged(int index);
     void onReversePressed();
     void onModeChanged(int index);
+    void onSymmetricChanged(int index);
+    void onObjectTypeChanged(int index);
     // Note: Spinbox value changes are often handled by direct binding,
     // but we might need slots if extra logic (like updating SpacingPattern[0]) is needed.
     void onLengthChanged(double value);
@@ -208,6 +225,8 @@ private:
     App::PropertyLinkSub* m_directionProp = nullptr;
     App::PropertyBool* m_reversedProp = nullptr;
     App::PropertyEnumeration* m_modeProp = nullptr;
+    App::PropertyEnumeration* m_symmetricProp = nullptr;
+    App::PropertyEnumeration* m_objectTypeProp = nullptr;
     App::PropertyQuantity* m_extentProp = nullptr;
     App::PropertyQuantity* m_spacingProp = nullptr;
     App::PropertyFloatList* m_spacingPatternProp = nullptr;

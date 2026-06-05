@@ -47,9 +47,15 @@ public:
     bool ConstraintSeparation;
     bool EqualVerticalHorizontalSpacing;
     bool Clone;
+    bool SymmetricX;
+    bool SymmetricY;
+    bool IndependentXYSpacing;
+    double SpacingX;
+    double SpacingY;
 
 protected:
     void updateValues();
+    void onIndependentXYToggled(bool checked);
 
 private:
     std::unique_ptr<Ui_SketchRectangularArrayDialog> ui;

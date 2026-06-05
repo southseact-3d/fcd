@@ -91,6 +91,8 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderScaled.h
     ViewProviderMultiTransform.cpp
     ViewProviderMultiTransform.h
+    ViewProviderPatternOnPath.cpp
+    ViewProviderPatternOnPath.h
     ViewProviderDatum.cpp
     ViewProviderDatum.h
     ViewProviderDatumPoint.cpp

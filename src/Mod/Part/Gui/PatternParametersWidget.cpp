@@ -95,6 +95,18 @@ void PatternParametersWidget::connectSignals()
         this,
         &PatternParametersWidget::onModeChanged
     );
+    connect(
+        ui->comboSymmetric,
+        qOverload<int>(&QComboBox::activated),
+        this,
+        &PatternParametersWidget::onSymmetricChanged
+    );
+    connect(
+        ui->comboObjectType,
+        qOverload<int>(&QComboBox::activated),
+        this,
+        &PatternParametersWidget::onObjectTypeChanged
+    );
 
     connect(
         ui->spinExtent,
@@ -180,6 +192,18 @@ void PatternParametersWidget::bindProperties(
     updateUI();
 }
 
+void PatternParametersWidget::bindSymmetricProperty(App::PropertyEnumeration* symmetricProp)
+{
+    m_symmetricProp = symmetricProp;
+    ui->comboSymmetric->setCurrentIndex(m_symmetricProp->getValue());
+}
+
+void PatternParametersWidget::bindObjectTypeProperty(App::PropertyEnumeration* objectTypeProp)
+{
+    m_objectTypeProp = objectTypeProp;
+    ui->comboObjectType->setCurrentIndex(m_objectTypeProp->getValue());
+}
+
 void PatternParametersWidget::addDirection(
     App::DocumentObject* linkObj,
     const std::string& linkSubname,
@@ -213,6 +237,9 @@ void PatternParametersWidget::updateUI()
 
     // Update other controls directly from properties
     ui->comboMode->setCurrentIndex(m_modeProp->getValue());
+    if (m_symmetricProp) {
+        ui->comboSymmetric->setCurrentIndex(m_symmetricProp->getValue());
+    }
     ui->spinExtent->setValue(m_extentProp->getValue());
     ui->spinSpacing->setValue(m_spacingProp->getValue());
     ui->spinOccurrences->setValue(m_occurrencesProp->getValue());
@@ -332,6 +359,24 @@ void PatternParametersWidget::onModeChanged(int index)
     }
     m_modeProp->setValue(index);  // Assuming enum values match index
     adaptVisibilityToMode();      // Update visibility based on new mode
+    parametersChanged();
+}
+
+void PatternParametersWidget::onSymmetricChanged(int index)
+{
+    if (blockUpdate || !m_symmetricProp) {
+        return;
+    }
+    m_symmetricProp->setValue(index);
+    parametersChanged();
+}
+
+void PatternParametersWidget::onObjectTypeChanged(int index)
+{
+    if (blockUpdate || !m_objectTypeProp) {
+        return;
+    }
+    m_objectTypeProp->setValue(index);
     parametersChanged();
 }
 

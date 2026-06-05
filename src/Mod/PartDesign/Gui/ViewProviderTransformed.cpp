@@ -115,7 +115,21 @@ void ViewProviderTransformed::updatePreview()
 
             Gui::coinRemoveAllChildren(pcPreviewRoot);
 
+            // Get suppressed instances list for filtering preview
+            const auto suppressed = feature->SuppressedInstances.getValues();
+
+            int instanceIndex = 0;
             for (const auto& transform : transforms) {
+                // Skip suppressed instances in preview (index 0 is identity = original,
+                // index 1+ maps to SuppressedInstances[0+])
+                if (instanceIndex > 0) {
+                    size_t suppIdx = static_cast<size_t>(instanceIndex - 1);
+                    if (suppIdx < suppressed.size() && suppressed[suppIdx]) {
+                        instanceIndex++;
+                        continue;
+                    }
+                }
+
                 Base::Matrix4D transformMatrix;
                 Part::TopoShape::convertToMatrix(transform, transformMatrix);
 
@@ -128,6 +142,7 @@ void ViewProviderTransformed::updatePreview()
                 sep->addChild(pcPreviewShape);
 
                 pcPreviewRoot->addChild(sep);
+                instanceIndex++;
             }
         }
     }
