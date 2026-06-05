@@ -30,10 +30,13 @@
 #include <Gui/ComboView.h>
 #include <Gui/DockWindowManager.h>
 #include <Gui/MainWindow.h>
+#include <Gui/View3DInventor.h>
+#include <Gui/View3DInventorViewer.h>
 
 #include "Control.h"
 #include "BitmapFactory.h"
 #include "Tree.h"
+#include "ToolSettingsPanel.h"
 #include "TaskView/TaskView.h"
 
 
@@ -47,16 +50,46 @@ ControlSingleton* ControlSingleton::_pcSingleton = nullptr;
 ControlSingleton::ControlSingleton()
     : ActiveDialog(nullptr)
     , oldTabIndex(-1)
+    , _toolSettingsPanel(nullptr)
 {}
 
 ControlSingleton::~ControlSingleton() = default;
 
 Gui::TaskView::TaskView* ControlSingleton::taskPanel() const
 {
-    auto taskView = qobject_cast<Gui::TaskView::TaskView*>(
-        Gui::DockWindowManager::instance()->getDockWindow("Tasks")
-    );
-    return taskView;
+    // TaskView dock widget has been removed; always return nullptr.
+    return nullptr;
+}
+
+Gui::ToolSettingsPanel* ControlSingleton::toolSettingsPanel() const
+{
+    return _toolSettingsPanel;
+}
+
+void ControlSingleton::ensureToolSettingsPanel()
+{
+    if (_toolSettingsPanel) {
+        return;
+    }
+
+    // Find the active 3D view to parent the panel to
+    auto* mainWin = getMainWindow();
+    if (!mainWin) {
+        return;
+    }
+
+    auto* view = qobject_cast<View3DInventor*>(mainWin->activeWindow());
+    if (!view) {
+        return;
+    }
+
+    _toolSettingsPanel = new ToolSettingsPanel(view->getViewer()->getWidget());
+
+    // Connect signals so that accept/reject routes through ControlSingleton
+    QObject::connect(_toolSettingsPanel, &ToolSettingsPanel::dialogAccepted,
+                     this, &ControlSingleton::onDialogAccepted);
+    QObject::connect(_toolSettingsPanel, &ToolSettingsPanel::dialogRejected,
+                     this, &ControlSingleton::onDialogRejected);
 }
 
 void ControlSingleton::showDockWidget(QWidget* widget)
@@ -89,42 +122,17 @@ QTabBar* ControlSingleton::findTabBar(QDockWidget* widget) const
 
 void ControlSingleton::aboutToShowDialog(QDockWidget* widget)
 {
-    static QIcon icon = Gui::BitmapFactory().pixmap("edit-edit.svg");
-    QTabBar* bar = findTabBar(widget);
-    if (bar) {
-        oldTabIndex = bar->currentIndex();
-        for (int i = 0; i < bar->count(); i++) {
-            if (bar->tabText(i) == widget->windowTitle()) {
-                bar->setTabIcon(i, icon);
-                break;
-            }
-        }
-    }
-
-    widget->show();
-    widget->raise();
+    Q_UNUSED(widget);
 }
 
 void ControlSingleton::aboutToHideDialog(QDockWidget* widget)
 {
-    QTabBar* bar = findTabBar(widget);
-    if (bar) {
-        bar->setCurrentIndex(oldTabIndex);
-        for (int i = 0; i < bar->count(); i++) {
-            if (bar->tabText(i) == widget->windowTitle()) {
-                bar->setTabIcon(i, QIcon());
-                break;
-            }
-        }
-    }
+    Q_UNUSED(widget);
 }
 
 void ControlSingleton::showTaskView()
 {
-    Gui::TaskView::TaskView* taskView = taskPanel();
-    if (taskView) {
-        showDockWidget(taskView);
-    }
+    // No-op: Tasks dock widget has been removed.
 }
 
 void ControlSingleton::showModelView()
@@ -167,26 +175,18 @@ void ControlSingleton::showDialog(Gui::TaskView::TaskDialog* dlg)
     // which may open a transaction but fails when auto transaction is still active.
     App::AutoTransaction::setEnable(false);
 
-    Gui::TaskView::TaskView* taskView = taskPanel();
-    // should return the pointer to combo view
-    if (taskView) {
-        taskView->showDialog(dlg);
+    // Ensure we have a tool settings panel
+    ensureToolSettingsPanel();
 
-        // make sure that the combo view is shown
-        auto dw = qobject_cast<QDockWidget*>(taskView->parentWidget());
-        if (dw) {
-            aboutToShowDialog(dw);
-            dw->setVisible(true);
-            dw->toggleViewAction()->setVisible(true);
-            dw->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-        }
-
-        if (ActiveDialog == dlg) {
-            return;  // dialog is already defined
-        }
-        ActiveDialog = dlg;
-        connect(dlg, &TaskView::TaskDialog::aboutToBeDestroyed, this, &ControlSingleton::closedDialog);
+    if (_toolSettingsPanel) {
+        _toolSettingsPanel->showDialog(dlg);
     }
+
+    if (ActiveDialog == dlg) {
+        return;  // dialog is already defined
+    }
+    ActiveDialog = dlg;
+    connect(dlg, &TaskView::TaskDialog::aboutToBeDestroyed, this, &ControlSingleton::closedDialog);
 }
 
 Gui::TaskView::TaskDialog* ControlSingleton::activeDialog() const
@@ -196,44 +196,64 @@ Gui::TaskView::TaskDialog* ControlSingleton::activeDialog() const
 
 void ControlSingleton::accept()
 {
-    Gui::TaskView::TaskView* taskView = taskPanel();
-    if (taskView) {
-        taskView->accept();
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    if (_toolSettingsPanel && _toolSettingsPanel->hasActiveDialog()) {
+        if (ActiveDialog) {
+            bool success = ActiveDialog->accept();
+            qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+            if (success) {
+                closeDialog();
+            }
+        }
     }
 }
 
 void ControlSingleton::reject()
 {
-    Gui::TaskView::TaskView* taskView = taskPanel();
-    if (taskView) {
-        taskView->reject();
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    if (_toolSettingsPanel && _toolSettingsPanel->hasActiveDialog()) {
+        if (ActiveDialog) {
+            bool success = ActiveDialog->reject();
+            qApp->processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+            if (success) {
+                closeDialog();
+            }
+        }
     }
 }
 
 void ControlSingleton::closeDialog()
 {
-    Gui::TaskView::TaskView* taskView = taskPanel();
-    if (taskView) {
-        taskView->removeDialog();
+    if (_toolSettingsPanel) {
+        _toolSettingsPanel->hidePanel();
+    }
+    auto* dlg = ActiveDialog;
+    ActiveDialog = nullptr;
+    if (dlg) {
+        dlg->closed();
+        dlg->emitDestructionSignal();
+        delete dlg;
+    }
+}
+
+void ControlSingleton::onDialogAccepted()
+{
+    if (ActiveDialog) {
+        accept();
+    }
+}
+
+void ControlSingleton::onDialogRejected()
+{
+    if (ActiveDialog) {
+        reject();
     }
 }
 
 void ControlSingleton::closedDialog()
 {
     ActiveDialog = nullptr;
-    Gui::TaskView::TaskView* taskView = taskPanel();
-    assert(taskView);
 
-    // make sure that the combo view is shown
-    auto dw = qobject_cast<QDockWidget*>(taskView->parentWidget());
-    if (dw) {
-        aboutToHideDialog(dw);
-        dw->setFeatures(
-            QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
-            | QDockWidget::DockWidgetFloatable
-        );
+    if (_toolSettingsPanel) {
+        _toolSettingsPanel->hidePanel();
     }
 }
 
