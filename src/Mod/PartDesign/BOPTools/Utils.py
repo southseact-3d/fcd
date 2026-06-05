@@ -105,35 +105,26 @@ def upgradeToAggregateIfNeeded(list_of_shapes, types=None):
 
     if types is None:
         types = set()
+    # Single pass: collect types and transform shapes simultaneously
+    result = []
     for shape in list_of_shapes:
         types.add(shape.ShapeType)
-        subshapes = compoundLeaves(shape)
-        for subshape in subshapes:
+        for subshape in compoundLeaves(shape):
             types.add(subshape.ShapeType)
-    if "Wire" in types:
-        list_of_shapes = [
-            (Part.Wire([shape]) if shape.ShapeType == "Edge" else shape) for shape in list_of_shapes
-        ]
-    if "Shell" in types:
-        list_of_shapes = [
-            (Part.makeShell([shape]) if shape.ShapeType == "Face" else shape)
-            for shape in list_of_shapes
-        ]
-    if "CompSolid" in types:
-        list_of_shapes = [
-            (Part.CompSolid([shape]) if shape.ShapeType == "Solid" else shape)
-            for shape in list_of_shapes
-        ]
-    if "Compound" in types:
-        list_of_shapes = [
-            (
-                Part.makeCompound(upgradeToAggregateIfNeeded(shape.childShapes(), types))
-                if shape.ShapeType == "Compound"
-                else shape
+        # Apply upgrades based on collected types
+        transformed = shape
+        if shape.ShapeType == "Edge" and "Wire" in types:
+            transformed = Part.Wire([shape])
+        elif shape.ShapeType == "Face" and "Shell" in types:
+            transformed = Part.makeShell([shape])
+        elif shape.ShapeType == "Solid" and "CompSolid" in types:
+            transformed = Part.CompSolid([shape])
+        elif shape.ShapeType == "Compound" and "Compound" in types:
+            transformed = Part.makeCompound(
+                upgradeToAggregateIfNeeded(shape.childShapes(), types)
             )
-            for shape in list_of_shapes
-        ]
-    return list_of_shapes
+        result.append(transformed)
+    return result
 
 
 # adapted from http://stackoverflow.com/a/3603824/6285007

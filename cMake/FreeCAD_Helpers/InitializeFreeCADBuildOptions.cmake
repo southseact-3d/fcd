@@ -28,7 +28,7 @@ macro(InitializeFreeCADBuildOptions)
 
     # == Win32 is default behaviour use the LibPack copied in Source tree ==========
     if(MSVC)
-        option(FREECAD_RELEASE_PDB "Create PDB files for Release version." ON)
+        option(FREECAD_RELEASE_PDB "Create PDB files for Release version." OFF)
         option(FREECAD_RELEASE_SEH "Enable Structured Exception Handling for Release version." ON)
         option(FREECAD_LIBPACK_USE "Use the LibPack to Build FreeCAD (only Win32 so far)." ON)
         option(FREECAD_USE_PCH "Activate precompiled headers where it's used." ON)

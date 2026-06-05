@@ -280,20 +280,6 @@ QPixmap SplashScreen::splashImage()
     // now try the icon paths
     float pixelRatio(1.0);
     if (splash_image.isNull()) {
-        // determine the count of splashes
-        QStringList pixmaps = Gui::BitmapFactory().findIconFiles().filter(
-            QString::fromStdString(splash_path)
-        );
-        // divide by 2 since there's two sets (normal and 2x)
-        // minus 1 to ignore the default splash that isn't numbered
-        int splash_count = pixmaps.count() / 2 - 1;
-
-        // set a random splash path
-        if (splash_count > 0) {
-            int random = rand() % splash_count;
-            splash_path += std::to_string(random);
-        }
-
         if (qApp->devicePixelRatio() > 1.0) {
             // For HiDPI screens, we have a double-resolution version of the splash image
             splash_path += "_2x";
