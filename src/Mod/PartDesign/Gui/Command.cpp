@@ -27,6 +27,7 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <GeomLib_IsPlanarSurface.hxx>
 #include <QMessageBox>
+#include <QPushButton>
 #include <TopExp_Explorer.hxx>
 #include <TopLoc_Location.hxx>
 #include <TopoDS.hxx>
