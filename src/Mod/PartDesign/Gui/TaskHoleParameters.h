@@ -87,6 +87,7 @@ public:
     long getThreadDepthType() const;
     double getThreadDepth() const;
     int getBaseProfileType() const;
+    int getPlacement() const;
 
 private Q_SLOTS:
     void holeTypeChanged(int index);
@@ -116,6 +117,7 @@ private Q_SLOTS:
     void threadDepthTypeChanged(int index);
     void threadDepthChanged(double value);
     void baseProfileTypeChanged(int index);
+    void placementChanged(int index);
     void setCutDiagram();
 
 private:
