@@ -85,25 +85,11 @@ void CmdPrimtiveCompAdditive::activated(int iMsg)
 {
     App::Document* doc = getDocument();
 
-    // We need either an active Body, or for there to be no Body objects
-    // (in which case, just make one) to make a new additive shape.
-
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     PartDesign::Body* pcActiveBody = PartDesignGui::getBody(/* messageIfNot = */ false);
 
-    auto shouldMakeBody(false);
     if (!pcActiveBody) {
-        if (doc->getObjectsOfType(PartDesign::Body::getClassTypeId()).empty()) {
-            shouldMakeBody = true;
-        }
-        else {
-            PartDesignGui::DlgActiveBody dia(Gui::getMainWindow(), doc);
-            if (dia.exec() == QDialog::DialogCode::Accepted) {
-                pcActiveBody = dia.getActiveBody();
-            }
-            if (!pcActiveBody) {
-                return;
-            }
-        }
+        pcActiveBody = PartDesignGui::makeBody(doc);
     }
 
     Gui::ActionGroup* pcAction = qobject_cast<Gui::ActionGroup*>(_pcAction);
@@ -112,9 +98,6 @@ void CmdPrimtiveCompAdditive::activated(int iMsg)
     auto shapeType(primitiveIntToName(iMsg));
 
     Gui::Command::openCommand((std::string("Make additive ") + shapeType).c_str());
-    if (shouldMakeBody) {
-        pcActiveBody = PartDesignGui::makeBody(doc);
-    }
 
     if (!pcActiveBody) {
         return;

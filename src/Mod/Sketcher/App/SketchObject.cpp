@@ -169,7 +169,7 @@ SketchObject::SketchObject() : geoLastId(0)
     ADD_PROPERTY(InternalShape,
                  (Part::TopoShape()));
     ADD_PROPERTY_TYPE(MakeInternals,
-                      (false),
+                      (true),
                       "Internal Geometry",
                       App::Prop_None,
                       "Enables selection of closed profiles within a sketch as input for operations");
@@ -222,7 +222,7 @@ void SketchObject::setupObject()
     ParameterGrp::handle hGrpp = App::GetApplication().GetParameterGroupByPath(
             "User parameter:BaseApp/Preferences/Mod/Sketcher");
     ArcFitTolerance.setValue(hGrpp->GetFloat("ArcFitTolerance", Precision::Confusion()*10.0));
-    MakeInternals.setValue(hGrpp->GetBool("MakeInternals", false));
+    MakeInternals.setValue(hGrpp->GetBool("MakeInternals", true));
     inherited::setupObject();
 }
 

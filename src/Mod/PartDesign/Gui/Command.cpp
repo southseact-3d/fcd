@@ -2725,10 +2725,15 @@ void finishProfileBased(const Gui::Command* cmd, const Part::Feature* sketch, Ap
 
 void prepareProfileBased(Gui::Command* cmd, const std::string& which, double length)
 {
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        App::Document* doc = cmd->getDocument();
+        pcActiveBody = PartDesignGui::makeBody(doc);
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     auto worker = [cmd, length](Part::Feature* profile, App::DocumentObject* Feat) {
@@ -2838,10 +2843,14 @@ void CmdPartDesignHole::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        pcActiveBody = PartDesignGui::makeBody(getDocument());
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     Gui::Command* cmd = this;
@@ -2884,10 +2893,14 @@ void CmdPartDesignRevolution::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        pcActiveBody = PartDesignGui::makeBody(getDocument());
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     Gui::Command* cmd = this;
@@ -2946,10 +2959,14 @@ void CmdPartDesignGroove::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        pcActiveBody = PartDesignGui::makeBody(getDocument());
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     Gui::Command* cmd = this;
@@ -3016,10 +3033,14 @@ void CmdPartDesignAdditivePipe::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        pcActiveBody = PartDesignGui::makeBody(getDocument());
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     Gui::Command* cmd = this;
@@ -3116,10 +3137,14 @@ void CmdPartDesignAdditiveLoft::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        pcActiveBody = PartDesignGui::makeBody(getDocument());
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     Gui::Command* cmd = this;
@@ -3215,10 +3240,14 @@ void CmdPartDesignAdditiveHelix::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(false);
 
+    // Auto-create a body if none exists (Fusion 360-like workflow)
     if (!pcActiveBody) {
-        return;
+        pcActiveBody = PartDesignGui::makeBody(getDocument());
+        if (!pcActiveBody) {
+            return;
+        }
     }
 
     Gui::Command* cmd = this;
