@@ -580,6 +580,7 @@ static inline void _updateDockWidget(
     if (show) {
         auto dock = pDockMgr->addDockWindow(widget->objectName().toUtf8().constData(), widget, pos);
         if (dock) {
+            dock->toggleViewAction()->setData(name);
             if (!dock->toggleViewAction()->isChecked()) {
                 dock->toggleViewAction()->activate(QAction::Trigger);
             }

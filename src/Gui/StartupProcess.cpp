@@ -522,6 +522,10 @@ void StartupPostProcess::activateWorkbench()
         mainWindow->loadWindowSettings();
     }
 
+    // Re-initialize dock windows after restoreState() which can override
+    // visibility of newly added docks like ModelSidebar.
+    mainWindow->initDockWindows(true);
+
     // initialize spaceball.
     if (auto fcApp = qobject_cast<GUIApplicationNativeEventAware*>(qtApp)) {
         fcApp->initSpaceball(mainWindow);
