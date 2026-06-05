@@ -2771,7 +2771,7 @@ CmdPartDesignPad::CmdPartDesignPad()
     sWhatsThis = "PartDesign_Pad";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Pad";
-    sAccel = "Ctrl+E";
+    sAccel = "E";
 }
 
 void CmdPartDesignPad::activated(int iMsg)
@@ -2877,6 +2877,7 @@ CmdPartDesignHole::CmdPartDesignHole()
     sWhatsThis = "PartDesign_Hole";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Hole";
+    sAccel = "H";
 }
 
 void CmdPartDesignHole::activated(int iMsg)
@@ -3551,7 +3552,7 @@ CmdPartDesignFillet::CmdPartDesignFillet()
     sWhatsThis = "PartDesign_Fillet";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Fillet";
-    sAccel = "Ctrl+F";
+    sAccel = "F";
 }
 
 void CmdPartDesignFillet::activated(int iMsg)
