@@ -41,6 +41,7 @@ public:
     ~ViewProviderExtrude() override;
 
     void highlightShapeFaces(const std::vector<std::string>& faces);
+    void highlightProfileFaces(const std::vector<std::string>& faces);
 
 protected:
     TaskDlgFeatureParameters* getEditDialog() override;

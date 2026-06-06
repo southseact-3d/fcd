@@ -113,7 +113,8 @@ public:
         SelectFace,
         SelectShape,
         SelectShapeFaces,
-        SelectReferenceAxis
+        SelectReferenceAxis,
+        SelectProfileFace
     };
 
     TaskExtrudeParameters(
@@ -321,11 +322,22 @@ protected:
 
 private Q_SLOTS:
     void onTypeToggled(bool checked);
+    void onSelectProfileFaceToggled(bool checked);
+    void onProfileFaceItemChanged(QListWidgetItem* item);
 
 private:
     QRadioButton* radioJoin = nullptr;
     QRadioButton* radioCut = nullptr;
+    QToolButton* buttonSelectProfileFace = nullptr;
+    QListWidget* listWidgetProfileFaces = nullptr;
+    QToolButton* buttonSelectAllProfileFaces = nullptr;
+    QToolButton* buttonClearProfileFaces = nullptr;
+    std::vector<std::string> profileFaces;
     void setupTypeToggle();
+    void setupProfileFaceSelection();
+    void computeProfileFaces();
+    void updateProfileFaceList();
+    void updateProfileSubValues();
 };
 
 }  // namespace PartDesignGui
