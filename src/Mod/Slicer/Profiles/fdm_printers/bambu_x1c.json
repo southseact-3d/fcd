@@ -1,0 +1,15 @@
+{
+  "name": "Bambu X1 Carbon",
+  "type": "fdm",
+  "manufacturer": "Bambu Lab",
+  "model": "X1 Carbon",
+  "bed_size": [256, 256, 256],
+  "nozzle_diameter": 0.4,
+  "heated_bed": true,
+  "heated_chamber": true,
+  "max_feedrate": {"x": 500, "y": 500, "z": 15, "e": 120},
+  "max_acceleration": {"x": 20000, "y": 20000, "z": 1000, "e": 12000},
+  "firmware": "griffin",
+  "has_auto_bed_leveling": true,
+  "default_material": "PLA"
+}

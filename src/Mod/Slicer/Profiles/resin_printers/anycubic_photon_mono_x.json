@@ -1,0 +1,20 @@
+{
+  "name": "Anycubic Photon Mono X",
+  "type": "resin",
+  "manufacturer": "Anycubic",
+  "model": "Photon Mono X",
+  "resolution_x": 3840,
+  "resolution_y": 2400,
+  "pixel_size_x": 0.035,
+  "pixel_size_y": 0.035,
+  "build_area_x": 192.0,
+  "build_area_y": 120.0,
+  "build_height": 245.0,
+  "has_tilt": false,
+  "lift_height": 6.0,
+  "lift_speed": 1.0,
+  "retract_speed": 1.5,
+  "light_type": "LCD",
+  "light_power": 4500,
+  "default_material": "Grey Resin"
+}

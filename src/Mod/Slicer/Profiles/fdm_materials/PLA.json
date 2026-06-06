@@ -1,0 +1,17 @@
+{
+  "name": "PLA",
+  "type": "fdm_material",
+  "manufacturer": "Generic",
+  "material_type": "PLA",
+  "density": 1.24,
+  "diameter": 1.75,
+  "temperature_range": [180, 230],
+  "bed_temperature_range": [0, 60],
+  "print_speed_range": [20, 150],
+  "fan_speed_range": [0, 100],
+  "retract_distance": 5.0,
+  "retract_speed": 45.0,
+  "flow_rate": 100.0,
+  "shrinkage_factor": 0.3,
+  "color": "#FFFF00"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Generic FDM Printer",
+  "type": "fdm",
+  "manufacturer": "Generic",
+  "model": "Generic FDM",
+  "bed_size": [220, 220, 250],
+  "nozzle_diameter": 0.4,
+  "heated_bed": true,
+  "heated_chamber": false,
+  "max_feedrate": {"x": 200, "y": 200, "z": 10, "e": 120},
+  "max_acceleration": {"x": 1000, "y": 1000, "z": 500, "e": 5000},
+  "firmware": "marlin",
+  "has_auto_bed_leveling": false,
+  "default_material": "PLA"
+}

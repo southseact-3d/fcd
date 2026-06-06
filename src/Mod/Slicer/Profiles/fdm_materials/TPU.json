@@ -1,0 +1,17 @@
+{
+  "name": "TPU",
+  "type": "fdm_material",
+  "manufacturer": "Generic",
+  "material_type": "TPU",
+  "density": 1.21,
+  "diameter": 1.75,
+  "temperature_range": [210, 240],
+  "bed_temperature_range": [40, 60],
+  "print_speed_range": [10, 40],
+  "fan_speed_range": [30, 60],
+  "retract_distance": 1.5,
+  "retract_speed": 25.0,
+  "flow_rate": 100.0,
+  "shrinkage_factor": 0.5,
+  "color": "#FF6600"
+}
