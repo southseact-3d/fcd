@@ -28,7 +28,6 @@
 
 #include <gp_Trsf.hxx>
 
-#include <App/PropertyLists.h>
 #include <App/PropertyStandard.h>
 #include "FeatureRefine.h"
 
