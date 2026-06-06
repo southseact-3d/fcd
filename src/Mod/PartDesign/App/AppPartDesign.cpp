@@ -35,6 +35,7 @@
 #include "Measure.h"
 #include "FeatureBase.h"
 #include "FeatureBoolean.h"
+#include "FeatureBrickTexture.h"
 #include "FeatureChamfer.h"
 #include "FeatureDraft.h"
 #include "FeatureDressUp.h"
@@ -158,6 +159,7 @@ PyMOD_INIT_FUNC(_PartDesign)
     PartDesign::AdditiveWedge               ::init();
     PartDesign::SubtractiveWedge            ::init();
     PartDesign::FeatureBase                 ::init();
+    PartDesign::BrickTexture                ::init();
 
     PartDesign::Measure ::initialize();
     // clang-format on

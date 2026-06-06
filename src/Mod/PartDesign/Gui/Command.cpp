@@ -3537,6 +3537,46 @@ void makeChamferOrFillet(Gui::Command* cmd, const std::string& which)
     finishDressupFeature(cmd, which, base, SubNames, useAllEdges);
 }
 
+void makeBrickTexture(Gui::Command* cmd)
+{
+    bool noSelection = false;
+    bool useAllEdges = false;
+    Gui::SelectionObject selected;
+    if (!dressupGetSelected(cmd, "BrickTexture", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+    }
+
+    std::ostringstream str;
+    str << '(' << Gui::Command::getObjectCmd(base) << ",[";
+    for (const auto& SubName : SubNames) {
+        str << "'" << SubName << "',";
+    }
+    str << "])";
+
+    std::string FeatName = cmd->getUniqueObjectName("BrickTexture", base);
+
+    auto body = PartDesignGui::getBodyFor(base, false);
+    if (!body) {
+        return;
+    }
+    cmd->openCommand("Make Brick Texture");
+    FCMD_OBJ_CMD(body, "newObject('PartDesign::BrickTexture','" << FeatName << "')");
+    auto Feat = body->getDocument()->getObject(FeatName.c_str());
+    FCMD_OBJ_CMD(Feat, "Base = " << str.str());
+    cmd->doCommand(cmd->Gui, "Gui.Selection.clearSelection()");
+    finishFeature(cmd, Feat, base);
+}
+
 //===========================================================================
 // PartDesign_Fillet
 //===========================================================================
@@ -3792,6 +3832,34 @@ void prepareTransformed(
 void finishTransformed(Gui::Command* cmd, App::DocumentObject* Feat)
 {
     finishFeature(cmd, Feat);
+}
+
+//===========================================================================
+// PartDesign_BrickTexture
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignBrickTexture)
+
+CmdPartDesignBrickTexture::CmdPartDesignBrickTexture()
+    : Command("PartDesign_BrickTexture")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Brick Texture");
+    sToolTipText = QT_TR_NOOP("Applies a brick texture geometry to selected faces");
+    sWhatsThis = "PartDesign_BrickTexture";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_BrickTexture";
+}
+
+void CmdPartDesignBrickTexture::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    makeBrickTexture(this);
+}
+
+bool CmdPartDesignBrickTexture::isActive()
+{
+    return hasActiveDocument();
 }
 
 //===========================================================================
@@ -4488,6 +4556,7 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignDraft());
     rcCmdMgr.addCommand(new CmdPartDesignChamfer());
     rcCmdMgr.addCommand(new CmdPartDesignThickness());
+    rcCmdMgr.addCommand(new CmdPartDesignBrickTexture());
 
     rcCmdMgr.addCommand(new CmdPartDesignMirrored());
     rcCmdMgr.addCommand(new CmdPartDesignLinearPattern());
