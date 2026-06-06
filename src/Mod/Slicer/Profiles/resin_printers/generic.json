@@ -1,0 +1,20 @@
+{
+  "name": "Generic Resin Printer",
+  "type": "resin",
+  "manufacturer": "Generic",
+  "model": "Generic MSLA",
+  "resolution_x": 2560,
+  "resolution_y": 1440,
+  "pixel_size_x": 0.047,
+  "pixel_size_y": 0.047,
+  "build_area_x": 120.0,
+  "build_area_y": 68.0,
+  "build_height": 150.0,
+  "has_tilt": false,
+  "lift_height": 5.0,
+  "lift_speed": 1.0,
+  "retract_speed": 1.0,
+  "light_type": "LCD",
+  "light_power": 5000,
+  "default_material": "Grey Resin"
+}

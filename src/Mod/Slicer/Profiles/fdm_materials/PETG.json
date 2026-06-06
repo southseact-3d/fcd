@@ -1,0 +1,17 @@
+{
+  "name": "PETG",
+  "type": "fdm_material",
+  "manufacturer": "Generic",
+  "material_type": "PETG",
+  "density": 1.27,
+  "diameter": 1.75,
+  "temperature_range": [220, 260],
+  "bed_temperature_range": [60, 80],
+  "print_speed_range": [20, 80],
+  "fan_speed_range": [20, 60],
+  "retract_distance": 4.0,
+  "retract_speed": 40.0,
+  "flow_rate": 100.0,
+  "shrinkage_factor": 0.4,
+  "color": "#0066CC"
+}
