@@ -656,7 +656,7 @@ Hole::Hole()
     ADD_PROPERTY_TYPE(PlacementFace, (nullptr), "Hole", App::Prop_None, "Face to place hole on");
     ADD_PROPERTY_TYPE(PlacementPoint, (Base::Vector3d(0, 0, 0)), "Hole", App::Prop_None, "Position on the face");
     ADD_PROPERTY_TYPE(PlacementReferences, (nullptr), "Hole", App::Prop_None, "Edge references for positioning");
-    ADD_PROPERTY_TYPE(PlacementOffsets, (nullptr), "Hole", App::Prop_None, "Offset distances from edge references");
+    ADD_PROPERTY_TYPE(PlacementOffsets, (std::vector<double>()), "Hole", App::Prop_None, "Offset distances from edge references");
 }
 
 void Hole::updateHoleCutParams()
@@ -2285,7 +2285,7 @@ void Hole::positionByPrevious()
     if (Placement.getValue() == AtPoint) {
         Part::Feature* feat = getBaseObject(/* silent = */ true);
         if (feat) {
-            this->Placement.setValue(feat->Placement.getValue());
+            Part::Feature::Placement.setValue(feat->Placement.getValue());
         }
         return;
     }

@@ -83,7 +83,7 @@ public:
     App::PropertyLinkSub PlacementFace;
     App::PropertyVector PlacementPoint;
     App::PropertyLinkSubList PlacementReferences;
-    App::PropertyQuantityList PlacementOffsets;
+    App::PropertyFloatList PlacementOffsets;
 
     enum PlacementMode
     {
