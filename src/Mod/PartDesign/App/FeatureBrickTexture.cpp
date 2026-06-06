@@ -28,7 +28,8 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
-#include <BRepBnd_Box.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <BRepGProp.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
@@ -250,8 +251,8 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
             gp_Dir normal = plane.Axis().Direction();
             gp_Pnt loc = plane.Location();
 
-            BRepBnd_Box bbox;
-            BRepBnd::Add(bbox, face);
+            Bnd_Box bbox;
+            BRepBndLib::Add(bbox, face);
             double xMin, yMin, zMin, xMax, yMax, zMax;
             bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
 
