@@ -39,6 +39,18 @@ using namespace PartDesignGui;
 
 PROPERTY_SOURCE(PartDesignGui::ViewProviderExtrude, PartDesignGui::ViewProviderSketchBased)
 
+ViewProviderExtrude::ViewProviderExtrude()
+{
+    sPixmap = "PartDesign_Extrude.svg";
+}
+
+ViewProviderExtrude::~ViewProviderExtrude() = default;
+
+TaskDlgFeatureParameters* ViewProviderExtrude::getEditDialog()
+{
+    return new TaskDlgExtrudeParameters(this);
+}
+
 void PartDesignGui::ViewProviderExtrude::highlightShapeFaces(const std::vector<std::string>& faces)
 {
     auto extrude = getObject<PartDesign::FeatureExtrude>();

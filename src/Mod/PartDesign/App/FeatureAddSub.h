@@ -50,6 +50,7 @@ public:
 
     void onChanged(const App::Property*) override;
     Type getAddSubType();
+    void setAddSubType(Type type);
 
     short mustExecute() const override;
 

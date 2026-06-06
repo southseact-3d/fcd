@@ -26,7 +26,7 @@
 #include <QMenu>
 
 
-#include "TaskPocketParameters.h"
+#include "TaskExtrudeParameters.h"
 #include "ViewProviderPocket.h"
 
 
@@ -36,7 +36,7 @@ PROPERTY_SOURCE(PartDesignGui::ViewProviderPocket, PartDesignGui::ViewProviderEx
 
 ViewProviderPocket::ViewProviderPocket()
 {
-    sPixmap = "PartDesign_Pocket.svg";
+    sPixmap = "PartDesign_Extrude.svg";
 }
 
 ViewProviderPocket::~ViewProviderPocket() = default;
@@ -44,12 +44,12 @@ ViewProviderPocket::~ViewProviderPocket() = default;
 
 void ViewProviderPocket::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)
 {
-    addDefaultAction(menu, QObject::tr("Edit Pocket"));
+    addDefaultAction(menu, QObject::tr("Edit Extrude"));
     PartDesignGui::ViewProviderSketchBased::setupContextMenu(menu, receiver, member);
 }
 
 
 TaskDlgFeatureParameters* ViewProviderPocket::getEditDialog()
 {
-    return new TaskDlgPocketParameters(this);
+    return new TaskDlgExtrudeParameters(this);
 }

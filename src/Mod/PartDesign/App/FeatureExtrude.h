@@ -67,6 +67,8 @@ public:
     //@{
     short mustExecute() const override;
     void setupObject() override;
+    App::DocumentObjectExecReturn* execute() override;
+    Base::Vector3d getProfileNormal() const override;
 
     const char* getViewProviderName() const override
     {
@@ -75,6 +77,7 @@ public:
     //@}
 
     static const char* SideTypesEnums[];
+    static const char* TypeEnums[];
 
 protected:
     void onDocumentRestored() override;

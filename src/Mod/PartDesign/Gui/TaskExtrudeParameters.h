@@ -35,6 +35,7 @@ class QComboBox;
 class QLineEdit;
 class QListWidget;
 class QToolButton;
+class QRadioButton;
 
 class Ui_TaskPadPocketParameters;
 
@@ -294,7 +295,37 @@ public:
     bool reject() override;
 
 protected:
-    virtual TaskExtrudeParameters* getTaskParameters() = 0;
+    TaskExtrudeParameters* getTaskParameters();
+
+private:
+    TaskExtrudeParameters* parameters = nullptr;
+};
+
+class TaskUnifiedExtrudeParameters: public TaskExtrudeParameters
+{
+    Q_OBJECT
+
+public:
+    TaskUnifiedExtrudeParameters(
+        ViewProviderExtrude* vp,
+        QWidget* parent = nullptr,
+        bool newObj = true
+    );
+    ~TaskUnifiedExtrudeParameters() override = default;
+
+protected:
+    void onModeChanged(int index, Side side) override;
+    void translateModeList(QComboBox* box, int index) override;
+    void updateUI(Side side) override;
+    void apply() override;
+
+private Q_SLOTS:
+    void onTypeToggled(bool checked);
+
+private:
+    QRadioButton* radioJoin = nullptr;
+    QRadioButton* radioCut = nullptr;
+    void setupTypeToggle();
 };
 
 }  // namespace PartDesignGui

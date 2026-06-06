@@ -24,6 +24,11 @@
 
 #include <QSignalBlocker>
 #include <QAction>
+#include <QRadioButton>
+#include <QButtonGroup>
+
+#include <Precision.hxx>
+#include <cmath>
 
 
 #include <App/Document.h>
@@ -1449,7 +1454,11 @@ void TaskExtrudeParameters::setGizmoPositions()
 
 TaskDlgExtrudeParameters::TaskDlgExtrudeParameters(PartDesignGui::ViewProviderExtrude* vp)
     : TaskDlgSketchBasedParameters(vp)
-{}
+    , parameters(new TaskUnifiedExtrudeParameters(vp))
+{
+    Content.push_back(parameters);
+    Content.push_back(preview);
+}
 
 bool TaskDlgExtrudeParameters::accept()
 {
@@ -1463,6 +1472,138 @@ bool TaskDlgExtrudeParameters::reject()
     getTaskParameters()->setSelectionMode(TaskExtrudeParameters::None);
 
     return TaskDlgSketchBasedParameters::reject();
+}
+
+// --- TaskUnifiedExtrudeParameters ---
+
+TaskUnifiedExtrudeParameters::TaskUnifiedExtrudeParameters(
+    ViewProviderExtrude* vp,
+    QWidget* parent,
+    bool newObj
+)
+    : TaskExtrudeParameters(vp, parent, "PartDesign_Extrude", QObject::tr("Extrude Parameters"))
+{
+    setupTypeToggle();
+
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+
+    // Set initial mode list based on current addSubType
+    if (extrude->getAddSubType() == PartDesign::FeatureAddSub::Subtractive) {
+        radioCut->setChecked(true);
+    }
+    else {
+        radioJoin->setChecked(true);
+    }
+
+    // Set initial mode list
+    translateModeList(ui->changeMode, extrude->Type.getValue());
+    translateModeList(ui->changeMode2, extrude->Type2.getValue());
+
+    if (newObj) {
+        readValuesFromHistory();
+    }
+}
+
+void TaskUnifiedExtrudeParameters::setupTypeToggle()
+{
+    // Create Join/Cut radio buttons and insert at the top of the layout
+    auto* toggleLayout = new QHBoxLayout();
+    radioJoin = new QRadioButton(QObject::tr("Join"), this);
+    radioCut = new QRadioButton(QObject::tr("Cut"), this);
+    radioJoin->setChecked(true);
+    toggleLayout->addWidget(radioJoin);
+    toggleLayout->addWidget(radioCut);
+
+    // Insert at the top of the group layout
+    this->groupLayout()->insertLayout(0, toggleLayout);
+
+    connect(radioJoin, &QRadioButton::toggled, this, &TaskUnifiedExtrudeParameters::onTypeToggled);
+}
+
+void TaskUnifiedExtrudeParameters::onTypeToggled(bool checked)
+{
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+
+    if (radioJoin->isChecked()) {
+        extrude->setAddSubType(PartDesign::FeatureAddSub::Additive);
+    }
+    else {
+        extrude->setAddSubType(PartDesign::FeatureAddSub::Subtractive);
+    }
+
+    // Update mode lists to match the type
+    int currentMode = ui->changeMode->currentIndex();
+    int currentMode2 = ui->changeMode2->currentIndex();
+    translateModeList(ui->changeMode, currentMode);
+    translateModeList(ui->changeMode2, currentMode2);
+
+    updateUI(Side::First);
+    recomputeFeature();
+}
+
+void TaskUnifiedExtrudeParameters::translateModeList(QComboBox* box, int index)
+{
+    box->clear();
+    box->addItem(QObject::tr("Dimension"));
+    box->addItem(QObject::tr("Through all"));
+    box->addItem(QObject::tr("To first"));
+    box->addItem(QObject::tr("Up to face"));
+    box->addItem(QObject::tr("Up to shape"));
+    if (index >= 0 && index < box->count()) {
+        box->setCurrentIndex(index);
+    }
+}
+
+void TaskUnifiedExtrudeParameters::updateUI(Side side)
+{
+    fillDirectionCombo();
+    updateWholeUI(Type::Pad, side);
+}
+
+void TaskUnifiedExtrudeParameters::onModeChanged(int index, Side side)
+{
+    auto& sideCtrl = getSideController(side);
+
+    switch (static_cast<Mode>(index)) {
+        case Mode::Dimension:
+            sideCtrl.Type->setValue("Length");
+            if (side == Side::First) {
+                double L = sideCtrl.lengthEdit->value().getValue();
+                Side otherSide = side == Side::First ? Side::Second : Side::First;
+                auto& sideCtrl2 = getSideController(otherSide);
+                double L2 = static_cast<SidesMode>(getSidesMode()) == SidesMode::TwoSides
+                    ? sideCtrl2.lengthEdit->value().getValue()
+                    : 0;
+                if (std::abs(L + L2) < Precision::Confusion()) {
+                    sideCtrl.lengthEdit->setValue(5.0);
+                }
+            }
+            break;
+        case Mode::ThroughAll:
+            sideCtrl.Type->setValue("ThroughAll");
+            break;
+        case Mode::ToFirst:
+            sideCtrl.Type->setValue("UpToFirst");
+            break;
+        case Mode::ToFace:
+            sideCtrl.Type->setValue("UpToFace");
+            if (sideCtrl.lineFaceName->text().isEmpty()) {
+                sideCtrl.buttonFace->setChecked(true);
+                handleLineFaceNameClick(sideCtrl.lineFaceName);
+            }
+            break;
+        case Mode::ToShape:
+            sideCtrl.Type->setValue("UpToShape");
+            break;
+    }
+
+    updateUI(side);
+    recomputeFeature();
+}
+
+void TaskUnifiedExtrudeParameters::apply()
+{
+    applyParameters();
 }
 
 #include "moc_TaskExtrudeParameters.cpp"

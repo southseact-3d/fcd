@@ -49,6 +49,11 @@ using namespace PartDesign;
 
 const char* FeatureExtrude::SideTypesEnums[] = {"One side", "Two sides", "Symmetric", nullptr};
 
+// Combined TypeEnums for unified Extrude (Pad used "UpToLast", Pocket used "ThroughAll";
+// they are aliased internally, so we use "ThroughAll" as the canonical name).
+const char* FeatureExtrude::TypeEnums[]
+    = {"Length", "ThroughAll", "UpToFirst", "UpToFace", "?TwoLengths", "UpToShape", nullptr};
+
 PROPERTY_SOURCE(PartDesign::FeatureExtrude, PartDesign::ProfileBased)
 
 App::PropertyQuantityConstraint::Constraints FeatureExtrude::signedLengthConstraint
@@ -56,7 +61,61 @@ App::PropertyQuantityConstraint::Constraints FeatureExtrude::signedLengthConstra
 double FeatureExtrude::maxAngle = 90 - Base::toDegrees<double>(Precision::Angular());
 App::PropertyAngle::Constraints FeatureExtrude::floatAngle = {-maxAngle, maxAngle, 1.0};
 
-FeatureExtrude::FeatureExtrude() = default;
+FeatureExtrude::FeatureExtrude()
+{
+    ADD_PROPERTY_TYPE(SideType, (0L), "Extrude", App::Prop_None, "Type of sides definition");
+    ADD_PROPERTY_TYPE(Type, (0L), "Side1", App::Prop_None, "Extrude type for side 1");
+    ADD_PROPERTY_TYPE(Type2, (0L), "Side2", App::Prop_None, "Extrude type for side 2");
+    SideType.setEnums(SideTypesEnums);
+    Type.setEnums(TypeEnums);
+    Type2.setEnums(TypeEnums);
+    ADD_PROPERTY_TYPE(Length, (10.0), "Side1", App::Prop_None, "Extrude length");
+    ADD_PROPERTY_TYPE(Length2, (10.0), "Side2", App::Prop_None, "Extrude length in 2nd direction");
+    ADD_PROPERTY_TYPE(UseCustomVector, (false), "Extrude", App::Prop_None, "Use custom vector for extrude direction");
+    ADD_PROPERTY_TYPE(
+        Direction,
+        (Base::Vector3d(1.0, 1.0, 1.0)),
+        "Extrude",
+        App::Prop_None,
+        "Extrude direction vector"
+    );
+    ADD_PROPERTY_TYPE(ReferenceAxis, (nullptr), "Extrude", App::Prop_None, "Reference axis of direction");
+    ADD_PROPERTY_TYPE(
+        AlongSketchNormal,
+        (true),
+        "Extrude",
+        App::Prop_None,
+        "Measure extrude length along the sketch normal direction"
+    );
+    ADD_PROPERTY_TYPE(UpToFace, (nullptr), "Side1", App::Prop_None, "Face where extrude will end");
+    ADD_PROPERTY_TYPE(UpToShape, (nullptr), "Side1", App::Prop_None, "Faces or shape(s) where extrude will end");
+    ADD_PROPERTY_TYPE(UpToFace2, (nullptr), "Side2", App::Prop_None, "Face where extrude will end on side2");
+    ADD_PROPERTY_TYPE(
+        UpToShape2,
+        (nullptr),
+        "Side2",
+        App::Prop_None,
+        "Faces or shape(s) where extrude will end on side2"
+    );
+    ADD_PROPERTY_TYPE(Offset, (0.0), "Side1", App::Prop_None, "Offset from face in which extrude will end");
+    ADD_PROPERTY_TYPE(
+        Offset2,
+        (0.0),
+        "Side2",
+        App::Prop_None,
+        "Offset from face in which extrude will end on side 2"
+    );
+    Offset.setConstraints(&signedLengthConstraint);
+    Offset2.setConstraints(&signedLengthConstraint);
+    ADD_PROPERTY_TYPE(TaperAngle, (0.0), "Side1", App::Prop_None, "Taper angle");
+    TaperAngle.setConstraints(&floatAngle);
+    ADD_PROPERTY_TYPE(TaperAngle2, (0.0), "Side2", App::Prop_None, "Taper angle for 2nd direction");
+    TaperAngle2.setConstraints(&floatAngle);
+
+    // Remove the constraints and keep the type to allow one to accept negative values
+    Length.setConstraints(nullptr);
+    Length2.setConstraints(nullptr);
+}
 
 short FeatureExtrude::mustExecute() const
 {
@@ -317,6 +376,24 @@ void FeatureExtrude::updateProperties()
 void FeatureExtrude::setupObject()
 {
     ProfileBased::setupObject();
+}
+
+App::DocumentObjectExecReturn* FeatureExtrude::execute()
+{
+    ExtrudeOptions options(ExtrudeOption::MakeFace | ExtrudeOption::MakeFuse);
+    if (addSubType == FeatureAddSub::Subtractive) {
+        options.setFlag(ExtrudeOption::InverseDirection);
+    }
+    return buildExtrusion(options);
+}
+
+Base::Vector3d FeatureExtrude::getProfileNormal() const
+{
+    auto res = ProfileBased::getProfileNormal();
+    if (addSubType == FeatureAddSub::Subtractive) {
+        return res * -1;
+    }
+    return res;
 }
 
 App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions options)
