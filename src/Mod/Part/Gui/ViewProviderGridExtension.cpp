@@ -208,8 +208,8 @@ void GridExtensionP::computeGridSize(const Gui::View3DInventorViewer* viewer)
 
     auto capGridSize = [](auto& value) {
         using T = decltype(value);
-        value = std::max(value, static_cast<T>(std::numeric_limits<float>::min()));
-        value = std::min(value, static_cast<T>(std::numeric_limits<float>::max()));
+        value = (std::max)(value, static_cast<T>(std::numeric_limits<float>::min()));
+        value = (std::min)(value, static_cast<T>(std::numeric_limits<float>::max()));
     };
 
     if (!vp->GridAuto.getValue()) {
@@ -226,7 +226,7 @@ void GridExtensionP::computeGridSize(const Gui::View3DInventorViewer* viewer)
         return;
     }
 
-    int numberOfLines = static_cast<int>(std::max(pixelWidth, pixelHeight)) / GridSizePixelThreshold;
+    int numberOfLines = static_cast<int>((std::max)(pixelWidth, pixelHeight)) / GridSizePixelThreshold;
 
     // Compute ideal grid spacing so lines appear ~GridSizePixelThreshold pixels apart
     double idealSpacing = camMaxDimension / numberOfLines;
