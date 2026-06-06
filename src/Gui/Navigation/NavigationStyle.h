@@ -154,6 +154,9 @@ public:
     void setSensitivity(float);
     float getSensitivity() const;
 
+    void setOrbitViewportEnabled(bool enabled);
+    bool isOrbitViewportEnabled() const;
+
     void setResetCursorPosition(SbBool);
     SbBool isResetCursorPosition() const;
 
@@ -311,6 +314,7 @@ protected:
     SbBool hasDragged;
     SbBool hasPanned;
     SbBool hasZoomed;
+    bool orbitViewportEnabled {true};
 
     /** @name Mouse model */
     //@{

@@ -1102,6 +1102,9 @@ SbVec3f NavigationStyle::getFocalPoint() const
  */
 void NavigationStyle::spin(const SbVec2f& pointerpos)
 {
+    if (!this->orbitViewportEnabled) {
+        return;
+    }
     if (this->log.historysize < 2) {
         return;
     }
@@ -1214,6 +1217,9 @@ void NavigationStyle::spinInternal(const SbVec2f& pointerpos, const SbVec2f& las
  */
 void NavigationStyle::spin_simplified(SbVec2f curpos, SbVec2f prevpos)
 {
+    if (!this->orbitViewportEnabled) {
+        return;
+    }
     assert(this->spinprojector);
 
     if (getOrbitStyle() == FreeTurntable) {
@@ -1492,6 +1498,16 @@ void NavigationStyle::setSensitivity(float val)
 float NavigationStyle::getSensitivity() const
 {
     return this->sensitivity;
+}
+
+void NavigationStyle::setOrbitViewportEnabled(bool enabled)
+{
+    this->orbitViewportEnabled = enabled;
+}
+
+bool NavigationStyle::isOrbitViewportEnabled() const
+{
+    return this->orbitViewportEnabled;
 }
 
 void NavigationStyle::setResetCursorPosition(SbBool on)

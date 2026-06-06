@@ -56,6 +56,7 @@
 #include "Action.h"
 #include "MainWindow.h"
 #include "Navigation/NavigationAnimation.h"
+#include "Navigation/NavigationStyle.h"
 #include "View3DInventorViewer.h"
 #include "View3DInventor.h"
 #include "ViewParams.h"
@@ -390,6 +391,12 @@ NaviCubeImplementation::NaviCubeImplementation(Gui::View3DInventorViewer* viewer
     m_PickingFramebuffer = nullptr;
     m_LastOrientation = m_View3DInventorViewer->getCameraOrientation();
     m_Menu = createNaviCubeMenu();
+
+    // Disable viewport orbit — only the NaviCube should allow orbiting
+    NavigationStyle* style = m_View3DInventorViewer->navigationStyle();
+    if (style) {
+        style->setOrbitViewportEnabled(false);
+    }
 }
 
 NaviCubeImplementation::~NaviCubeImplementation()
@@ -1074,11 +1081,8 @@ bool NaviCubeImplementation::mousePressed(short x, short y)
     PickId pick = pickFace(x, y);
     setHilite(pick);
 
-    // Capture events inside the cube so dragging can rotate the view.
-    qreal physicalCubeWidgetSize = getPhysicalCubeWidgetSize();
-    bool withinCube = std::abs(x) <= physicalCubeWidgetSize / 2
-        && std::abs(y) <= physicalCubeWidgetSize / 2;
-    return pick != PickId::None || withinCube;
+    // Only capture events when clicking on an actual visible face/edge/corner of the cube
+    return pick != PickId::None;
 }
 
 void NaviCubeImplementation::handleMenu()
@@ -1203,14 +1207,8 @@ bool NaviCubeImplementation::mouseReleased(short x, short y)
 
         if (m_Faces[pickId].type == ShapeId::Main || m_Faces[pickId].type == ShapeId::Edge
             || m_Faces[pickId].type == ShapeId::Corner) {
-            // Handle the cube faces
-            SbRotation orientation;
-            if (m_RotateToNearest) {
-                orientation = getNearestOrientation(pickId);
-            }
-            else {
-                orientation = m_Faces[pickId].rotation;
-            }
+            // Handle the cube faces — always go to the standard orientation for the clicked face
+            SbRotation orientation = m_Faces[pickId].rotation;
             m_View3DInventorViewer->setCameraOrientation(orientation);
         }
         else if (m_Faces[pickId].type == ShapeId::Button) {
@@ -1327,7 +1325,11 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
                 SbRotation rotation = SbRotation(up, yaw) * SbRotation(right, pitch);
                 SbRotation newOrientation = rotation * m_LastOrientation;
 
-                m_View3DInventorViewer->setCameraOrientation(newOrientation);
+                // Set camera orientation directly for real-time response during drag
+                SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
+                if (cam) {
+                    cam->orientation = newOrientation;
+                }
                 m_LastOrientation = newOrientation;
                 m_LastMouse = SbVec2s(x, y);
                 return true;
