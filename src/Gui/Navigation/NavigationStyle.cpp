@@ -1264,6 +1264,9 @@ void NavigationStyle::spinSimplifiedInternal(SbVec2f curpos, SbVec2f prevpos)
 
 SbBool NavigationStyle::doSpin()
 {
+    if (!this->orbitViewportEnabled) {
+        return false;
+    }
     if (this->log.historysize >= 3) {
         SbTime stoptime = (SbTime::getTimeOfDay() - this->log.time[0]);
         if (isSpinningAnimationEnabled() && stoptime.getValue() < 0.100) {
@@ -1831,6 +1834,11 @@ SbBool NavigationStyle::processEvent(const SoEvent* const ev)
 
     SbBool processed = false;
     processed = this->processSoEvent(ev);
+
+    // Prevent orbit (DRAGGING mode) when viewport orbit is disabled
+    if (!orbitViewportEnabled && currentmode == DRAGGING) {
+        currentmode = IDLE;
+    }
 
     // check for left click without selecting something
     if ((curmode == NavigationStyle::SELECTION || curmode == NavigationStyle::IDLE) && !processed) {

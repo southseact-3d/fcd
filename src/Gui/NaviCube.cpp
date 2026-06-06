@@ -157,6 +157,7 @@ private:
     bool mouseMoved(short x, short y);
     PickId pickFace(short x, short y);
     bool inDragZone(short x, short y);
+    SbVec3f projectToSphere(const SbVec2f& screenPos);
 
     void prepare();
     void handleResize();
@@ -211,7 +212,6 @@ private:
     bool m_Hovering = false;
 
     SbVec2s m_LastMouse = SbVec2s(0, 0);
-    SbRotation m_LastOrientation;
 
     SbVec2f m_RelPos = SbVec2f(1.0f, 1.0f);
     SbVec2s m_PosAreaBase = SbVec2s(0, 0);
@@ -389,7 +389,6 @@ NaviCubeImplementation::NaviCubeImplementation(Gui::View3DInventorViewer* viewer
 {
     m_View3DInventorViewer = viewer;
     m_PickingFramebuffer = nullptr;
-    m_LastOrientation = m_View3DInventorViewer->getCameraOrientation();
     m_Menu = createNaviCubeMenu();
 
     // Disable viewport orbit — only the NaviCube should allow orbiting
@@ -1075,7 +1074,6 @@ bool NaviCubeImplementation::mousePressed(short x, short y)
     m_MouseDown = true;
     m_Rotating = false;
     m_LastMouse = SbVec2s(x, y);
-    m_LastOrientation = m_View3DInventorViewer->getCameraOrientation();
 
     m_MightDrag = m_Draggable && inDragZone(x, y);
     PickId pick = pickFace(x, y);
@@ -1266,6 +1264,27 @@ bool NaviCubeImplementation::inDragZone(short x, short y)
     return std::abs(x) < limit && std::abs(y) < limit;
 }
 
+SbVec3f NaviCubeImplementation::projectToSphere(const SbVec2f& screenPos)
+{
+    float x = screenPos[0];
+    float y = screenPos[1];
+    float r = 0.8f;
+
+    float x2y2 = x * x + y * y;
+    float r2 = r * r;
+
+    SbVec3f result;
+    if (x2y2 <= r2 * 0.5f) {
+        result.setValue(x, y, sqrtf(r2 - x2y2));
+    }
+    else {
+        float halfR2 = r2 * 0.5f;
+        result.setValue(x, y, halfR2 / sqrtf(x2y2));
+    }
+    result.normalize();
+    return result;
+}
+
 bool NaviCubeImplementation::mouseMoved(short x, short y)
 {
     qreal physicalCubeWidgetSize = getPhysicalCubeWidgetSize();
@@ -1311,26 +1330,27 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
             int dx = x - m_LastMouse[0];
             int dy = y - m_LastMouse[1];
             if (dx || dy) {
-                const float pi = std::numbers::pi_v<float>;
-                const float angleScaleX = (m_PosAreaSize[0] > 0) ? (pi / (float)m_PosAreaSize[0]) : 0.0f;
-                const float angleScaleY = (m_PosAreaSize[1] > 0) ? (pi / (float)m_PosAreaSize[1]) : 0.0f;
+                qreal halfSize = getPhysicalCubeWidgetSize() / 2.0;
+                SbVec2f lastPos(
+                    (float)m_LastMouse[0] / (float)halfSize,
+                    (float)m_LastMouse[1] / (float)halfSize
+                );
+                SbVec2f curPos(
+                    (float)x / (float)halfSize,
+                    (float)y / (float)halfSize
+                );
 
-                float yaw = -dx * angleScaleX;
-                float pitch = -dy * angleScaleY;
+                SbVec3f from = projectToSphere(lastPos);
+                SbVec3f to = projectToSphere(curPos);
 
-                SbVec3f up, right;
-                m_LastOrientation.multVec(SbVec3f(0, 1, 0), up);
-                m_LastOrientation.multVec(SbVec3f(1, 0, 0), right);
+                SbVec3f axis = from.cross(to);
+                float dot = from.dot(to);
+                SbRotation rotation(axis, dot);
 
-                SbRotation rotation = SbRotation(up, yaw) * SbRotation(right, pitch);
-                SbRotation newOrientation = rotation * m_LastOrientation;
-
-                // Set camera orientation directly for real-time response during drag
                 SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
                 if (cam) {
-                    cam->orientation = newOrientation;
+                    cam->orientation = rotation * cam->orientation.getValue();
                 }
-                m_LastOrientation = newOrientation;
                 m_LastMouse = SbVec2s(x, y);
                 return true;
             }
