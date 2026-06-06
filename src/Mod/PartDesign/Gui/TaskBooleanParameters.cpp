@@ -43,6 +43,7 @@
 
 #include "ui_TaskBooleanParameters.h"
 #include "TaskBooleanParameters.h"
+#include "Utils.h"
 
 
 using namespace PartDesignGui;
@@ -426,6 +427,8 @@ bool TaskDlgBooleanParameters::accept()
     }
     BooleanView->Visibility.setValue(true);
 
+    bool keepTools = false;
+
     try {
         // Set the target body (BaseFeature)
         std::string target = parameter->getTargetBody();
@@ -452,7 +455,7 @@ bool TaskDlgBooleanParameters::accept()
         Gui::Command::runCommand(Gui::Command::Doc, str.str().c_str());
 
         // Set Keep Tools
-        bool keepTools = parameter->getKeepTools();
+        keepTools = parameter->getKeepTools();
         std::stringstream keepStr;
         keepStr << Gui::Command::getObjectCmd(obj) << ".KeepTools = " << (keepTools ? "True" : "False");
         Gui::Command::runCommand(Gui::Command::Doc, keepStr.str().c_str());
