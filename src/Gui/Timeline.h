@@ -37,6 +37,7 @@
 #include <QSet>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <fastsignals/signal.h>
 #include <vector>
 #include <string>
 #include <map>

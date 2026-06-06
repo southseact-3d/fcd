@@ -36,6 +36,7 @@
 #include <QStyleOptionSlider>
 #include <QToolTip>
 #include <QAction>
+#include <QApplication>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QDrag>
