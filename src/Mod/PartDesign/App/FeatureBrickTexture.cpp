@@ -28,6 +28,8 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
 #include <BRepGProp.hxx>
@@ -61,6 +63,7 @@ using namespace PartDesign;
 PROPERTY_SOURCE(PartDesign::BrickTexture, PartDesign::DressUp)
 
 const App::PropertyQuantityConstraint::Constraints BrickTexture::floatSize = {0.1, 10000.0, 1.0};
+const App::PropertyIntegerConstraint::Constraints BrickTexture::intPercent = {0, 100, 1};
 
 const char* BrickTexture::ScaleEnums[]
     = {"1:1", "1:2", "1:5", "1:10", "1:20", "1:50", "1:76", "1:100", "1:200", "1:500", "Custom", nullptr};
@@ -124,7 +127,7 @@ BrickTexture::BrickTexture()
         App::Prop_None,
         "Horizontal offset of alternating rows as percentage of brick width"
     );
-    RowOffset.setConstraints(0, 100, 1);
+    RowOffset.setConstraints(&intPercent);
 
     ADD_PROPERTY_TYPE(
         Scale,
@@ -252,7 +255,7 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
             gp_Pnt loc = plane.Location();
 
             Bnd_Box bbox;
-            BRepBndLib::Add(bbox, face);
+            BRepBndLib::Add(face, bbox);
             double xMin, yMin, zMin, xMax, yMax, zMax;
             bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
 
@@ -289,8 +292,14 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
                         }
                         TopoDS_Shape clipped = common.Shape();
 
-                        if (clipped.IsNull() || !clipped.HasSubShape(TopAbs_FACE)) {
+                        if (clipped.IsNull()) {
                             continue;
+                        }
+                        {
+                            TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
+                            if (!anExplorer.More()) {
+                                continue;
+                            }
                         }
 
                         gp_Vec extrudeVec(normal);
@@ -331,8 +340,55 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
                         }
                         TopoDS_Shape clipped = common.Shape();
 
-                        if (clipped.IsNull() || !clipped.HasSubShape(TopAbs_FACE)) {
+                        if (clipped.IsNull()) {
                             continue;
+                        }
+                        {
+                            TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
+                            if (!anExplorer.More()) {
+                                continue;
+                            }
+                        }
+
+                        gp_Vec extrudeVec(normal);
+                        extrudeVec.Multiply(-mortarD);
+                        TopoDS_Shape mortar3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+
+                        builder.Add(compound, mortar3D);
+                    }
+                    catch (Standard_Failure&) {
+                        continue;
+                    }
+                }
+            }
+
+            for (int row = 0; row < rows; row++) {
+                double rowOffsetX = (row % 2 == 1) ? rowOff * brickW : 0.0;
+
+                for (int col = 0; col <= cols; col++) {
+                    double vx = offsetDx + col * (brickW + mortarT) + rowOffsetX - mortarT / 2.0;
+                    double vy = offsetDy + row * (brickH + mortarT);
+                    double vw = mortarT;
+                    double vh = brickH + mortarT;
+
+                    gp_Pnt mortarOrigin(vx, vy, 0.0);
+                    TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, vw, vh);
+
+                    try {
+                        BRepAlgoAPI_Common common(face, mortar2D);
+                        if (!common.IsDone()) {
+                            continue;
+                        }
+                        TopoDS_Shape clipped = common.Shape();
+
+                        if (clipped.IsNull()) {
+                            continue;
+                        }
+                        {
+                            TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
+                            if (!anExplorer.More()) {
+                                continue;
+                            }
                         }
 
                         gp_Vec extrudeVec(normal);
@@ -365,8 +421,14 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
                             }
                             TopoDS_Shape clipped = common.Shape();
 
-                            if (clipped.IsNull() || !clipped.HasSubShape(TopAbs_FACE)) {
+                            if (clipped.IsNull()) {
                                 continue;
+                            }
+                            {
+                                TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
+                                if (!anExplorer.More()) {
+                                    continue;
+                                }
                             }
 
                             gp_Vec extrudeVec(normal);

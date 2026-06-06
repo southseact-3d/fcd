@@ -59,6 +59,7 @@ protected:
 
 private:
     static const App::PropertyQuantityConstraint::Constraints floatSize;
+    static const App::PropertyIntegerConstraint::Constraints intPercent;
     static const char* ScaleEnums[];
 };
 
