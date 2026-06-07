@@ -102,6 +102,10 @@ if(BUILD_SHOW)
     add_subdirectory(Show)
 endif(BUILD_SHOW)
 
+if(BUILD_SLICER)
+    add_subdirectory(Slicer)
+endif(BUILD_SLICER)
+
 if(BUILD_SKETCHER)
     if(EIGEN3_FOUND)
       add_subdirectory(Sketcher)
