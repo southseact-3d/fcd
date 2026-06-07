@@ -22,7 +22,6 @@ set(Slicer_Core_Scripts
 set(Slicer_UI_Scripts
     SlicerUI/__init__.py
     SlicerUI/slicer_task_panel.py
-    SlicerUI/print_settings_widget.py
     SlicerUI/printer_selector_widget.py
     SlicerUI/material_selector_widget.py
     SlicerUI/slicer_preview_widget.py
@@ -34,11 +33,17 @@ set(Slicer_UI_Scripts
 
 set(Slicer_Profiles
     Profiles/fdm_printers/generic.json
+    Profiles/fdm_printers/bambu_x1c.json
+    Profiles/fdm_printers/creality_ender3.json
+    Profiles/fdm_printers/prusa_mk3s.json
+    Profiles/fdm_printers/voron_2.4.json
     Profiles/fdm_materials/PLA.json
     Profiles/fdm_materials/ABS.json
     Profiles/fdm_materials/PETG.json
     Profiles/fdm_materials/TPU.json
     Profiles/resin_printers/generic.json
+    Profiles/resin_printers/anycubic_photon_mono_x.json
+    Profiles/resin_printers/elegoo_mars3.json
     Profiles/resin_materials/generic_resin.json
 )
 
