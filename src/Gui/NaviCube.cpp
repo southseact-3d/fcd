@@ -1071,16 +1071,20 @@ NaviCubeImplementation::PickId NaviCubeImplementation::pickFace(short x, short y
 
 bool NaviCubeImplementation::mousePressed(short x, short y)
 {
-    m_MouseDown = true;
     m_Rotating = false;
-    m_LastMouse = SbVec2s(x, y);
-
-    m_MightDrag = m_Draggable && inDragZone(x, y);
     PickId pick = pickFace(x, y);
     setHilite(pick);
 
     // Only capture events when clicking on an actual visible face/edge/corner of the cube
-    return pick != PickId::None;
+    if (pick == PickId::None) {
+        return false;
+    }
+
+    m_MouseDown = true;
+    m_LastMouse = SbVec2s(x, y);
+    m_MightDrag = m_Draggable && inDragZone(x, y);
+
+    return true;
 }
 
 void NaviCubeImplementation::handleMenu()
@@ -1190,7 +1194,14 @@ bool NaviCubeImplementation::mouseReleased(short x, short y)
     static const float pi = boost::math::constants::pi<float>();
 
     setHilite(PickId::None);
+
+    bool wasInteracting = m_MouseDown;
     m_MouseDown = false;
+
+    // If we weren't tracking a mouse-down on the cube, don't consume the event
+    if (!wasInteracting) {
+        return false;
+    }
 
     if (m_Dragging) {
         m_Dragging = false;
@@ -1345,7 +1356,7 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
 
                 SbVec3f axis = from.cross(to);
                 float dot = from.dot(to);
-                SbRotation rotation(axis, dot);
+                SbRotation rotation(axis[0], axis[1], axis[2], dot);
 
                 SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
                 if (cam) {

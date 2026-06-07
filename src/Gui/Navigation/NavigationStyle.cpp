@@ -1837,7 +1837,7 @@ SbBool NavigationStyle::processEvent(const SoEvent* const ev)
 
     // Prevent orbit (DRAGGING mode) when viewport orbit is disabled
     if (!orbitViewportEnabled && currentmode == DRAGGING) {
-        currentmode = IDLE;
+        setViewingMode(IDLE);
     }
 
     // check for left click without selecting something
