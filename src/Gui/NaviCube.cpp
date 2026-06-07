@@ -1354,7 +1354,7 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
                 SbVec3f from = projectToSphere(lastPos);
                 SbVec3f to = projectToSphere(curPos);
 
-                SbVec3f axis = from.cross(to);
+                SbVec3f axis = to.cross(from);
                 float dot = from.dot(to);
                 SbRotation rotation(axis[0], axis[1], axis[2], dot);
 
