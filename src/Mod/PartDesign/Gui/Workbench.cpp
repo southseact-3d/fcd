@@ -34,15 +34,11 @@
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeatureMultiTransform.h>
 
-#include <QObject>
 #include <QToolBar>
-#include <QVBoxLayout>
 
 #include "PartDesignPartToolsWidget.h"
 #include "Utils.h"
 #include "Workbench.h"
-#include "WorkbenchModeHandler.h"
-#include "PartDesignTabBar.h"
 #include "WorkflowManager.h"
 
 using namespace PartDesignGui;
@@ -87,52 +83,9 @@ namespace sp = std::placeholders;
 /// @namespace PartDesignGui @class Workbench
 TYPESYSTEM_SOURCE(PartDesignGui::Workbench, Gui::StdWorkbench)
 
-Workbench::Workbench()
-    : tabBar(nullptr)
-    , tabBarAttached(false)
-{
-    modeHandler = std::make_unique<WorkbenchModeHandler>();
-}
-
 Workbench::~Workbench()
 {
     WorkflowManager::destruct();
-}
-
-void Workbench::createTabBar()
-{
-    if (!tabBar) {
-        tabBar = new PartDesignTabBar();
-        QObject::connect(tabBar, &PartDesignTabBar::currentIndexChanged,
-                [this](int index) { onModeChanged(index); });
-    }
-}
-
-void Workbench::attachTabBar()
-{
-    if (tabBar && !tabBarAttached) {
-        auto mainWindow = Gui::getMainWindow();
-        if (mainWindow) {
-            auto centralWidget = mainWindow->centralWidget();
-            if (centralWidget) {
-                auto layout = qobject_cast<QVBoxLayout*>(centralWidget->layout());
-                if (layout) {
-                    layout->insertWidget(0, tabBar);
-                    tabBarAttached = true;
-                }
-            }
-        }
-    }
-}
-
-void Workbench::onModeChanged(int index)
-{
-    if (index == 0) {
-        modeHandler->switchToMode(WorkbenchMode::DesignMode);
-    }
-    else {
-        modeHandler->switchToMode(WorkbenchMode::MeshMode);
-    }
 }
 
 void Workbench::setupContextMenu(const char* recipient, Gui::MenuItem* item) const
@@ -205,25 +158,17 @@ void Workbench::activated()
 {
     Gui::Workbench::activated();
 
-    createTabBar();
-    attachTabBar();
-
-    int savedIndex = (modeHandler->currentMode() == WorkbenchMode::MeshMode) ? 1 : 0;
-    tabBar->setCurrentIndex(savedIndex);
-
-    if (modeHandler->currentMode() == WorkbenchMode::MeshMode) {
-        modeHandler->switchToMode(WorkbenchMode::MeshMode);
-    }
-
     WorkflowManager::init();
 
-    // Replace Part Design Part Tools toolbar with custom responsive widget
+    // Force the Part Design Part Tools toolbar visible — it may have been
+    // hidden by stale user preferences (the old Mesh/Design toggle system).
     auto* mainWin = Gui::getMainWindow();
     if (mainWin) {
         auto* toolbar = mainWin->findChild<QToolBar*>(
             QStringLiteral("Part Design Part Tools"));
         if (toolbar) {
             toolbar->clear();
+            toolbar->setVisible(true);
             auto* widget = new PartDesignPartToolsWidget(toolbar);
             toolbar->addWidget(widget);
         }
@@ -429,56 +374,6 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     part->setCommand("Part Design Part Tools");
     part->setCustomIconSize(20);
     *part << "PartDesign_Pad";
-
-    Gui::ToolBarItem* mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
-    mesh->setCommand("Mesh Tools");
-    *mesh << "Mesh_Import"
-          << "Mesh_Export"
-          << "Mesh_FromPartShape"
-          << "Mesh_BuildRegularSolid";
-
-    mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
-    mesh->setCommand("Mesh Modify");
-    *mesh << "Mesh_HarmonizeNormals"
-          << "Mesh_FlipNormals"
-          << "Mesh_FillupHoles"
-          << "Mesh_FillInteractiveHole"
-          << "Mesh_AddFacet"
-          << "Mesh_RemoveComponents"
-          << "Mesh_Smoothing"
-          << "Mesh_RemeshGmsh"
-          << "Mesh_Decimating"
-          << "Mesh_Scale";
-
-    mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
-    mesh->setCommand("Mesh Boolean");
-    *mesh << "Mesh_Union"
-          << "Mesh_Intersection"
-          << "Mesh_Difference";
-
-    mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
-    mesh->setCommand("Mesh Cutting");
-    *mesh << "Mesh_PolyCut"
-          << "Mesh_PolyTrim"
-          << "Mesh_TrimByPlane"
-          << "Mesh_SectionByPlane"
-          << "Mesh_CrossSections";
-
-    mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
-    mesh->setCommand("Mesh Segmentation");
-    *mesh << "Mesh_Merge"
-          << "Mesh_SplitComponents"
-          << "Mesh_Segmentation"
-          << "Mesh_SegmentationBestFit";
-
-    mesh = new Gui::ToolBarItem(root, Gui::ToolBarItem::DefaultVisibility::Unavailable);
-    mesh->setCommand("Mesh Analyze");
-    *mesh << "Mesh_Evaluation"
-          << "Mesh_EvaluateFacet"
-          << "Mesh_VertexCurvature"
-          << "Mesh_CurvatureInfo"
-          << "Mesh_EvaluateSolid"
-          << "Mesh_BoundingBox";
 
     return root;
 }
