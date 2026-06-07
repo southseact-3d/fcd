@@ -83,6 +83,8 @@ namespace sp = std::placeholders;
 /// @namespace PartDesignGui @class Workbench
 TYPESYSTEM_SOURCE(PartDesignGui::Workbench, Gui::StdWorkbench)
 
+Workbench::Workbench() = default;
+
 Workbench::~Workbench()
 {
     WorkflowManager::destruct();
