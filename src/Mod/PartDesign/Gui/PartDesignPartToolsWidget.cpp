@@ -248,6 +248,7 @@ PartDesignGroupWidget* PartDesignPartToolsWidget::createModifyGroup()
         "PartDesign_Chamfer",
         "PartDesign_Draft",
         "PartDesign_Thickness",
+        "PartDesign_BrickTexture",
         "PartDesign_Mirrored",
         "PartDesign_LinearPattern",
         "PartDesign_PolarPattern",
@@ -447,6 +448,7 @@ QMenu* PartDesignPartToolsWidget::buildModifyMenu()
     addMenuItem("PartDesign_Chamfer");
     addMenuItem("PartDesign_Draft");
     addMenuItem("PartDesign_Thickness");
+    addMenuItem("PartDesign_BrickTexture");
 
     addSeparator();
 

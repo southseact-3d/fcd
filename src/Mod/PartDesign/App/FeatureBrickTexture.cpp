@@ -401,47 +401,6 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
                         continue;
                     }
                 }
-
-                for (int row = 0; row < rows; row++) {
-                    double rowOffsetX = (row % 2 == 1) ? rowOff * brickW : 0.0;
-
-                    for (int col = 0; col <= cols; col++) {
-                        double vx = offsetDx + col * (brickW + mortarT) + rowOffsetX - mortarT / 2.0;
-                        double vy = offsetDy + row * (brickH + mortarT);
-                        double vw = mortarT;
-                        double vh = brickH + mortarT;
-
-                        gp_Pnt mortarOrigin(vx, vy, 0.0);
-                        TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, vw, vh);
-
-                        try {
-                            BRepAlgoAPI_Common common(face, mortar2D);
-                            if (!common.IsDone()) {
-                                continue;
-                            }
-                            TopoDS_Shape clipped = common.Shape();
-
-                            if (clipped.IsNull()) {
-                                continue;
-                            }
-                            {
-                                TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
-                                if (!anExplorer.More()) {
-                                    continue;
-                                }
-                            }
-
-                            gp_Vec extrudeVec(normal);
-                            extrudeVec.Multiply(-mortarD);
-                            TopoDS_Shape mortar3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
-
-                            builder.Add(compound, mortar3D);
-                        }
-                        catch (Standard_Failure&) {
-                            continue;
-                        }
-                    }
-                }
             }
         }
 
