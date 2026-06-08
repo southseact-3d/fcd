@@ -1239,11 +1239,7 @@ bool NaviCubeImplementation::mouseReleased(short x, short y)
 
             // Handle the home button
             if (pickId == PickId::Home) {
-                CommandManager& rcCmdMgr = Application::Instance->commandManager();
-                Command* cmd = rcCmdMgr.getCommandByName("Std_ViewHome");
-                if (cmd) {
-                    cmd->activated(0);
-                }
+                Application::Instance->commandManager().runCommandByName("Std_ViewHome");
                 return true;
             }
 
