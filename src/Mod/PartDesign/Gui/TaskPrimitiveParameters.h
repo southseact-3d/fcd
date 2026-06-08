@@ -63,6 +63,7 @@ public:
     bool setPrimitive(App::DocumentObject*);
 
 public Q_SLOTS:
+    void onOperationChanged(int index);
     void onBoxLengthChanged(double);
     void onBoxWidthChanged(double);
     void onBoxHeightChanged(double);
@@ -127,6 +128,7 @@ private:
     QWidget* proxy;
     std::unique_ptr<Ui_DlgPrimitives> ui;
     ViewProviderPrimitive* vp;
+    QComboBox* operationCombo = nullptr;
 
     std::unique_ptr<Gui::GizmoContainer> gizmoContainer;
     Gui::LinearGizmo* lengthGizmo = nullptr;

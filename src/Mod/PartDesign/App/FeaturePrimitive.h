@@ -101,6 +101,7 @@ class PartDesignExport AdditiveBox: public Box
     AdditiveBox()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -111,6 +112,7 @@ class PartDesignExport SubtractiveBox: public Box
     SubtractiveBox()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -141,6 +143,7 @@ class PartDesignExport AdditiveCylinder: public Cylinder
     AdditiveCylinder()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -151,6 +154,7 @@ class PartDesignExport SubtractiveCylinder: public Cylinder
     SubtractiveCylinder()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -184,6 +188,7 @@ class PartDesignExport AdditiveSphere: public Sphere
     AdditiveSphere()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -194,6 +199,7 @@ class PartDesignExport SubtractiveSphere: public Sphere
     SubtractiveSphere()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -226,6 +232,7 @@ class PartDesignExport AdditiveCone: public Cone
     AdditiveCone()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -236,6 +243,7 @@ class PartDesignExport SubtractiveCone: public Cone
     SubtractiveCone()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -271,6 +279,7 @@ class PartDesignExport AdditiveEllipsoid: public Ellipsoid
     AdditiveEllipsoid()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -281,6 +290,7 @@ class PartDesignExport SubtractiveEllipsoid: public Ellipsoid
     SubtractiveEllipsoid()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -315,6 +325,7 @@ class PartDesignExport AdditiveTorus: public Torus
     AdditiveTorus()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -325,6 +336,7 @@ class PartDesignExport SubtractiveTorus: public Torus
     SubtractiveTorus()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -355,6 +367,7 @@ class PartDesignExport AdditivePrism: public Prism
     AdditivePrism()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -365,6 +378,7 @@ class PartDesignExport SubtractivePrism: public Prism
     SubtractivePrism()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 
@@ -404,6 +418,7 @@ class PartDesignExport AdditiveWedge: public Wedge
     AdditiveWedge()
     {
         addSubType = FeatureAddSub::Additive;
+        Operation.setValue(0);
     }
 };
 
@@ -414,6 +429,7 @@ class PartDesignExport SubtractiveWedge: public Wedge
     SubtractiveWedge()
     {
         addSubType = FeatureAddSub::Subtractive;
+        Operation.setValue(1);
     }
 };
 

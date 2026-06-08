@@ -58,7 +58,7 @@ public:
     void updatePreviewShape() override;
 
     Part::PropertyPartShape AddSubShape;
-
+    App::PropertyEnumeration Operation;
 
 protected:
     Type addSubType {Additive};
