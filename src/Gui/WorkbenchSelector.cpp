@@ -52,11 +52,13 @@ WorkbenchComboBox::WorkbenchComboBox(WorkbenchGroup* aGroup, QWidget* parent)
     setWhatsThis(aGroup->action()->whatsThis());
     refreshList(aGroup->getEnabledWbActions());
     connect(aGroup, &WorkbenchGroup::workbenchListRefreshed, this, &WorkbenchComboBox::refreshList);
-    connect(aGroup->groupAction(), &QActionGroup::triggered, this, [this, aGroup](QAction* action) {
-        setCurrentIndex(aGroup->actions().indexOf(action));
+    connect(aGroup->groupAction(), &QActionGroup::triggered, this, [this](QAction* action) {
+        setCurrentIndex(_filteredActions.indexOf(action));
     });
-    connect(this, qOverload<int>(&WorkbenchComboBox::activated), aGroup, [aGroup](int index) {
-        aGroup->actions()[index]->trigger();
+    connect(this, qOverload<int>(&WorkbenchComboBox::activated), this, [this](int index) {
+        if (index >= 0 && index < _filteredActions.size()) {
+            _filteredActions[index]->trigger();
+        }
     });
 }
 
@@ -75,6 +77,7 @@ void WorkbenchComboBox::showPopup()
 void WorkbenchComboBox::refreshList(QList<QAction*> actionList)
 {
     clear();
+    _filteredActions.clear();
 
     ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Workbenches"
@@ -86,6 +89,7 @@ void WorkbenchComboBox::refreshList(QList<QAction*> actionList)
         if (action->text() == QStringLiteral("<none>")) {
             continue;
         }
+        _filteredActions.append(action);
         QIcon icon = action->icon();
 
         if (icon.isNull() || itemStyle == WorkbenchItemStyle::TextOnly) {
