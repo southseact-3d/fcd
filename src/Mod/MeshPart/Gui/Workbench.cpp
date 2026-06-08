@@ -49,6 +49,8 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     Gui::ToolBarItem* part = new Gui::ToolBarItem(root);
     part->setCommand("MeshPart");
     *part << "MeshPart_Mesher";
+    *part << "MeshPart_MeshToBody";
+    *part << "MeshPart_PrismaticBody";
     return root;
 }
 
