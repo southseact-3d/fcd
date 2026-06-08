@@ -118,7 +118,8 @@ private:
         ArrowRight,
         ArrowLeft,
         DotBackside,
-        ViewMenu
+        ViewMenu,
+        Home
     };
     enum class DirId
     {
@@ -601,6 +602,13 @@ void NaviCubeImplementation::addButtonFace(PickId pickId, const SbVec3f& directi
             }
             break;
         }
+        case PickId::Home: {
+            offx = 0.5F;
+            offy = 0.15F;
+            // House shape: roof peak, roof left, wall left-bottom, wall right-bottom, roof right
+            pointData = {0., -12., -10., 0., -10., 10., 10., 10., 10., 0.};
+            break;
+        }
     }
 
     int count = static_cast<int>(pointData.size()) / 2;
@@ -758,6 +766,7 @@ void NaviCubeImplementation::prepare()
     addButtonFace(PickId::ArrowRight, SbVec3f(0, 0, -1));
     addButtonFace(PickId::DotBackside, SbVec3f(0, 1, 0));
     addButtonFace(PickId::ViewMenu);
+    addButtonFace(PickId::Home);
 
     if (m_PickingFramebuffer) {
         delete m_PickingFramebuffer;
@@ -1225,6 +1234,16 @@ bool NaviCubeImplementation::mouseReleased(short x, short y)
             // Handle the menu
             if (pickId == PickId::ViewMenu) {
                 handleMenu();
+                return true;
+            }
+
+            // Handle the home button
+            if (pickId == PickId::Home) {
+                CommandManager& rcCmdMgr = Application::Instance->commandManager();
+                Command* cmd = rcCmdMgr.getCommandByName("Std_ViewHome");
+                if (cmd) {
+                    cmd->activated(0);
+                }
                 return true;
             }
 
