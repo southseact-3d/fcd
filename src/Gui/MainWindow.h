@@ -49,6 +49,7 @@ class CommandManager;
 class Document;
 class MacroManager;
 class MDIView;
+class Timeline;
 
 namespace DockWnd
 {
@@ -229,6 +230,11 @@ public:
     void initDockWindows(bool show);
 
     bool isRestoringWindowState() const;
+
+    /**
+     * Returns the parametric timeline widget.
+     */
+    Timeline* getTimeline() const;
 
 public Q_SLOTS:
     /**
