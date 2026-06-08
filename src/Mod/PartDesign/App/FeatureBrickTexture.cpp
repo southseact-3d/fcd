@@ -404,7 +404,13 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
             }
         }
 
-        Part::TopoShape result(compound);
+        BRepAlgoAPI_Fuse fuse(TopShape.getShape(), compound);
+        if (!fuse.IsDone()) {
+            return new App::DocumentObjectExecReturn(
+                QT_TRANSLATE_NOOP("Exception", "Failed to fuse bricks with base shape")
+            );
+        }
+        Part::TopoShape result(fuse.Shape());
         result = refineShapeIfActive(result);
         this->Shape.setValue(result);
         return App::DocumentObject::StdReturn;
