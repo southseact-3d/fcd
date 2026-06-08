@@ -1342,13 +1342,14 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
             int dy = y - m_LastMouse[1];
             if (dx || dy) {
                 qreal halfSize = getPhysicalCubeWidgetSize() / 2.0;
+                float vHalfSize = (float)halfSize * 2.0f;
                 SbVec2f lastPos(
                     (float)m_LastMouse[0] / (float)halfSize,
-                    (float)m_LastMouse[1] / (float)halfSize
+                    (float)m_LastMouse[1] / vHalfSize
                 );
                 SbVec2f curPos(
                     (float)x / (float)halfSize,
-                    (float)y / (float)halfSize
+                    (float)y / vHalfSize
                 );
 
                 SbVec3f from = projectToSphere(lastPos);
