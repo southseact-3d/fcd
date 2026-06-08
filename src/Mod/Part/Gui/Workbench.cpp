@@ -146,6 +146,7 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "Part_CrossSections"
           << "Part_Offset"
           << "Part_Offset2D"
+          << "Part_FaceOffset"
           << "Part_Thickness"
           << "Part_ProjectionOnSurface"
           << "Part_SectionCut"

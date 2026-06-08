@@ -53,6 +53,7 @@
 #include <Gui/WaitCursor.h>
 
 #include <Mod/Part/App/Datums.h>
+#include <Mod/Part/App/FeatureFaceOffset.h>
 #include <Mod/Part/App/Part2DObject.h>
 
 #include "BoxSelection.h"
@@ -1959,6 +1960,72 @@ bool CmdPartOffset2D::isActive()
 }
 
 //===========================================================================
+// Part_FaceOffset
+//===========================================================================
+
+DEF_STD_CMD_A(CmdPartFaceOffset)
+
+CmdPartFaceOffset::CmdPartFaceOffset()
+    : Command("Part_FaceOffset")
+{
+    sAppModule = "Part";
+    sGroup = QT_TR_NOOP("Part");
+    sMenuText = QT_TR_NOOP("Face Offset");
+    sToolTipText = QT_TR_NOOP("Offsets selected faces on a solid body");
+    sWhatsThis = "Part_FaceOffset";
+    sStatusTip = sToolTipText;
+    sPixmap = "Part_FaceOffset";
+}
+
+void CmdPartFaceOffset::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    std::vector<App::DocumentObject*> docobjs = Gui::Selection().getObjectsOfType(
+        App::DocumentObject::getClassTypeId()
+    );
+    std::vector<App::DocumentObject*> shapes;
+    for (auto it : docobjs) {
+        if (!Part::Feature::getTopoShape(it, Part::ShapeOption::ResolveLink | Part::ShapeOption::Transform)
+                 .isNull()) {
+            shapes.push_back(it);
+        }
+    }
+    if (shapes.size() != 1) {
+        return;
+    }
+    App::DocumentObject* shape = shapes.front();
+    std::string faceOffset = getUniqueObjectName("FaceOffset");
+
+    openCommand(QT_TRANSLATE_NOOP("Command", "Make Face Offset"));
+    doCommand(Doc, "App.ActiveDocument.addObject(\"Part::FaceOffset\",\"%s\")", faceOffset.c_str());
+    doCommand(
+        Doc,
+        "App.ActiveDocument.%s.Source = App.ActiveDocument.%s",
+        faceOffset.c_str(),
+        shape->getNameInDocument()
+    );
+    doCommand(Doc, "App.ActiveDocument.%s.Value = 1.0", faceOffset.c_str());
+    updateActive();
+
+    doCommand(Gui, "Gui.ActiveDocument.setEdit('%s')", faceOffset.c_str());
+
+    if (!shape->isDerivedFrom<Part::Part2DObject>()) {
+        copyVisual(faceOffset.c_str(), "ShapeAppearance", shape->getNameInDocument());
+        copyVisual(faceOffset.c_str(), "LineColor", shape->getNameInDocument());
+        copyVisual(faceOffset.c_str(), "PointColor", shape->getNameInDocument());
+    }
+}
+
+bool CmdPartFaceOffset::isActive()
+{
+    bool hasShapes = PartGui::hasShapesInSelection();
+    std::vector<App::DocumentObject*> docobjs = Gui::Selection().getObjectsOfType(
+        App::DocumentObject::getClassTypeId()
+    );
+    return (hasShapes && !Gui::Control().activeDialog() && docobjs.size() == 1);
+}
+
+//===========================================================================
 // Part_CompOffset (dropdown toolbar button for Offset features)
 //===========================================================================
 
@@ -1984,6 +2051,9 @@ void CmdPartCompOffset::activated(int iMsg)
     else if (iMsg == 1) {
         rcCmdMgr.runCommandByName("Part_Offset2D");
     }
+    else if (iMsg == 2) {
+        rcCmdMgr.runCommandByName("Part_FaceOffset");
+    }
     else {
         return;
     }
@@ -2007,6 +2077,8 @@ Gui::Action* CmdPartCompOffset::createAction()
     cmd0->setIcon(Gui::BitmapFactory().iconFromTheme("Part_Offset"));
     QAction* cmd1 = pcAction->addAction(QString());
     cmd1->setIcon(Gui::BitmapFactory().iconFromTheme("Part_Offset2D"));
+    QAction* cmd2 = pcAction->addAction(QString());
+    cmd2->setIcon(Gui::BitmapFactory().iconFromTheme("Part_FaceOffset"));
 
     _pcAction = pcAction;
     languageChange();
@@ -2048,6 +2120,18 @@ void CmdPartCompOffset::languageChange()
         );
         cmd1->setStatusTip(
             QApplication::translate(cmdOffset2D->className(), cmdOffset2D->getStatusTip())
+        );
+    }
+
+    Gui::Command* cmdFaceOffset = rcCmdMgr.getCommandByName("Part_FaceOffset");
+    if (cmdFaceOffset) {
+        QAction* cmd2 = a[2];
+        cmd2->setText(QApplication::translate(cmdFaceOffset->className(), cmdFaceOffset->getMenuText()));
+        cmd2->setToolTip(
+            QApplication::translate(cmdFaceOffset->className(), cmdFaceOffset->getToolTipText())
+        );
+        cmd2->setStatusTip(
+            QApplication::translate(cmdFaceOffset->className(), cmdFaceOffset->getStatusTip())
         );
     }
 }
@@ -2771,6 +2855,7 @@ void CreatePartCommands()
     rcCmdMgr.addCommand(new CmdPartSweep());
     rcCmdMgr.addCommand(new CmdPartOffset());
     rcCmdMgr.addCommand(new CmdPartOffset2D());
+    rcCmdMgr.addCommand(new CmdPartFaceOffset());
     rcCmdMgr.addCommand(new CmdPartCompOffset());
     rcCmdMgr.addCommand(new CmdPartThickness());
     rcCmdMgr.addCommand(new CmdCheckGeometry());

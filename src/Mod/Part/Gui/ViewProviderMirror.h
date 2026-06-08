@@ -221,6 +221,26 @@ public:
     ~ViewProviderReverse() override;
 };
 
+class ViewProviderFaceOffset: public ViewProviderPart
+{
+    PROPERTY_HEADER_WITH_OVERRIDE(PartGui::ViewProviderFaceOffset);
+
+public:
+    /// constructor
+    ViewProviderFaceOffset();
+    /// destructor
+    ~ViewProviderFaceOffset() override;
+
+    /// grouping handling
+    std::vector<App::DocumentObject*> claimChildren() const override;
+    void setupContextMenu(QMenu*, QObject*, const char*) override;
+    bool onDelete(const std::vector<std::string>&) override;
+
+protected:
+    bool setEdit(int ModNum) override;
+    void unsetEdit(int ModNum) override;
+};
+
 }  // namespace PartGui
 
 

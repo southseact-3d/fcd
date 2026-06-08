@@ -41,6 +41,7 @@
 #include <Gui/Control.h>
 #include <Gui/Document.h>
 #include <Mod/Part/App/FeatureChamfer.h>
+#include <Mod/Part/App/FeatureFaceOffset.h>
 #include <Mod/Part/App/FeatureFillet.h>
 #include <Mod/Part/App/FeatureMirroring.h>
 #include <Mod/Part/App/FeatureOffset.h>
@@ -49,6 +50,7 @@
 
 #include "ViewProviderMirror.h"
 #include "DlgFilletEdges.h"
+#include "TaskFaceOffset.h"
 #include "TaskOffset.h"
 #include "TaskThickness.h"
 
@@ -741,3 +743,84 @@ ViewProviderReverse::ViewProviderReverse()
 }
 
 ViewProviderReverse::~ViewProviderReverse() = default;
+
+// ---------------------------------------
+
+PROPERTY_SOURCE(PartGui::ViewProviderFaceOffset, PartGui::ViewProviderPart)
+
+ViewProviderFaceOffset::ViewProviderFaceOffset()
+{
+    sPixmap = "Part_FaceOffset";
+}
+
+ViewProviderFaceOffset::~ViewProviderFaceOffset() = default;
+
+void ViewProviderFaceOffset::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)
+{
+    addDefaultAction(menu, QObject::tr("Edit face offset"));
+    PartGui::ViewProviderPart::setupContextMenu(menu, receiver, member);
+}
+
+bool ViewProviderFaceOffset::setEdit(int ModNum)
+{
+    if (ModNum == ViewProvider::Default) {
+        Gui::TaskView::TaskDialog* dlg = Gui::Control().activeDialog();
+        TaskFaceOffset* faceOffsetDlg = qobject_cast<TaskFaceOffset*>(dlg);
+        if (faceOffsetDlg && faceOffsetDlg->getObject() != this->getObject()) {
+            faceOffsetDlg = nullptr;
+        }
+        if (dlg && !faceOffsetDlg) {
+            if (dlg->canClose()) {
+                Gui::Control().closeDialog();
+            }
+            else {
+                return false;
+            }
+        }
+
+        // clear the selection (convenience)
+        Gui::Selection().clearSelection();
+
+        // start the edit dialog
+        if (faceOffsetDlg) {
+            Gui::Control().showDialog(faceOffsetDlg);
+        }
+        else {
+            Gui::Control().showDialog(new TaskFaceOffset(getObject<Part::FaceOffset>()));
+        }
+
+        return true;
+    }
+    else {
+        return ViewProviderPart::setEdit(ModNum);
+    }
+}
+
+void ViewProviderFaceOffset::unsetEdit(int ModNum)
+{
+    if (ModNum == ViewProvider::Default) {
+        // when pressing ESC make sure to close the dialog
+        QTimer::singleShot(0, &Gui::Control(), &Gui::ControlSingleton::closeDialog);
+    }
+    else {
+        PartGui::ViewProviderPart::unsetEdit(ModNum);
+    }
+}
+
+std::vector<App::DocumentObject*> ViewProviderFaceOffset::claimChildren() const
+{
+    std::vector<App::DocumentObject*> child;
+    child.push_back(getObject<Part::FaceOffset>()->Source.getValue());
+    return child;
+}
+
+bool ViewProviderFaceOffset::onDelete(const std::vector<std::string>&)
+{
+    Part::FaceOffset* faceOffset = getObject<Part::FaceOffset>();
+    App::DocumentObject* source = faceOffset->Source.getValue();
+    if (source) {
+        Gui::Application::Instance->getViewProvider(source)->show();
+    }
+
+    return true;
+}

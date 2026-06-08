@@ -50,9 +50,19 @@ ALIAS_COMMANDS = {
         "Create a Part cylinder",
         "Part_Cylinder",
     ),
-    "PartDesign_PartSphere": ("Part_Sphere", "Sphere", "Create a Part sphere", "Part_Sphere"),
+    "PartDesign_PartSphere": (
+        "Part_Sphere",
+        "Sphere",
+        "Create a Part sphere",
+        "Part_Sphere",
+    ),
     "PartDesign_PartCone": ("Part_Cone", "Cone", "Create a Part cone", "Part_Cone"),
-    "PartDesign_PartTorus": ("Part_Torus", "Torus", "Create a Part torus", "Part_Torus"),
+    "PartDesign_PartTorus": (
+        "Part_Torus",
+        "Torus",
+        "Create a Part torus",
+        "Part_Torus",
+    ),
     "PartDesign_PartTube": ("Part_Tube", "Tube", "Create a Part tube", "Part_Tube"),
     "PartDesign_PartPrimitives": (
         "Part_Primitives",
@@ -73,7 +83,12 @@ ALIAS_COMMANDS = {
         "Part_Boolean",
     ),
     "PartDesign_PartCut": ("Part_Cut", "Cut", "Cuts selected shapes", "Part_Cut"),
-    "PartDesign_PartFuse": ("Part_Fuse", "Union", "Unites selected shapes", "Part_Fuse"),
+    "PartDesign_PartFuse": (
+        "Part_Fuse",
+        "Union",
+        "Unites selected shapes",
+        "Part_Fuse",
+    ),
     "PartDesign_PartCommon": (
         "Part_Common",
         "Intersection",
@@ -216,12 +231,23 @@ ALIAS_COMMANDS = {
         "Part_EditAttachment",
     ),
     "PartDesign_PartScale": ("Part_Scale", "Scale", "Scale shape", "Part_Scale"),
-    "PartDesign_PartOffset": ("Part_Offset", "3D Offset", "Create 3D offset", "Part_Offset"),
+    "PartDesign_PartOffset": (
+        "Part_Offset",
+        "3D Offset",
+        "Create 3D offset",
+        "Part_Offset",
+    ),
     "PartDesign_PartOffset2D": (
         "Part_Offset2D",
         "2D Offset",
         "Create 2D offset",
         "Part_Offset2D",
+    ),
+    "PartDesign_PartFaceOffset": (
+        "Part_FaceOffset",
+        "Face Offset",
+        "Offset selected faces on a solid body",
+        "Part_FaceOffset",
     ),
     "PartDesign_PartShapeFromMesh": (
         "Part_ShapeFromMesh",
@@ -545,7 +571,9 @@ def register_alias_commands():
                 ),
             )
         else:
-            Gui.addCommand(alias_name, _RelayCommand(source_name, menu_text, tooltip, pixmap))
+            Gui.addCommand(
+                alias_name, _RelayCommand(source_name, menu_text, tooltip, pixmap)
+            )
 
 
 def map_legacy_command(command_name):
