@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90d9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c5f9e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="url(#bg)" stroke="#2c5f9e" stroke-width="1"/>
+  <!-- Teapot body -->
+  <ellipse cx="30" cy="36" rx="14" ry="11" fill="#e8e8e8" stroke="#666" stroke-width="1.5"/>
+  <!-- Teapot lid -->
+  <ellipse cx="30" cy="26" rx="9" ry="3" fill="#d0d0d0" stroke="#666" stroke-width="1"/>
+  <circle cx="30" cy="24" r="2.5" fill="#d0d0d0" stroke="#666" stroke-width="1"/>
+  <!-- Spout -->
+  <path d="M 16 34 Q 8 30 10 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+  <!-- Handle -->
+  <path d="M 44 32 Q 52 32 52 38 Q 52 44 44 44" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+  <!-- Steam lines -->
+  <path d="M 26 20 Q 24 14 26 8" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.6" stroke-linecap="round"/>
+  <path d="M 30 19 Q 32 13 30 7" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.6" stroke-linecap="round"/>
+  <path d="M 34 20 Q 36 14 34 8" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.6" stroke-linecap="round"/>
+</svg>
