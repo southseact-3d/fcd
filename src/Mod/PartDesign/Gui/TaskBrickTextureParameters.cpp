@@ -42,6 +42,7 @@ TaskBrickTextureParameters::TaskBrickTextureParameters(ViewProviderDressUp* Dres
     : TaskDressUpParameters(DressUpView, false, true, parent)
     , ui(new Ui_TaskBrickTextureParameters)
 {
+    allowPlanar = true;
     proxy = new QWidget(this);
     ui->setupUi(proxy);
     this->groupLayout()->addWidget(proxy);
