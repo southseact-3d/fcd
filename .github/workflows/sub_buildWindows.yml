@@ -274,14 +274,27 @@ jobs:
       #   CMAKE_C/CXX_COMPILER_LAUNCHER still used — correct way to wrap
       #   cl.exe with ccache under any generator
       # ------------------------------------------------------------------
-      - name: Clear stale CMake cache if generator changed
+      - name: Clear stale CMake cache if generator or compiler changed
         run: |
           $cacheFile = "${{ env.builddir }}\CMakeCache.txt"
           if (Test-Path $cacheFile) {
             $cached = Select-String -Path $cacheFile -Pattern "CMAKE_GENERATOR:INTERNAL=" | Select-Object -First 1
             $generatorOk = $cached -and $cached.Line -match "^CMAKE_GENERATOR:INTERNAL=Ninja$"
-            if (-not $generatorOk) {
-              Write-Host "CMake cache stale (generator or flags changed) — clearing..."
+
+            # Check if the cached compiler still exists on disk
+            $cachedCompiler = Select-String -Path $cacheFile -Pattern "CMAKE_C_COMPILER:FILEPATH=" | Select-Object -First 1
+            $compilerOk = $false
+            if ($cachedCompiler -and $cachedCompiler.Line -match "CMAKE_C_COMPILER:FILEPATH=(.+)") {
+              $compilerPath = $Matches[1].Trim()
+              $compilerOk = Test-Path $compilerPath
+              if (-not $compilerOk) {
+                Write-Host "Cached compiler not found: $compilerPath"
+              }
+            }
+
+            if (-not $generatorOk -or -not $compilerOk) {
+              $reason = if (-not $generatorOk) { "generator changed" } else { "compiler not found" }
+              Write-Host "CMake cache stale ($reason) — clearing..."
               Remove-Item $cacheFile -Force
               $cmakeFiles = "${{ env.builddir }}\CMakeFiles"
               if (Test-Path $cmakeFiles) { Remove-Item $cmakeFiles -Recurse -Force }
