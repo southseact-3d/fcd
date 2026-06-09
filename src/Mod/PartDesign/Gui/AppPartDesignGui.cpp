@@ -158,6 +158,8 @@ PyMOD_INIT_FUNC(PartDesignGui)
     PartDesignGui::ViewProviderSubShapeBinderPython::init();
     PartDesignGui::ViewProviderBoolean       ::init();
     PartDesignGui::ViewProviderBrickTexture  ::init();
+    PartDesignGui::ViewProviderWoodPlankTexture::init();
+    PartDesignGui::ViewProviderStoneTexture ::init();
     PartDesignGui::ViewProviderPrimitive     ::init();
     PartDesignGui::ViewProviderPipe          ::init();
     PartDesignGui::ViewProviderLoft          ::init();

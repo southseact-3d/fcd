@@ -294,7 +294,9 @@ Gui::MenuItem* Workbench::setupMenuBar() const
               << "PartDesign_Chamfer"
               << "PartDesign_Draft"
               << "PartDesign_Thickness"
-              << "PartDesign_BrickTexture";
+              << "PartDesign_BrickTexture"
+              << "PartDesign_WoodPlankTexture"
+              << "PartDesign_StoneTexture";
 
     *part << "PartDesign_Body"
           << "Separator"

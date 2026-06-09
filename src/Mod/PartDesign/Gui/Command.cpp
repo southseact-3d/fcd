@@ -3577,6 +3577,86 @@ void makeBrickTexture(Gui::Command* cmd)
     finishFeature(cmd, Feat, base);
 }
 
+void makeWoodPlankTexture(Gui::Command* cmd)
+{
+    bool noSelection = false;
+    bool useAllEdges = false;
+    Gui::SelectionObject selected;
+    if (!dressupGetSelected(cmd, "WoodPlankTexture", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+    }
+
+    std::ostringstream str;
+    str << '(' << Gui::Command::getObjectCmd(base) << ",[";
+    for (const auto& SubName : SubNames) {
+        str << "'" << SubName << "',";
+    }
+    str << "])";
+
+    std::string FeatName = cmd->getUniqueObjectName("WoodPlankTexture", base);
+
+    auto body = PartDesignGui::getBodyFor(base, false);
+    if (!body) {
+        return;
+    }
+    cmd->openCommand("Make Wood Plank Texture");
+    FCMD_OBJ_CMD(body, "newObject('PartDesign::WoodPlankTexture','" << FeatName << "')");
+    auto Feat = body->getDocument()->getObject(FeatName.c_str());
+    FCMD_OBJ_CMD(Feat, "Base = " << str.str());
+    cmd->doCommand(cmd->Gui, "Gui.Selection.clearSelection()");
+    finishFeature(cmd, Feat, base);
+}
+
+void makeStoneTexture(Gui::Command* cmd)
+{
+    bool noSelection = false;
+    bool useAllEdges = false;
+    Gui::SelectionObject selected;
+    if (!dressupGetSelected(cmd, "StoneTexture", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+    }
+
+    std::ostringstream str;
+    str << '(' << Gui::Command::getObjectCmd(base) << ",[";
+    for (const auto& SubName : SubNames) {
+        str << "'" << SubName << "',";
+    }
+    str << "])";
+
+    std::string FeatName = cmd->getUniqueObjectName("StoneTexture", base);
+
+    auto body = PartDesignGui::getBodyFor(base, false);
+    if (!body) {
+        return;
+    }
+    cmd->openCommand("Make Stone Texture");
+    FCMD_OBJ_CMD(body, "newObject('PartDesign::StoneTexture','" << FeatName << "')");
+    auto Feat = body->getDocument()->getObject(FeatName.c_str());
+    FCMD_OBJ_CMD(Feat, "Base = " << str.str());
+    cmd->doCommand(cmd->Gui, "Gui.Selection.clearSelection()");
+    finishFeature(cmd, Feat, base);
+}
+
 //===========================================================================
 // PartDesign_Fillet
 //===========================================================================
@@ -3858,6 +3938,62 @@ void CmdPartDesignBrickTexture::activated(int iMsg)
 }
 
 bool CmdPartDesignBrickTexture::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// PartDesign_WoodPlankTexture
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignWoodPlankTexture)
+
+CmdPartDesignWoodPlankTexture::CmdPartDesignWoodPlankTexture()
+    : Command("PartDesign_WoodPlankTexture")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Wood Plank Texture");
+    sToolTipText = QT_TR_NOOP("Applies a wood plank texture geometry to selected faces");
+    sWhatsThis = "PartDesign_WoodPlankTexture";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_WoodPlankTexture";
+}
+
+void CmdPartDesignWoodPlankTexture::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    makeWoodPlankTexture(this);
+}
+
+bool CmdPartDesignWoodPlankTexture::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// PartDesign_StoneTexture
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignStoneTexture)
+
+CmdPartDesignStoneTexture::CmdPartDesignStoneTexture()
+    : Command("PartDesign_StoneTexture")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Stone Texture");
+    sToolTipText = QT_TR_NOOP("Applies a stone texture geometry to selected faces");
+    sWhatsThis = "PartDesign_StoneTexture";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_StoneTexture";
+}
+
+void CmdPartDesignStoneTexture::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    makeStoneTexture(this);
+}
+
+bool CmdPartDesignStoneTexture::isActive()
 {
     return hasActiveDocument();
 }
@@ -4557,6 +4693,8 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignChamfer());
     rcCmdMgr.addCommand(new CmdPartDesignThickness());
     rcCmdMgr.addCommand(new CmdPartDesignBrickTexture());
+    rcCmdMgr.addCommand(new CmdPartDesignWoodPlankTexture());
+    rcCmdMgr.addCommand(new CmdPartDesignStoneTexture());
 
     rcCmdMgr.addCommand(new CmdPartDesignMirrored());
     rcCmdMgr.addCommand(new CmdPartDesignLinearPattern());
