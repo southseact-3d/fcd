@@ -6,8 +6,6 @@ else(MSVC)
     add_definitions(-DHAVE_LIMITS_H -DHAVE_CONFIG_H)
 endif(MSVC)
 
-add_definitions(-DYAML_CPP_STATIC_DEFINE)
-
 if(BUILD_MATERIAL_EXTERNAL)
     add_definitions(-DBUILD_MATERIAL_EXTERNAL)
 endif(BUILD_MATERIAL_EXTERNAL)
@@ -19,16 +17,6 @@ set(Materials_LIBS
 list(APPEND Materials_LIBS
     ${QtConcurrent_LIBRARIES}
 )
-
-if(yaml-cpp_VERSION VERSION_LESS 0.8.0)
-    list(APPEND Materials_LIBS
-        ${YAML_CPP_LIBRARIES}
-    )
-else()
-    list(APPEND Materials_LIBS
-        yaml-cpp::yaml-cpp
-    )
-endif()
 
 generate_from_py(Array2D)
 generate_from_py(Array3D)
@@ -157,7 +145,6 @@ target_include_directories(
     Materials
     SYSTEM
     PUBLIC
-    ${YAML_CPP_INCLUDE_DIR}
     ${QtConcurrent_INCLUDE_DIRS}
 )
 
@@ -165,7 +152,6 @@ if(BUILD_MATERIAL_EXTERNAL)
     target_include_directories(Materials PUBLIC ${CMAKE_SOURCE_DIR}/src/3rdParty/lru-cache/include)
 endif(BUILD_MATERIAL_EXTERNAL)
 
-target_link_directories(Materials PUBLIC ${YAML_CPP_LIBRARY_DIR})
 target_link_libraries(Materials ${Materials_LIBS})
 
 if (MSVC)

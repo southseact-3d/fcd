@@ -40,9 +40,17 @@ from builtins import open as pyopen
 
 has_yaml = True
 try:
-    import yaml
+    import sys
+    import os
+
+    sys.path.insert(
+        0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "Material")
+    )
+    from Material import yaml_parser as yaml
 except ImportError:
-    Console.PrintMessage("No YAML available (import yaml failure), yaml import/export won't work\n")
+    Console.PrintMessage(
+        "No YAML available (import yaml failure), yaml import/export won't work\n"
+    )
     has_yaml = False
 
 
@@ -185,5 +193,5 @@ def write(fileString, fem_mesh):
             or fileExtension.lower() == ".yml"
         ) and has_yaml:
             fp = pyopen(fileString, "wt")
-            yaml.safe_dump(mesh_data, fp)
+            fp.write(yaml.safe_dump(mesh_data))
             fp.close()

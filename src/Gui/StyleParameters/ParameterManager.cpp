@@ -26,7 +26,7 @@
 
 #include <QFile>
 #include <fstream>
-#include <yaml-cpp/yaml.h>
+#include <Base/YamlParser.h>
 
 #include <QColor>
 #include <QRegularExpression>
@@ -249,7 +249,7 @@ void YamlParameterSource::reload()
     QTextStream in(&file);
     std::string content = in.readAll().toStdString();
 
-    YAML::Node root = YAML::Load(content);
+    Base::YamlNode root = Base::YamlLoad(content);
     parameters.clear();
     for (auto it = root.begin(); it != root.end(); ++it) {
         auto key = it->first.as<std::string>();
@@ -292,7 +292,7 @@ void YamlParameterSource::remove(const std::string& name)
 
 void YamlParameterSource::flush()
 {
-    YAML::Node root;
+    Base::YamlNode root;
     for (const auto& [name, param] : parameters) {
         root[name] = param.value;
     }
@@ -304,7 +304,7 @@ void YamlParameterSource::flush()
     }
 
     QTextStream out(&file);
-    out << QString::fromStdString(YAML::Dump(root));
+    out << QString::fromStdString(Base::YamlDump(root));
 }
 
 ParameterManager::ParameterManager() = default;

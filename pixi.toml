@@ -34,17 +34,13 @@ pybind11 = "*"
 pycollada = "*"
 pyside6 = "*"
 python = ">=3.11,<3.12"
-pythonocc-core = "*"
-pyyaml = "*"
 qt6-main = ">=6.8,<6.9"
 smesh = "*"
 swig = "*"
 tbb-devel = ">=2022,<2023"
 vtk = "*"
 xerces-c = "*"
-yaml-cpp = "*"
 zlib = "*"
-zstd = "*"
 
 ## Linux Dependencies (x86-64)
 [target.linux-64.dependencies]

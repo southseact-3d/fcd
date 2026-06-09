@@ -238,6 +238,7 @@ SET(FreeCADBase_CPP_SRCS
     ViewProj.cpp
     Writer.cpp
     XMLTools.cpp
+    YamlParser.cpp
     ZipHeader.cpp
 )
 

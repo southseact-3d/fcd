@@ -24,7 +24,14 @@
 
 """Widget for browsing Tool Library assets with filtering and sorting."""
 
-import yaml
+import sys
+import os
+
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "Material")
+)
+from Material import yaml_parser as yaml
+
 from typing import cast, List, Optional
 from PySide import QtCore, QtGui
 from PySide.QtGui import QMenu, QAction, QKeySequence
@@ -75,7 +82,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred
         )
         self._top_layout.insertWidget(0, self._tool_type_combo, 1)
-        self._tool_type_combo.currentTextChanged.connect(self._on_tool_type_combo_changed)
+        self._tool_type_combo.currentTextChanged.connect(
+            self._on_tool_type_combo_changed
+        )
 
         self.restore_last_sort_order()
         self.load_last_library()
@@ -114,7 +123,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
         selected_toolbit_uris = []
         selected_items = self._tool_list_widget.selectedItems()
         if selected_items:
-            selected_toolbit_uris = [item.data(ToolBitUriRole) for item in selected_items]
+            selected_toolbit_uris = [
+                item.data(ToolBitUriRole) for item in selected_items
+            ]
 
         scroll_pos = self._tool_list_widget.verticalScrollBar().value()
 
@@ -135,7 +146,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
         if library_uri_str:
             try:
                 library_uri = AssetUri(library_uri_str)
-                library = self._asset_manager.get(library_uri, store=self._store_name, depth=1)
+                library = self._asset_manager.get(
+                    library_uri, store=self._store_name, depth=1
+                )
                 self.set_current_library(library)
             except FileNotFoundError:
                 Path.Log.error(f"Library {library_uri_str} not found.")
@@ -161,7 +174,10 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
             library_uri = self.current_library.get_uri()
             try:
                 self.current_library = cast(
-                    Library, self._asset_manager.get(library_uri, store=self._store_name, depth=1)
+                    Library,
+                    self._asset_manager.get(
+                        library_uri, store=self._store_name, depth=1
+                    ),
                 )
             except FileNotFoundError:
                 Path.Log.error(f"Library {library_uri} not found.")
@@ -321,7 +337,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
 
         # Only show "Delete from disk" when viewing 'all tools' (no library selected)
         if not has_library:
-            action = context_menu.addAction("Delete from disk", self._on_delete_requested)
+            action = context_menu.addAction(
+                "Delete from disk", self._on_delete_requested
+            )
             action.setShortcut(QtGui.QKeySequence("Shift+Delete"))
 
         # Execute the menu
@@ -383,7 +401,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
 
         new_uris = set()
         for uri_string in uris:
-            toolbit = cast(ToolBit, self._asset_manager.get(AssetUri(uri_string), depth=0))
+            toolbit = cast(
+                ToolBit, self._asset_manager.get(AssetUri(uri_string), depth=0)
+            )
             if not toolbit:
                 Path.Log.warning(f"Toolbit {uri_string} not found.\n")
                 continue
@@ -449,11 +469,15 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
                 continue
 
             toolbit_data_bytes = toolbit_yaml_str.encode("utf-8")
-            toolbit = YamlToolBitSerializer.deserialize(toolbit_data_bytes, dependencies=None)
+            toolbit = YamlToolBitSerializer.deserialize(
+                toolbit_data_bytes, dependencies=None
+            )
 
             # Get the original toolbit ID from the deserialized data
             original_id = toolbit.id
-            Path.Log.info(f"COPY PASTE: Attempting to paste toolbit with original_id={original_id}")
+            Path.Log.info(
+                f"COPY PASTE: Attempting to paste toolbit with original_id={original_id}"
+            )
 
             # Check if toolbit already exists in asset manager
             toolbit_uri = toolbit.get_uri()
@@ -462,10 +486,14 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
                 existing_toolbit = self._asset_manager.get(
                     toolbit_uri, store=["local", "builtin"], depth=0
                 )
-                Path.Log.info(f"COPY PASTE: Found existing toolbit {original_id}, using reference")
+                Path.Log.info(
+                    f"COPY PASTE: Found existing toolbit {original_id}, using reference"
+                )
             except FileNotFoundError:
                 # Toolbit doesn't exist, save it as new
-                Path.Log.info(f"COPY PASTE: Toolbit {original_id} not found, creating new one")
+                Path.Log.info(
+                    f"COPY PASTE: Toolbit {original_id} not found, creating new one"
+                )
                 self._asset_manager.add(toolbit)
                 existing_toolbit = toolbit
 
@@ -494,7 +522,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
         try:
             source_library = cast(
                 Library,
-                self._asset_manager.get(source_library_uri, store=self._store_name, depth=1),
+                self._asset_manager.get(
+                    source_library_uri, store=self._store_name, depth=1
+                ),
             )
         except FileNotFoundError:
             Path.Log.warning(f"Source library {source_library_uri_str} not found.\n")
@@ -506,7 +536,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
                 continue
 
             toolbit_data_bytes = toolbit_yaml_str.encode("utf-8")
-            toolbit = YamlToolBitSerializer.deserialize(toolbit_data_bytes, dependencies=None)
+            toolbit = YamlToolBitSerializer.deserialize(
+                toolbit_data_bytes, dependencies=None
+            )
 
             # Get the original toolbit ID and find the existing toolbit
             original_id = toolbit.id
@@ -517,7 +549,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
                 existing_toolbit = self._asset_manager.get(
                     toolbit_uri, store=["local", "builtin"], depth=0
                 )
-                Path.Log.info(f"CUT PASTE: Found existing toolbit {original_id}, using reference")
+                Path.Log.info(
+                    f"CUT PASTE: Found existing toolbit {original_id}, using reference"
+                )
 
                 # Remove from source library, add to target library
                 source_library.remove_bit(existing_toolbit)
@@ -525,7 +559,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
                 if added_toolbit:
                     new_uris.add(str(existing_toolbit.get_uri()))
             except FileNotFoundError:
-                Path.Log.warning(f"CUT PASTE: Toolbit {original_id} not found in asset manager")
+                Path.Log.warning(
+                    f"CUT PASTE: Toolbit {original_id} not found in asset manager"
+                )
 
         if new_uris:
             # Save the modified libraries
@@ -547,7 +583,8 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
             self,
             FreeCAD.Qt.translate("CAM", "Confirm Removal"),
             FreeCAD.Qt.translate(
-                "CAM", "Are you sure you want to remove the selected toolbit(s) from the library?"
+                "CAM",
+                "Are you sure you want to remove the selected toolbit(s) from the library?",
             ),
             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
             QtGui.QMessageBox.No,
@@ -565,7 +602,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
                 library.remove_bit_by_uri(uri_string)
                 removed_count += 1
             except Exception as e:
-                Path.Log.error(f"Failed to remove toolbit {uri_string} from library: {e}\n")
+                Path.Log.error(
+                    f"Failed to remove toolbit {uri_string} from library: {e}\n"
+                )
 
         if removed_count > 0:
             self._asset_manager.add(library)
@@ -577,7 +616,9 @@ class LibraryBrowserWidget(ToolBitBrowserWidget):
         self._tool_type_combo.blockSignals(True)
         try:
             self._tool_type_combo.clear()
-            self._tool_type_combo.addItem(FreeCAD.Qt.translate("CAM", "All Toolbit Types"))
+            self._tool_type_combo.addItem(
+                FreeCAD.Qt.translate("CAM", "All Toolbit Types")
+            )
 
             for tool_type in self._get_available_tool_types():
                 self._tool_type_combo.addItem(tool_type)
@@ -624,7 +665,9 @@ class LibraryBrowserWithCombo(LibraryBrowserWidget):
 
         # Library selection combo box
         self._library_combo = QtGui.QComboBox()
-        self._library_combo.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        self._library_combo.setSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred
+        )
         self._top_layout.insertWidget(0, self._library_combo, 1)
         self._library_combo.currentIndexChanged.connect(self._on_library_combo_changed)
 
@@ -665,7 +708,9 @@ class LibraryBrowserWithCombo(LibraryBrowserWidget):
     def refresh(self):
         """Reads available libraries and refreshes the combo box and toolbits."""
         Path.Log.debug("refresh(): Fetching and populating libraries and toolbits.")
-        libraries = self._asset_manager.fetch("toolbitlibrary", store=self._store_name, depth=0)
+        libraries = self._asset_manager.fetch(
+            "toolbitlibrary", store=self._store_name, depth=0
+        )
         self._in_refresh = True
         try:
             self._library_combo.clear()

@@ -119,7 +119,6 @@ requirements:
     - smesh
     - vtk
     - xerces-c
-    - yaml-cpp
     - zlib
 
     - if: win
@@ -149,8 +148,6 @@ requirements:
     - pycollada
     - pyside6
     - python>=3.11,<3.12
-    - pythonocc-core
-    - pyyaml
     - qt6-main>=6.8,<6.9
     - typing_extensions
     - vtk

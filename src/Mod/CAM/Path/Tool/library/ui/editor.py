@@ -22,7 +22,14 @@
 # *   USA                                                                   *
 # *                                                                         *
 # ***************************************************************************
-import yaml
+import sys
+import os
+
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "Material")
+)
+from Material import yaml_parser as yaml
+
 import pathlib
 import FreeCAD
 import FreeCADGui
@@ -90,7 +97,9 @@ class LibraryEditor(QWidget):
             parent=self,
         )
         self.browser.setDragEnabled(True)
-        self.form.verticalLayout_2.layout().replaceWidget(self.form.toolTable, self.browser)
+        self.form.verticalLayout_2.layout().replaceWidget(
+            self.form.toolTable, self.browser
+        )
         self.form.toolTable.hide()
 
         # Connect signals.
@@ -194,10 +203,15 @@ class LibraryEditor(QWidget):
         target_library = cast(Library, cam_assets.get(target_library_uri, depth=1))
 
         try:
-            clipboard_content_yaml = mime_data.data(ToolBitUriListMimeType).data().decode("utf-8")
+            clipboard_content_yaml = (
+                mime_data.data(ToolBitUriListMimeType).data().decode("utf-8")
+            )
             clipboard_data_dict = yaml.safe_load(clipboard_content_yaml)
 
-            if not isinstance(clipboard_data_dict, dict) or "toolbits" not in clipboard_data_dict:
+            if (
+                not isinstance(clipboard_data_dict, dict)
+                or "toolbits" not in clipboard_data_dict
+            ):
                 event.ignore()
                 return True
 
@@ -217,7 +231,10 @@ class LibraryEditor(QWidget):
 
                             # Remove the toolbit from the current library if it exists and
                             # it's not "all_tools"
-                            if current_library and current_library.get_id() != "all_tools":
+                            if (
+                                current_library
+                                and current_library.get_id() != "all_tools"
+                            ):
                                 current_library.remove_bit(toolbit)
                 except Exception as e:
                     Path.Log.error(f"Failed to load toolbit from URI {uri}: {e}")
@@ -304,7 +321,9 @@ class LibraryEditor(QWidget):
             # Fetch library assets themselves, not their deep dependencies (toolbits).
             # depth=0 means "fetch this asset, but not its dependencies"
             # The 'fetch' method returns actual Asset objects.
-            libraries = cast(List[Library], cam_assets.fetch(asset_type="toolbitlibrary", depth=0))
+            libraries = cast(
+                List[Library], cam_assets.fetch(asset_type="toolbitlibrary", depth=0)
+            )
         except Exception as e:
             Path.Log.error(f"Failed to fetch toolbit libraries: {e}")
             return
@@ -429,9 +448,9 @@ class LibraryEditor(QWidget):
             QMessageBox.critical(
                 self,
                 FreeCAD.Qt.translate("CAM", "Error"),
-                FreeCAD.Qt.translate("CAM", "Failed to delete library '{0}': {1}").format(
-                    current_library.label, str(e)
-                ),
+                FreeCAD.Qt.translate(
+                    "CAM", "Failed to delete library '{0}': {1}"
+                ).format(current_library.label, str(e)),
             )
 
     def _on_rename_library_requested(self):
@@ -453,7 +472,10 @@ class LibraryEditor(QWidget):
         """Handles request to import a library."""
         Path.Log.debug("_on_import_library_requested: Called.")
         dialog = AssetOpenDialog(
-            cam_assets, asset_class=Library, serializers=library_serializers, parent=self
+            cam_assets,
+            asset_class=Library,
+            serializers=library_serializers,
+            parent=self,
         )
         response = dialog.exec_()
         if not response:
@@ -469,7 +491,9 @@ class LibraryEditor(QWidget):
             QMessageBox.critical(
                 self,
                 FreeCAD.Qt.translate("CAM", "Error"),
-                FreeCAD.Qt.translate("CAM", f"Failed to import library: {file_path} {e}"),
+                FreeCAD.Qt.translate(
+                    "CAM", f"Failed to import library: {file_path} {e}"
+                ),
             )
 
     def _on_export_library_requested(self):
@@ -479,7 +503,9 @@ class LibraryEditor(QWidget):
         if not current_library:
             return
 
-        dialog = AssetSaveDialog(asset_class=Library, serializers=library_serializers, parent=self)
+        dialog = AssetSaveDialog(
+            asset_class=Library, serializers=library_serializers, parent=self
+        )
         dialog.exec_(current_library)
         self._update_button_states()
 
@@ -507,7 +533,9 @@ class LibraryEditor(QWidget):
 
             # Save the individual toolbit asset first
             tool_asset_uri = cam_assets.add(new_toolbit)
-            Path.Log.debug(f"_on_add_toolbit_requested: Saved tool with URI: {tool_asset_uri}")
+            Path.Log.debug(
+                f"_on_add_toolbit_requested: Saved tool with URI: {tool_asset_uri}"
+            )
 
             # Add the toolbit to the current library if one is selected
             if current_library:
@@ -551,7 +579,10 @@ class LibraryEditor(QWidget):
             return
 
         dialog = AssetOpenDialog(
-            cam_assets, asset_class=ToolBit, serializers=toolbit_serializers, parent=self
+            cam_assets,
+            asset_class=ToolBit,
+            serializers=toolbit_serializers,
+            parent=self,
         )
         response = dialog.exec_()
         if not response:
@@ -573,7 +604,9 @@ class LibraryEditor(QWidget):
         Path.Log.info(f"IMPORT CHECK: toolbit_uri={toolbit_uri}")
         existing_toolbit = None
         try:
-            existing_toolbit = cam_assets.get(toolbit_uri, store=["local", "builtin"], depth=0)
+            existing_toolbit = cam_assets.get(
+                toolbit_uri, store=["local", "builtin"], depth=0
+            )
             Path.Log.info(
                 f"IMPORT CHECK: Toolbit {toolbit.id} already exists, using existing reference"
             )
@@ -599,7 +632,9 @@ class LibraryEditor(QWidget):
             self.browser.select_by_uri([str(existing_toolbit.get_uri())])
             self._update_button_states()
         else:
-            Path.Log.warning(f"IMPORT ADD: Failed to add toolbit {existing_toolbit.id} to library")
+            Path.Log.warning(
+                f"IMPORT ADD: Failed to add toolbit {existing_toolbit.id} to library"
+            )
             Path.Log.warning(
                 f"IMPORT FAILED: Failed to import toolbit from {file_path} to library {current_library.label}."
             )
@@ -630,11 +665,17 @@ class LibraryEditor(QWidget):
             QMessageBox.warning(
                 self,
                 FreeCAD.Qt.translate("CAM", "Warning"),
-                FreeCAD.Qt.translate("CAM", "Please select only one toolbit to export."),
+                FreeCAD.Qt.translate(
+                    "CAM", "Please select only one toolbit to export."
+                ),
             )
             return
 
         toolbit_to_export = selected_toolbits[0]
-        dialog = AssetSaveDialog(asset_class=ToolBit, serializers=toolbit_serializers, parent=self)
-        dialog.exec_(toolbit_to_export)  # This will open the save dialog and handle the export
+        dialog = AssetSaveDialog(
+            asset_class=ToolBit, serializers=toolbit_serializers, parent=self
+        )
+        dialog.exec_(
+            toolbit_to_export
+        )  # This will open the save dialog and handle the export
         self._update_button_states()

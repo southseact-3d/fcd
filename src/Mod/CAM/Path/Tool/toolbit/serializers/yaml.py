@@ -23,7 +23,14 @@
 # *                                                                         *
 # ***************************************************************************
 
-import yaml
+import sys
+import os
+
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "Material")
+)
+from Material import yaml_parser as yaml
+
 from typing import List, Optional, Mapping, Type
 from ...assets.serializer import AssetSerializer
 from ...assets.uri import AssetUri

@@ -175,18 +175,6 @@ list(APPEND FreeCADGui_LIBS
     ${QtUiTools_LIBRARIES}
 )
 
-link_directories(${YAML_CPP_LIBRARY_DIR})
-
-if(yaml-cpp_VERSION VERSION_LESS 0.8.0)
-    list(APPEND FreeCADGui_LIBS
-            ${YAML_CPP_LIBRARIES}
-    )
-else()
-    list(APPEND FreeCADGui_LIBS
-            yaml-cpp::yaml-cpp
-    )
-endif()
-
 if(${Qt5WinExtras_FOUND})
     target_include_directories(
         FreeCADGui

@@ -28,7 +28,7 @@
 
 #include <QDir>
 #include <QString>
-#include <yaml-cpp/yaml.h>
+#include <Base/YamlParser.h>
 
 #include "Model.h"
 #include "ModelLibrary.h"
@@ -44,7 +44,7 @@ public:
                const QString& modelName,
                const QString& dir,
                const QString& modelUuid,
-               const YAML::Node& modelData);
+               const Base::YamlNode& modelData);
     virtual ~ModelEntry() = default;
 
     std::shared_ptr<ModelLibraryLocal> getLibrary() const
@@ -67,11 +67,11 @@ public:
     {
         return _uuid;
     }
-    const YAML::Node& getModel() const
+    const Base::YamlNode& getModel() const
     {
         return _model;
     }
-    YAML::Node* getModelPtr()
+    Base::YamlNode* getModelPtr()
     {
         return &_model;
     }
@@ -93,7 +93,7 @@ private:
     QString _name;
     QString _directory;
     QString _uuid;
-    YAML::Node _model;
+    Base::YamlNode _model;
     bool _dereferenced;
 };
 
@@ -111,10 +111,10 @@ private:
 
     void getModelLibraries();
     QString
-    yamlValue(const YAML::Node& node, const std::string& key, const std::string& defaultValue);
+    yamlValue(const Base::YamlNode& node, const std::string& key, const std::string& defaultValue);
     void addToTree(std::shared_ptr<ModelEntry> model,
                    std::map<std::pair<QString, QString>, QString>* inheritances);
-    void showYaml(const YAML::Node& yaml) const;
+    void showYaml(const Base::YamlNode& yaml) const;
     void dereference(const QString& uuid,
                      std::shared_ptr<ModelEntry> parent,
                      std::shared_ptr<ModelEntry> child,
