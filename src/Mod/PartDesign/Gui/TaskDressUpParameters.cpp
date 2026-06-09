@@ -441,6 +441,7 @@ void TaskDressUpParameters::setSelectionMode(selectionModes mode)
         AllowSelectionFlags allow;
         allow.setFlag(AllowSelection::EDGE, allowEdges);
         allow.setFlag(AllowSelection::FACE, allowFaces);
+        allow.setFlag(AllowSelection::PLANAR, allowPlanar);
         Gui::Selection().addSelectionGate(new ReferenceSelection(this->getBase(), allow));
 
         DressUpView->highlightReferences(true);

@@ -41,6 +41,7 @@
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
+#include <gp_Vec.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -189,6 +190,30 @@ static TopoDS_Shape makeBrickFace(const gp_Pnt& origin, double width, double hei
     return BRepBuilderAPI_MakeFace(wire).Face();
 }
 
+static TopoDS_Shape makeBrickFace(
+    const gp_Pnt& origin, const gp_Vec& uDir, const gp_Vec& vDir)
+{
+    gp_Pnt p1(origin);
+    gp_Pnt p2(origin.XYZ() + uDir.XYZ());
+    gp_Pnt p3(origin.XYZ() + uDir.XYZ() + vDir.XYZ());
+    gp_Pnt p4(origin.XYZ() + vDir.XYZ());
+
+    BRep_Builder builder;
+    TopoDS_Wire wire;
+    builder.MakeWire(wire);
+
+    auto makeEdge = [](const gp_Pnt& a, const gp_Pnt& b) -> TopoDS_Edge {
+        return BRepBuilderAPI_MakeEdge(a, b).Edge();
+    };
+
+    builder.Add(wire, makeEdge(p1, p2));
+    builder.Add(wire, makeEdge(p2, p3));
+    builder.Add(wire, makeEdge(p3, p4));
+    builder.Add(wire, makeEdge(p4, p1));
+
+    return BRepBuilderAPI_MakeFace(wire).Face();
+}
+
 App::DocumentObjectExecReturn* BrickTexture::execute()
 {
     if (onlyHaveRefined()) {
@@ -252,15 +277,28 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
 
             gp_Pln plane = surface.Plane();
             gp_Dir normal = plane.Axis().Direction();
-            gp_Pnt loc = plane.Location();
 
-            Bnd_Box bbox;
-            BRepBndLib::Add(face, bbox);
-            double xMin, yMin, zMin, xMax, yMax, zMax;
-            bbox.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+            // Use surface parameterization to get face extent and orientation
+            double uMin = surface.FirstUParameter();
+            double uMax = surface.LastUParameter();
+            double vMin = surface.FirstVParameter();
+            double vMax = surface.LastVParameter();
 
-            double faceW = xMax - xMin;
-            double faceH = yMax - yMin;
+            gp_Pnt p00 = surface.Value(uMin, vMin);
+            gp_Pnt p10 = surface.Value(uMax, vMin);
+            gp_Pnt p01 = surface.Value(uMin, vMax);
+
+            gp_Vec uAxis(p00, p10);
+            gp_Vec vAxis(p00, p01);
+            double faceW = uAxis.Magnitude();
+            double faceH = vAxis.Magnitude();
+
+            if (faceW < 1e-7 || faceH < 1e-7) {
+                continue;
+            }
+
+            uAxis.Normalize();
+            vAxis.Normalize();
 
             int cols = static_cast<int>(std::ceil(faceW / (brickW + mortarT)));
             int rows = static_cast<int>(std::ceil(faceH / (brickH + mortarT)));
@@ -269,21 +307,24 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
                 continue;
             }
 
-            gp_Trsf faceTrsf;
-            faceTrsf.SetTransformation(gp_Ax3(gp_Pnt(0, 0, 0), normal), gp_Ax3(loc, normal));
+            // Direction vectors scaled by brick+mortar pitch
+            gp_Vec uStep = uAxis * (brickW + mortarT);
+            gp_Vec vStep = vAxis * (brickH + mortarT);
+            gp_Vec uBrick = uAxis * brickW;
+            gp_Vec vBrick = vAxis * brickH;
 
-            double offsetDx = xMin;
-            double offsetDy = yMin;
+            // Row offset vector for running bond pattern
+            gp_Vec rowOffVec = uAxis * (rowOff * brickW);
 
             for (int row = 0; row < rows; row++) {
-                double rowOffsetX = (row % 2 == 1) ? rowOff * brickW : 0.0;
+                gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
 
                 for (int col = -1; col <= cols; col++) {
-                    double bx = offsetDx + col * (brickW + mortarT) + rowOffsetX;
-                    double by = offsetDy + row * (brickH + mortarT);
-
-                    gp_Pnt brickOrigin(bx, by, 0.0);
-                    TopoDS_Shape brick2D = makeBrickFace(brickOrigin, brickW, brickH);
+                    gp_Pnt brickOrigin(p00.XYZ()
+                        + uStep.XYZ() * col
+                        + vStep.XYZ() * row
+                        + rowOffset.XYZ());
+                    TopoDS_Shape brick2D = makeBrickFace(brickOrigin, uBrick, vBrick);
 
                     try {
                         BRepAlgoAPI_Common common(face, brick2D);
@@ -315,23 +356,25 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
             }
 
             if (mortarD > 0) {
+                // Horizontal mortar strips
                 for (int row = 0; row <= rows; row++) {
-                    double rowOffsetX = (row % 2 == 1) ? rowOff * brickW : 0.0;
-
-                    double hx = offsetDx - brickD;
-                    double hy = offsetDy + row * (brickH + mortarT) - mortarT / 2.0;
-                    double hw = faceW + 2 * brickD;
-                    double hh = mortarT;
-
+                    double mortarOffsetFrac = 0.0;
                     if (row == 0) {
-                        hy = offsetDy - mortarT;
+                        mortarOffsetFrac = -1.0;
                     }
                     else if (row == rows) {
-                        hy = offsetDy + rows * (brickH + mortarT);
+                        mortarOffsetFrac = 1.0;
                     }
 
-                    gp_Pnt mortarOrigin(hx, hy, 0.0);
-                    TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, hw, hh);
+                    gp_Pnt mortarOrigin(p00.XYZ()
+                        + vStep.XYZ() * row
+                        - vAxis.XYZ() * (mortarT / 2.0)
+                        + mortarOffsetFrac * vAxis.XYZ() * (mortarT / 2.0)
+                        - uAxis.XYZ() * brickD);
+
+                    gp_Vec mortarWidth = uAxis * (faceW + 2 * brickD);
+                    gp_Vec mortarHeight = vAxis * mortarT;
+                    TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, mortarWidth, mortarHeight);
 
                     try {
                         BRepAlgoAPI_Common common(face, mortar2D);
@@ -360,45 +403,48 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
                         continue;
                     }
                 }
-            }
 
-            for (int row = 0; row < rows; row++) {
-                double rowOffsetX = (row % 2 == 1) ? rowOff * brickW : 0.0;
+                // Vertical mortar strips
+                for (int row = 0; row < rows; row++) {
+                    gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
 
-                for (int col = 0; col <= cols; col++) {
-                    double vx = offsetDx + col * (brickW + mortarT) + rowOffsetX - mortarT / 2.0;
-                    double vy = offsetDy + row * (brickH + mortarT);
-                    double vw = mortarT;
-                    double vh = brickH + mortarT;
+                    for (int col = 0; col <= cols; col++) {
+                        gp_Pnt mortarOrigin(p00.XYZ()
+                            + uStep.XYZ() * col
+                            + vStep.XYZ() * row
+                            + rowOffset.XYZ()
+                            - uAxis.XYZ() * (mortarT / 2.0));
 
-                    gp_Pnt mortarOrigin(vx, vy, 0.0);
-                    TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, vw, vh);
+                        gp_Vec mortarWidth = uAxis * mortarT;
+                        gp_Vec mortarHeight = vAxis * (brickH + mortarT);
+                        TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, mortarWidth, mortarHeight);
 
-                    try {
-                        BRepAlgoAPI_Common common(face, mortar2D);
-                        if (!common.IsDone()) {
-                            continue;
-                        }
-                        TopoDS_Shape clipped = common.Shape();
-
-                        if (clipped.IsNull()) {
-                            continue;
-                        }
-                        {
-                            TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
-                            if (!anExplorer.More()) {
+                        try {
+                            BRepAlgoAPI_Common common(face, mortar2D);
+                            if (!common.IsDone()) {
                                 continue;
                             }
+                            TopoDS_Shape clipped = common.Shape();
+
+                            if (clipped.IsNull()) {
+                                continue;
+                            }
+                            {
+                                TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
+                                if (!anExplorer.More()) {
+                                    continue;
+                                }
+                            }
+
+                            gp_Vec extrudeVec(normal);
+                            extrudeVec.Multiply(-mortarD);
+                            TopoDS_Shape mortar3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+
+                            builder.Add(compound, mortar3D);
                         }
-
-                        gp_Vec extrudeVec(normal);
-                        extrudeVec.Multiply(-mortarD);
-                        TopoDS_Shape mortar3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
-
-                        builder.Add(compound, mortar3D);
-                    }
-                    catch (Standard_Failure&) {
-                        continue;
+                        catch (Standard_Failure&) {
+                            continue;
+                        }
                     }
                 }
             }
