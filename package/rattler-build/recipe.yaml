@@ -112,12 +112,10 @@ requirements:
     - occt>=7.8,<7.9
     - pcl
     - pivy
-    - ply
     - pybind11
     - pyside6
     - python>=3.11,<3.12
     - qt6-main>=6.8,<6.9
-    - six
     - smesh
     - vtk
     - xerces-c
@@ -140,40 +138,22 @@ requirements:
 
   run:
     - blas * openblas*
-    - blinker
     - calculix
-    - debugpy
-    - defusedxml
-    - docutils
     - gmsh
-    - graphviz
     - ifcopenshell
-    - lark
-    - lxml
     - matplotlib-base
-    - nine
-    - noqt5
     - numpy>=1.26,<2
     - occt>=7.8,<7.9
-    - olefile
     - opencamlib
-    - opencv
-    - pandas
-    - pip
     - pivy
-    - ply
     - pycollada
     - pyside6
     - python>=3.11,<3.12
     - pythonocc-core
     - pyyaml
     - qt6-main>=6.8,<6.9
-    - requests
-    - scipy
-    - sympy
     - typing_extensions
     - vtk
-    - xlutils
 
     - if: linux
       then:

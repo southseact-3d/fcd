@@ -25,143 +25,190 @@ __title__ = "FEM Utilities"
 __author__ = "Werner Mayer"
 __url__ = "https://www.freecad.org"
 
-tokens = (
-    "NAME",
-    "FLOAT",
-    "INT",
-    "PLUS",
-    "MINUS",
-    "TIMES",
-    "DIVIDE",
-    "EQUALS",
-    "LPAREN",
-    "RPAREN",
-    "POWER",
-)
-
-# Tokens
-
-t_PLUS = r"\+"
-t_MINUS = r"-"
-t_TIMES = r"\*"
-t_DIVIDE = r"/"
-t_EQUALS = r"="
-t_LPAREN = r"\("
-t_RPAREN = r"\)"
-t_POWER = r"\^"
-t_NAME = r"[a-zA-Z_][a-zA-Z0-9_]*"
-
-
-def t_FLOAT(t):
-    r"\d+\.(\d+)?([eE][-+]?\d+)?"
-    t.value = float(t.value)
-    return t
-
-
-def t_INT(t):
-    r"\d+"
-    t.value = int(t.value)
-    return t
-
-
-# Ignored characters
-t_ignore = " \t"
-
-
-def t_COMMENT(t):
-    r"\#.*"
-    pass
-
-
-def t_newline(t):
-    r"\n+"
-    t.lexer.lineno += t.value.count("\n")
-
-
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
-
-
-# Build the lexer
-import ply.lex as lex
-
-lex.lex()
-
-
-# Precedence rules for the arithmetic operators
-precedence = (
-    ("left", "PLUS", "MINUS"),
-    ("left", "TIMES", "DIVIDE"),
-    ("left", "POWER"),
-    ("right", "UMINUS"),
-)
+import re
+import math
 
 # dictionary of names (for storing variables)
 names = {}
 
 
-def p_statement_assign(p):
-    "statement : NAME EQUALS expression"
-    names[p[1]] = p[3]
+# ── Lexer ──────────────────────────────────────────────────────────────────
+
+_TOKEN_SPEC = [
+    ("FLOAT", r"\d+\.\d*([eE][+-]?\d+)?"),
+    ("INT", r"\d+"),
+    ("NAME", r"[a-zA-Z_][a-zA-Z0-9_]*"),
+    ("POWER", r"\^"),
+    ("PLUS", r"\+"),
+    ("MINUS", r"-"),
+    ("TIMES", r"\*"),
+    ("DIVIDE", r"/"),
+    ("EQUALS", r"="),
+    ("LPAREN", r"\("),
+    ("RPAREN", r"\)"),
+    ("COMMENT", r"\#.*"),
+    ("NEWLINE", r"\n+"),
+    ("SKIP", r"[ \t]+"),
+    ("MISMATCH", r"."),
+]
+
+_tok_regex = "|".join("(?P<%s>%s)" % pair for pair in _TOKEN_SPEC)
+_tok_re = re.compile(_tok_regex)
 
 
-def p_statement_expr(p):
-    "statement : expression"
-    print(p[1])
+def _tokenize(input_text):
+    """Yield (type, value, lineno) tokens from *input_text*."""
+    lineno = 1
+    for m in _tok_re.finditer(input_text):
+        kind = m.lastgroup
+        value = m.group()
+        if kind == "NEWLINE":
+            lineno += value.count("\n")
+            continue
+        elif kind == "SKIP" or kind == "COMMENT":
+            continue
+        elif kind == "MISMATCH":
+            raise SyntaxError("Illegal character %r" % value)
+        elif kind == "FLOAT":
+            yield (kind, float(value), lineno)
+        elif kind == "INT":
+            yield (kind, int(value), lineno)
+        else:
+            yield (kind, value, lineno)
 
 
-def p_expression_binop(p):
-    """expression : expression PLUS expression
-    | expression MINUS expression
-    | expression TIMES expression
-    | expression DIVIDE expression
-    | expression POWER expression"""
-    if p[2] == "+":
-        p[0] = p[1] + p[3]
-    elif p[2] == "-":
-        p[0] = p[1] - p[3]
-    elif p[2] == "*":
-        p[0] = p[1] * p[3]
-    elif p[2] == "/":
-        p[0] = p[1] / p[3]
-    elif p[2] == "^":
-        p[0] = p[1] ** p[3]
+# ── Recursive-descent parser ───────────────────────────────────────────────
 
 
-def p_expression_uminus(p):
-    "expression : MINUS expression %prec UMINUS"
-    p[0] = -p[2]
+class _Parser:
+    """Parse ``NAME = expression`` or bare ``expression``.
+
+    Operator precedence (low → high):
+        +  -       (left)
+        *  /       (left)
+        ^          (right)
+        unary -    (right)
+    """
+
+    def __init__(self, tokens):
+        self._tokens = list(tokens)
+        self._pos = 0
+
+    # ── helpers ─────────────────────────────────────────────────────────
+    def _peek(self):
+        if self._pos < len(self._tokens):
+            return self._tokens[self._pos]
+        return None
+
+    def _advance(self):
+        tok = self._tokens[self._pos]
+        self._pos += 1
+        return tok
+
+    def _expect(self, kind):
+        tok = self._advance()
+        if tok[0] != kind:
+            raise SyntaxError("Expected %s, got %s" % (kind, tok[0]))
+        return tok
+
+    # ── grammar rules ───────────────────────────────────────────────────
+
+    def parse(self):
+        """entry: statement"""
+        tok = self._peek()
+        if tok is None:
+            return
+        # NAME EQUALS expression  →  assignment
+        if tok[0] == "NAME":
+            saved = self._pos
+            name_tok = self._advance()
+            if self._peek() and self._peek()[0] == "EQUALS":
+                self._advance()  # consume =
+                val = self._expression()
+                names[name_tok[1]] = val
+                return
+            else:
+                # not an assignment – backtrack and parse as expression
+                self._pos = saved
+        self._expression()
+
+    def _expression(self):
+        """expression → term (('+' | '-') term)*"""
+        left = self._term()
+        while self._peek() and self._peek()[0] in ("PLUS", "MINUS"):
+            op = self._advance()[1]
+            right = self._term()
+            if op == "+":
+                left = left + right
+            else:
+                left = left - right
+        return left
+
+    def _term(self):
+        """term → power (('*' | '/') power)*"""
+        left = self._power()
+        while self._peek() and self._peek()[0] in ("TIMES", "DIVIDE"):
+            op = self._advance()[1]
+            right = self._power()
+            if op == "*":
+                left = left * right
+            else:
+                left = left / right
+        return left
+
+    def _power(self):
+        """power → unary ('^' unary)*   (right-associative)"""
+        left = self._unary()
+        if self._peek() and self._peek()[0] == "POWER":
+            self._advance()
+            right = self._power()  # right-associative
+            left = left**right
+        return left
+
+    def _unary(self):
+        """unary → '-' unary | atom"""
+        if self._peek() and self._peek()[0] == "MINUS":
+            self._advance()
+            return -self._unary()
+        return self._atom()
+
+    def _atom(self):
+        tok = self._peek()
+        if tok is None:
+            raise SyntaxError("Unexpected end of input")
+        kind = tok[0]
+        if kind == "FLOAT":
+            self._advance()
+            return tok[1]
+        elif kind == "INT":
+            self._advance()
+            return tok[1]
+        elif kind == "LPAREN":
+            self._advance()  # consume (
+            val = self._expression()
+            self._expect("RPAREN")
+            return val
+        elif kind == "NAME":
+            self._advance()
+            try:
+                return names[tok[1]]
+            except LookupError:
+                print("Undefined name '%s'" % tok[1])
+                return 0
+        else:
+            raise SyntaxError("Unexpected token %s" % str(tok))
 
 
-def p_expression_group(p):
-    "expression : LPAREN expression RPAREN"
-    p[0] = p[2]
+# ── Public API (same interface as the old ply-based parser) ────────────────
 
 
-def p_expression_float(p):
-    "expression : FLOAT"
-    p[0] = p[1]
+class _YaccWrapper:
+    """Mimics the ply.yacc parser object used by task_result_mechanical.py."""
+
+    def parse(self, input="", lexer=None):
+        tokens = _tokenize(input)
+        p = _Parser(tokens)
+        p.parse()
 
 
-def p_expression_int(p):
-    "expression : INT"
-    p[0] = p[1]
-
-
-def p_expression_name(p):
-    "expression : NAME"
-    try:
-        p[0] = names[p[1]]
-    except LookupError:
-        print("Undefined name '%s'" % p[1])
-        p[0] = 0
-
-
-def p_error(p):
-    print("Syntax error at '%s'" % p.value)
-
-
-import ply.yacc as yacc
-
-yacc.yacc(debug=False, write_tables=False)
+yacc = _YaccWrapper()

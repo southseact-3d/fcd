@@ -166,13 +166,13 @@ class DebianGitHub(VersionControl):
         self.hash = sha
 
         try:
-            import requests
+            import urllib.request
 
             request_url = "{}/repos/{}/{}/commits?per_page=1&sha={}".format(
                 base_url, owner, repo, sha
             )
-            commit_req = requests.get(request_url)
-            if not commit_req.ok:
+            commit_req = urllib.request.urlopen(request_url)
+            if commit_req.status != 200:
                 return False
 
             commit_date = commit_req.headers.get("last-modified")
@@ -209,10 +209,12 @@ class DebianGitHub(VersionControl):
         try:
             # Try to determine the branch of the sha
             # There is no function of the rest API of GH but with the url below we get HTML code
-            branch_url = "https://github.com/{}/{}/branch_commits/{}".format(owner, repo, sha)
-            branch_req = requests.get(branch_url)
-            if branch_req.ok:
-                html = branch_req.text
+            branch_url = "https://github.com/{}/{}/branch_commits/{}".format(
+                owner, repo, sha
+            )
+            branch_req = urllib.request.urlopen(branch_url)
+            if branch_req.status == 200:
+                html = branch_req.read().decode("utf-8")
                 pattern = '<li class="branch"><a href='
                 start = html.find(pattern) + len(pattern)
                 end = html.find("\n", start)
@@ -258,7 +260,10 @@ class GitControl(VersionControl):
                 l[:-8].split("\t") for l in rrstr.splitlines() if l.endswith(" (fetch)")
             )
             self.branchlst = (
-                os.popen("git show -s --pretty=%d HEAD").read().strip(" ()\n").split(", ")
+                os.popen("git show -s --pretty=%d HEAD")
+                .read()
+                .strip(" ()\n")
+                .split(", ")
             )  # used for possible remotes
 
     def geturl(self):
@@ -269,9 +274,9 @@ class GitControl(VersionControl):
                 if remote in self.remotes:
                     url = self.remotes[remote]
                     # rewrite github to public url
-                    match = re.match(r"git@github\.com:(\S+?)/(\S+\.git)", url) or re.match(
-                        r"https://github\.com/(\S+)/(\S+\.git)", url
-                    )
+                    match = re.match(
+                        r"git@github\.com:(\S+?)/(\S+\.git)", url
+                    ) or re.match(r"https://github\.com/(\S+)/(\S+\.git)", url)
                     if match is not None:
                         url = "git://github.com/%s/%s" % match.groups()
                     match = re.match(r"ssh://\S+?@(\S+)", url)
@@ -306,7 +311,9 @@ class GitControl(VersionControl):
 
         result = None
         null_device = "nul" if os.name == "nt" else "/dev/null"
-        countallfh = os.popen(f"git rev-list --count {referencecommit}..HEAD 2>{null_device}")
+        countallfh = os.popen(
+            f"git rev-list --count {referencecommit}..HEAD 2>{null_device}"
+        )
         countallstr = countallfh.read().strip()
         if countallfh.close() is not None:  # reference commit not present, use the date
             date_object = datetime.datetime.strptime(self.date, "%Y/%m/%d %H:%M:%S")
@@ -326,7 +333,9 @@ class GitControl(VersionControl):
             if mbfh.close() is None:  # exit code == 0
                 try:
                     countmergebase = int(
-                        os.popen("git rev-list --count %s..%s" % (referencecommit, mergebase))
+                        os.popen(
+                            "git rev-list --count %s..%s" % (referencecommit, mergebase)
+                        )
                         .read()
                         .strip()
                     )
@@ -351,7 +360,12 @@ class GitControl(VersionControl):
             names = []
             hasnames = 0
             for p in parents:
-                refs = os.popen("git show -s --pretty=%%d %s" % p).read().strip(" ()\n").split(", ")
+                refs = (
+                    os.popen("git show -s --pretty=%%d %s" % p)
+                    .read()
+                    .strip(" ()\n")
+                    .split(", ")
+                )
                 if refs[0] != "":  # has a ref name
                     parentrefs.append(refs)
                     names.append(refs[-1])
@@ -401,7 +415,9 @@ class GitControl(VersionControl):
             if len(self.branchlst) >= 2:
                 self.branch = self.branchlst[1]
             else:  # guess
-                self.branch = "(%s)" % os.popen("git describe --all --dirty").read().strip()
+                self.branch = (
+                    "(%s)" % os.popen("git describe --all --dirty").read().strip()
+                )
         # if the branch name contained any slashes but was not a remote
         # there might be no result by now. Hence we assume origin
         if self.url == "Unknown":
