@@ -212,6 +212,8 @@ private:
     bool m_Hovering = false;
 
     SbVec2s m_LastMouse = SbVec2s(0, 0);
+    SbVec3f m_AnchorPoint;
+    SbRotation m_SavedOrientation;
 
     SbVec2f m_RelPos = SbVec2f(1.0f, 1.0f);
     SbVec2s m_PosAreaBase = SbVec2s(0, 0);
@@ -1208,6 +1210,7 @@ bool NaviCubeImplementation::mouseReleased(short x, short y)
     }
     else if (m_Rotating) {
         m_Rotating = false;
+        m_AnchorPoint = SbVec3f(0, 0, 0);
     }
     else {
         PickId pickId = pickFace(x, y);
@@ -1286,11 +1289,18 @@ SbVec3f NaviCubeImplementation::projectToSphere(const SbVec2f& screenPos)
 
     SbVec3f result;
     if (x2y2 <= r2 * 0.5f) {
+        // Inside the inner hemisphere — project onto sphere
         result.setValue(x, y, sqrtf(r2 - x2y2));
     }
-    else {
+    else if (x2y2 <= r2) {
+        // Between inner hemisphere and sphere edge — project onto hyperbolic sheet
         float halfR2 = r2 * 0.5f;
         result.setValue(x, y, halfR2 / sqrtf(x2y2));
+    }
+    else {
+        // Outside the sphere — clamp to nearest point on sphere edge
+        float scale = r / sqrtf(x2y2);
+        result.setValue(x * scale, y * scale, 0.0f);
     }
     result.normalize();
     return result;
@@ -1343,25 +1353,34 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
             if (dx || dy) {
                 qreal halfSize = getPhysicalCubeWidgetSize() / 2.0;
                 float vHalfSize = (float)halfSize * 2.0f;
-                SbVec2f lastPos(
-                    (float)m_LastMouse[0] / (float)halfSize,
-                    (float)m_LastMouse[1] / vHalfSize
-                );
+
+                // On first frame of rotation, save anchor point and orientation
+                if (m_AnchorPoint == SbVec3f(0, 0, 0)) {
+                    SbVec2f anchorPos(
+                        (float)m_LastMouse[0] / (float)halfSize,
+                        (float)m_LastMouse[1] / vHalfSize
+                    );
+                    m_AnchorPoint = projectToSphere(anchorPos);
+                    SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
+                    if (cam) {
+                        m_SavedOrientation = cam->orientation.getValue();
+                    }
+                }
+
+                // Compute current point on sphere and delta rotation from anchor
                 SbVec2f curPos(
                     (float)x / (float)halfSize,
                     (float)y / vHalfSize
                 );
+                SbVec3f currentPoint = projectToSphere(curPos);
 
-                SbVec3f from = projectToSphere(lastPos);
-                SbVec3f to = projectToSphere(curPos);
-
-                SbVec3f axis = to.cross(from);
-                float dot = from.dot(to);
-                SbRotation rotation(axis[0], axis[1], axis[2], dot);
+                SbVec3f axis = currentPoint.cross(m_AnchorPoint);
+                float dot = m_AnchorPoint.dot(currentPoint);
+                SbRotation deltaRotation(axis[0], axis[1], axis[2], dot);
 
                 SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
                 if (cam) {
-                    cam->orientation = rotation * cam->orientation.getValue();
+                    cam->orientation = deltaRotation * m_SavedOrientation;
                 }
                 m_LastMouse = SbVec2s(x, y);
                 return true;
