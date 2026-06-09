@@ -23,9 +23,12 @@
  ***************************************************************************/
 
 
+#include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
 #include <Gui/ToolBarManager.h>
+#include <QToolBar>
 
+#include "ReverseEngineeringPartToolsWidget.h"
 #include "Workbench.h"
 
 
@@ -96,4 +99,21 @@ Gui::ToolBarItem* Workbench::setupCommandBars() const
     // Part tools
     Gui::ToolBarItem* root = new Gui::ToolBarItem;
     return root;
+}
+
+void Workbench::activated()
+{
+    Gui::Workbench::activated();
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("ReverseEngineering Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new ReverseEngineeringPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
 }

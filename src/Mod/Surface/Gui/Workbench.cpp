@@ -24,9 +24,12 @@
  ***************************************************************************/
 
 
+#include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
 #include <Gui/ToolBarManager.h>
+#include <QToolBar>
 
+#include "SurfacePartToolsWidget.h"
 #include "Workbench.h"
 
 
@@ -77,4 +80,21 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
      */
 
     return root;
+}
+
+void Workbench::activated()
+{
+    Gui::Workbench::activated();
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Surface Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new SurfacePartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
 }

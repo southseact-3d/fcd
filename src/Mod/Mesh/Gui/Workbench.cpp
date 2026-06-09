@@ -25,16 +25,19 @@
 #include <QGroupBox>
 #include <QObject>
 #include <QLabel>
+#include <QToolBar>
 
 
 #include <Gui/Application.h>
 #include <Gui/Command.h>
+#include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
 #include <Gui/Selection/Selection.h>
 #include <Gui/TaskView/TaskView.h>
 #include <Gui/ToolBarManager.h>
 #include <Mod/Mesh/App/MeshFeature.h>
 
+#include "MeshPartToolsWidget.h"
 #include "Workbench.h"
 
 
@@ -148,6 +151,18 @@ void Workbench::activated()
     std::vector<Gui::TaskView::TaskWatcher*> Watcher;
     Watcher.push_back(new MeshInfoWatcher);
     addTaskWatcher(Watcher);
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Mesh Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new MeshPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
 }
 
 void Workbench::deactivated()

@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
 /***************************************************************************
- *   Copyright (c) 2008 Werner Mayer <werner.wm.mayer@gmx.de>              *
+ *   Copyright (c) 2024 liamh <liamh[at]users.sourceforge.net>            *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -21,35 +23,53 @@
  ***************************************************************************/
 
 
-#ifndef FEM_WORKBENCH_H
-#define FEM_WORKBENCH_H
+#ifndef ROBOT_PARTTOOLSWIDGET_H
+#define ROBOT_PARTTOOLSWIDGET_H
 
-#include <Gui/Workbench.h>
-#include <Mod/Fem/FemGlobal.h>
+#include <QWidget>
+#include <QVector>
 
-namespace FemGui
+class QToolButton;
+class QMenu;
+
+namespace RobotGui
 {
 
-/**
- * @author Werner Mayer
- */
-class FemGuiExport Workbench: public Gui::StdWorkbench
+class RobotGroupWidget;
+
+class RobotPartToolsWidget : public QWidget
 {
-    TYPESYSTEM_HEADER_WITH_OVERRIDE();
+    Q_OBJECT
 
 public:
-    Workbench();
-    ~Workbench() override;
-    void activated() override;
-    void deactivated() override;
-    void setupContextMenu(const char* recipient, Gui::MenuItem*) const override;
+    explicit RobotPartToolsWidget(QWidget* parent = nullptr);
 
 protected:
-    Gui::ToolBarItem* setupToolBars() const override;
-    Gui::MenuItem* setupMenuBar() const override;
+    void resizeEvent(QResizeEvent* event) override;
+
+private:
+    RobotGroupWidget* createRobotGroup();
+    RobotGroupWidget* createTrajectoryGroup();
+    RobotGroupWidget* createSimulateGroup();
+
+    QToolButton* createToolButton(const char* cmdName);
+
+    QMenu* buildRobotMenu();
+    QMenu* buildTrajectoryMenu();
+    QMenu* buildSimulateMenu();
+
+    static QIcon commandIcon(const char* cmdName);
+
+    RobotGroupWidget* createGroup(
+        const QString& label,
+        const QVector<const char*>& visibleCommands,
+        QMenu* menu);
+
+    RobotGroupWidget* _robotGroup = nullptr;
+    RobotGroupWidget* _trajectoryGroup = nullptr;
+    RobotGroupWidget* _simulateGroup = nullptr;
 };
 
-}  // namespace FemGui
+}  // namespace RobotGui
 
-
-#endif  // FEM_WORKBENCH_H
+#endif  // ROBOT_PARTTOOLSWIDGET_H

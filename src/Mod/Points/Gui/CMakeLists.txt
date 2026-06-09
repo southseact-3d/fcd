@@ -35,6 +35,8 @@ SET(PointsGui_SRCS
     AppPointsGui.cpp
     Command.cpp
     PreCompiled.h
+    PointsPartToolsWidget.cpp
+    PointsPartToolsWidget.h
     ViewProvider.cpp
     ViewProvider.h
     Workbench.cpp

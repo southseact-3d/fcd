@@ -315,6 +315,8 @@ SET(FemGui_SRCS_Module
     Command.cpp
     FemGuiTools.cpp
     FemGuiTools.h
+    FemPartToolsWidget.cpp
+    FemPartToolsWidget.h
     FemSettings.cpp
     FemSettings.h
     Resources/Fem.qrc

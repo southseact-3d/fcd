@@ -42,6 +42,7 @@ class PointsGuiExport Workbench: public Gui::StdWorkbench
 public:
     Workbench();
     ~Workbench() override;
+    void activated() override;
 
 protected:
     Gui::ToolBarItem* setupToolBars() const override;

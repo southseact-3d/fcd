@@ -79,6 +79,8 @@ SET(SpreadsheetGui_SRCS
     DlgSheetConf.cpp
     ZoomableView.h
     ZoomableView.cpp
+    SpreadsheetPartToolsWidget.cpp
+    SpreadsheetPartToolsWidget.h
     ${SpreadsheetGui_UIC_HDRS}
 )
 

@@ -45,6 +45,8 @@ SET(SurfaceGui_SRCS
     ViewProviderExtend.h
     Workbench.cpp
     Workbench.h
+    SurfacePartToolsWidget.cpp
+    SurfacePartToolsWidget.h
 #    ViewProviderCut.cpp
 #    ViewProviderCut.h
 )

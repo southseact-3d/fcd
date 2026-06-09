@@ -23,13 +23,16 @@
  ***************************************************************************/
 
 
+#include "SketcherPartToolsWidget.h"
 #include "Utils.h"
 #include "Workbench.h"
 #include <Base/Console.h>
 #include <Gui/Application.h>
 #include <Gui/Document.h>
+#include <Gui/MainWindow.h>
 #include <Gui/WorkbenchManager.h>
 #include <Mod/Sketcher/App/Constraint.h>
+#include <QToolBar>
 
 using namespace SketcherGui;
 
@@ -201,6 +204,18 @@ void Workbench::activated()
             nonEditModeToolbarNames(),
             Gui::ToolBarManager::State::ForceHidden
         );
+    }
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Sketcher Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new SketcherPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
     }
 }
 

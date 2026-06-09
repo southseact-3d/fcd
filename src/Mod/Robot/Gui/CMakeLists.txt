@@ -77,6 +77,8 @@ SET(RobotGui_SRCS_TaskBoxes
     TaskTrajectoryDressUpParameter.h
     TaskWatcher.h
     TaskWatcher.cpp
+    RobotPartToolsWidget.cpp
+    RobotPartToolsWidget.h
 )
 SOURCE_GROUP("Task_Boxes" FILES ${RobotGui_SRCS_TaskBoxes})
 
