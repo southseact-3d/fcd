@@ -523,7 +523,7 @@ void StartupPostProcess::activateWorkbench()
     }
 
     // Re-initialize dock windows after restoreState() which can override
-    // visibility of newly added docks like ModelSidebar.
+    // visibility of newly added docks.
     mainWindow->initDockWindows(true);
 
     // initialize spaceball.
