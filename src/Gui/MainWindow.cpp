@@ -56,7 +56,7 @@
 #include <QWindow>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include "ModelSidebar.h"
+
 
 
 #if defined(Q_OS_WIN)
@@ -595,7 +595,6 @@ void MainWindow::initDockWindows(bool show)
     updatePropertyView(show);
     updateComboView(show);
     updateDAGView(show);
-    updateBodyListView(show);
 }
 
 void MainWindow::setupDockWindows()
@@ -782,6 +781,15 @@ bool MainWindow::updateComboView(bool show)
                                          ->GetGroup("DockWindows")
                                          ->GetGroup("ComboView");
         bool enable = group->GetBool("Enabled", true);
+
+        // Force Std_ComboView visibility to always-on so it can never be
+        // accidentally hidden by a stale saved preference in user.cfg.
+        App::GetApplication()
+            .GetUserParameter()
+            .GetGroup("BaseApp")
+            ->GetGroup("MainWindow")
+            ->GetGroup("DockWindows")
+            ->SetBool("Std_ComboView", true);
         _updateDockWidget("Std_ComboView", enable, show, Qt::LeftDockWidgetArea, [](QWidget* widget) {
             auto pcComboView = qobject_cast<ComboView*>(widget);
             if (widget) {
@@ -840,12 +848,6 @@ bool MainWindow::updateDAGView(bool show)
         return enabled;
     }
 
-    return false;
-}
-
-bool MainWindow::updateBodyListView(bool show)
-{
-    Q_UNUSED(show);
     return false;
 }
 

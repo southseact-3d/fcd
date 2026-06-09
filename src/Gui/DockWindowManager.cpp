@@ -165,6 +165,9 @@ struct DockWindowManagerP
 };
 }  // namespace Gui
 
+// Dock widgets that are always visible regardless of saved preferences
+static const QString sAlwaysVisibleDock = QStringLiteral("Std_ComboView");
+
 DockWindowManager* DockWindowManager::_instance = nullptr;
 
 DockWindowManager* DockWindowManager::instance()
@@ -239,7 +242,12 @@ void DockWindowManager::setupOverlayManagement()
             if (auto dw = qobject_cast<QDockWidget*>(w)) {
                 QSignalBlocker blocker(dw);
                 QByteArray dockName = dw->toggleViewAction()->data().toByteArray();
-                dw->setVisible(d->_hPref->GetBool(dockName, dw->isVisible()));
+                if (dockName == sAlwaysVisibleDock) {
+                    dw->setVisible(true);
+                }
+                else {
+                    dw->setVisible(d->_hPref->GetBool(dockName, dw->isVisible()));
+                }
             }
         }
     });
@@ -525,6 +533,9 @@ void DockWindowManager::setup(DockWindowItems* items)
         QDockWidget* dw = findDockWidget(docked, it.name);
         QByteArray dockName = it.name.toLatin1();
         bool visible = d->_hPref->GetBool(dockName.constData(), it.visibility);
+        if (it.name == sAlwaysVisibleDock) {
+            visible = true;
+        }
 
         if (!dw) {
             QMap<QString, QPointer<QWidget>>::Iterator jt = d->_dockWindows.find(it.name);
@@ -551,7 +562,8 @@ void DockWindowManager::setup(DockWindowItems* items)
 
     // Hide dock widgets not listed in the new workbench
     for (auto* dw : docked) {
-        if (dw && dw->isVisible()) {
+        if (dw && dw->isVisible()
+            && dw->toggleViewAction()->data().toString() != sAlwaysVisibleDock) {
             dw->setVisible(false);
         }
     }
@@ -634,6 +646,9 @@ void DockWindowManager::loadState()
         if (dw) {
             QByteArray dockName = it->name.toUtf8();
             bool visible = hPref->GetBool(dockName.constData(), it->visibility);
+            if (it->name == sAlwaysVisibleDock) {
+                visible = true;
+            }
             dw->setVisible(visible);
         }
     }
