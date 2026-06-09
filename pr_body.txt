@@ -1,0 +1,31 @@
+## Summary
+
+Reduce external Python dependencies from 55 to 37 (pixi.toml) and from 36 to 17 (recipe.yaml run deps) by removing unused packages and replacing others with stdlib equivalents.
+
+## What was removed (unused packages)
+
+`nine`, `six`, `blinker`, `lxml`, `scipy`, `pandas`, `sympy`, `xlutils`, `docutils`, `opencv`, `graphviz`, `pre-commit`, `conda-devenv`, `olefile`, `debugpy`, `pip` - all had zero imports in the source code or were dev-only tools.
+
+## What was replaced with stdlib (3 packages)
+
+| Old dependency | Replacement | Files changed |
+|---|---|---|
+| `defusedxml` | `xml.sax` | `src/Tools/doctools.py`, `src/Gui/DocumentRecovery.cpp` |
+| `requests` | `urllib.request` | `src/Tools/githubstats.py`, `src/Tools/SubWCRev.py`, `src/Mod/BIM/bimcommands/BimLibrary.py` |
+| `ply` | Custom recursive descent parser | `src/Mod/Fem/femtools/tokrules.py`, `src/Mod/Fem/femtaskpanels/task_result_mechanical.py`, `src/Mod/OpenSCAD/tokrules.py`, `src/Mod/OpenSCAD/importCSG.py` |
+
+## What was kept in build/host but removed from run deps
+
+`noqt5` and `lark` - moved to build-only in recipe.yaml since they are only needed at compile/build time.
+
+## Dependency count summary
+
+- **pixi.toml**: 55 -> 37 (18 removed)
+- **recipe.yaml run**: 36 -> 17 (19 removed)
+- **Total packages eliminated**: 21
+
+## Notes
+
+- The `ply` replacement includes a full recursive descent parser for the OpenSCAD CSG format (~50 grammar rules) and a simple expression evaluator for the FEM equation evaluator
+- All code changes preserve existing behavior - no functional changes
+- `debugpy` and `pip` imports were already in try/except blocks, so removing them causes graceful degradation
