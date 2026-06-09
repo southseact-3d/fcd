@@ -3,7 +3,7 @@
 include_directories(
     SYSTEM
     ${CMAKE_SOURCE_DIR}/src/3rdParty/
-    ${CMAKE_SOURCE_DIR}/src/Mod/Render/3rdParty/
+    ${RENDER_DEPS_INCLUDE_DIR}
 )
 
 find_package(Qt6 COMPONENTS Core REQUIRED)

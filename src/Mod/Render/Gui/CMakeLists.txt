@@ -3,7 +3,7 @@
 include_directories(
     SYSTEM
     ${CMAKE_SOURCE_DIR}/src/3rdParty/
-    ${CMAKE_SOURCE_DIR}/src/Mod/Render/3rdParty/
+    ${RENDER_DEPS_INCLUDE_DIR}
 )
 
 set(RenderRaytracerGlobal_HDR
@@ -31,7 +31,14 @@ set(RenderRaytracer_SRCS
     Raytracer/OutputWriter.cpp
 )
 
+# Implementation units for stb and tinyexr (compiled into the RenderRaytracer target)
+set(RenderDepsImpl_SRCS
+    Raytracer/impl/stb_impl.cpp
+    Raytracer/impl/tinyexr_impl.cpp
+)
+
 SOURCE_GROUP("Raytracer" FILES ${RenderRaytracer_SRCS})
+SOURCE_GROUP("Raytracer/impl" FILES ${RenderDepsImpl_SRCS})
 
 set(RenderGui_Python_SRCS
     Gui/RenderWorkbench.py
@@ -48,7 +55,11 @@ set(RenderGuiIcon_SVG
     Resources/Icons/RenderWorkbench.svg
 )
 
-add_library(RenderRaytracer SHARED ${RenderRaytracer_SRCS} ${RenderRaytracerGlobal_HDR})
+add_library(RenderRaytracer SHARED
+    ${RenderRaytracer_SRCS}
+    ${RenderRaytracerGlobal_HDR}
+    ${RenderDepsImpl_SRCS}
+)
 
 target_link_libraries(RenderRaytracer
     RenderApp
