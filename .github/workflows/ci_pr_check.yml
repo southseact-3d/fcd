@@ -170,6 +170,17 @@ jobs:
           $compileCommands = @()
           $skipped = @()
 
+          function Remove-PchFlags($cmd) {
+            $cmd = $cmd -replace '/Yu"[^"]*"', ''
+            $cmd = $cmd -replace '/Yu\S+', ''
+            $cmd = $cmd -replace '/FI"[^"]*cmake_pch[^"]*"', ''
+            $cmd = $cmd -replace '/Yc"[^"]*"', ''
+            if ($cmd -notmatch '/Y-') {
+              $cmd = "$cmd /Y-"
+            }
+            return $cmd
+          }
+
           foreach ($file in $changedFiles) {
             if (-not (Test-Path $file)) {
               Write-Host "SKIP (deleted): $file"
@@ -184,7 +195,7 @@ jobs:
               if ($compileLookup.ContainsKey($normalized)) {
                 $entry = $compileLookup[$normalized]
                 $compileCommands += @{
-                  cmd = $entry.command
+                  cmd = Remove-PchFlags $entry.command
                   dir = $entry.directory
                   file = $file
                 }
@@ -206,7 +217,7 @@ jobs:
                   if ($compileLookup.ContainsKey($incNormalized)) {
                     $entry = $compileLookup[$incNormalized]
                     $compileCommands += @{
-                      cmd = $entry.command
+                      cmd = Remove-PchFlags $entry.command
                       dir = $entry.directory
                       file = $inc
                     }
