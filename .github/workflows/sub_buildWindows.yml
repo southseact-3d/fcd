@@ -288,7 +288,7 @@ jobs:
       #   CMAKE_C/CXX_COMPILER_LAUNCHER still used — correct way to wrap
       #   cl.exe with ccache under any generator
       # ------------------------------------------------------------------
-      - name: Clear stale CMake cache if generator or compiler changed
+      - name: Clear stale CMake cache if generator, compiler, or launcher changed
         run: |
           $cacheFile = "${{ env.builddir }}\CMakeCache.txt"
           if (Test-Path $cacheFile) {
@@ -306,12 +306,30 @@ jobs:
               }
             }
 
-            if (-not $generatorOk -or -not $compilerOk) {
-              $reason = if (-not $generatorOk) { "generator changed" } else { "compiler not found" }
-              Write-Host "CMake cache stale ($reason) — clearing..."
+            # Check that the compiler launcher (ccache) path matches
+            $expectedLauncher = "${{ env.ccachebindir }}/ccache.exe"
+            $cachedLauncher = Select-String -Path $cacheFile -Pattern "CMAKE_C_COMPILER_LAUNCHER:FILEPATH=" | Select-Object -First 1
+            $launcherOk = $false
+            if ($cachedLauncher -and $cachedLauncher.Line -match "CMAKE_C_COMPILER_LAUNCHER:FILEPATH=(.+)") {
+              $launcherPath = $Matches[1].Trim().Replace('\', '/')
+              $launcherOk = $launcherPath -ieq $expectedLauncher
+              if (-not $launcherOk) {
+                Write-Host "Cached launcher mismatch: $launcherPath (expected: $expectedLauncher)"
+              }
+            }
+
+            if (-not $generatorOk -or -not $compilerOk -or -not $launcherOk) {
+              $reasons = @()
+              if (-not $generatorOk) { $reasons += "generator changed" }
+              if (-not $compilerOk)  { $reasons += "compiler not found" }
+              if (-not $launcherOk)  { $reasons += "launcher changed" }
+              Write-Host "CMake cache stale ($($reasons -join ', ')) — clearing..."
               Remove-Item $cacheFile -Force
               $cmakeFiles = "${{ env.builddir }}\CMakeFiles"
               if (Test-Path $cmakeFiles) { Remove-Item $cmakeFiles -Recurse -Force }
+              # Also remove stale build.ninja so CMake generates a fresh one
+              $buildNinja = "${{ env.builddir }}\build.ninja"
+              if (Test-Path $buildNinja) { Remove-Item $buildNinja -Force }
               Write-Host "Cache cleared — full reconfigure will run."
             } else {
               Write-Host "CMake cache valid — skipping clear."
