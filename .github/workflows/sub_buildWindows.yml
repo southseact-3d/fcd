@@ -80,7 +80,7 @@ on:
 
 jobs:
   Build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     continue-on-error: ${{ inputs.allowedToFail || false }}
     env:
       # -------------------------------------------------------------------
@@ -171,6 +171,16 @@ jobs:
           libpackdir: ${{ env.libpackdir }}
 
       # ------------------------------------------------------------------
+      # Set up the MSVC environment early so VCToolsVersion is available
+      # for the cache key hash.  This must run before "Generate file hash"
+      # so the compiler identity is included in ccache/Ninja cache keys.
+      # ------------------------------------------------------------------
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      # ------------------------------------------------------------------
       # ccache cache key strategy:
       #   key    = per-branch + config hash so cache is reusable across runs
       #   restore-keys = cascading fallback — always restores the newest
@@ -187,7 +197,7 @@ jobs:
 
           # Include the MSVC toolchain version so cache keys change when the
           # runner image upgrades (e.g. VS2022 → VS2026).  VCToolsVersion is
-          # set by the runner image provisioning, available before MSVC setup.
+          # set by ilammy/msvc-dev-cmd which runs earlier in this workflow.
           $vcTools = $env:VCToolsVersion
           if (-not $vcTools) { $vcTools = "unknown" }
           Write-Host "VCToolsVersion: $vcTools"
@@ -268,16 +278,6 @@ jobs:
           }
           Write-Host "Ninja found at: $ninjaPath"
           ninja --version
-
-      # ------------------------------------------------------------------
-      # Set up the MSVC environment so cl.exe / link.exe are on PATH.
-      # Ninja requires the compiler to be on PATH; unlike MSBuild it does
-      # not auto-discover Visual Studio.
-      # ------------------------------------------------------------------
-      - name: Set up MSVC environment
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
-        with:
-          arch: x64
 
       # ------------------------------------------------------------------
       # CMake configuration — key changes vs MSBuild version:
