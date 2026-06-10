@@ -108,7 +108,7 @@ jobs:
       ## Only ccache dir stays on C: (large, not involved in AUTOMOC).
       builddir: D:/FC/build/release/
       cacheKey: Windows
-      ccachebindir: C:/FC/ccache/
+      ccachebindir: C:/FC/ccache
       config: release
       libpackdir: D:/FC/libpack/
       logdir: C:/logs/
@@ -184,7 +184,15 @@ jobs:
         run: |
           $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
           $presetsHash = Get-FileHash -Path CMakePresets.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash
-          $combinedHash = "$cmakeHash-$presetsHash"
+
+          # Include the MSVC toolchain version so cache keys change when the
+          # runner image upgrades (e.g. VS2022 → VS2026).  VCToolsVersion is
+          # set by the runner image provisioning, available before MSVC setup.
+          $vcTools = $env:VCToolsVersion
+          if (-not $vcTools) { $vcTools = "unknown" }
+          Write-Host "VCToolsVersion: $vcTools"
+
+          $combinedHash = "$cmakeHash-$presetsHash-$vcTools"
           echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
           echo "combined_hash=$combinedHash" >> $env:GITHUB_OUTPUT
           Write-Host "Combined hash: $combinedHash"
@@ -247,12 +255,18 @@ jobs:
           cmake-version: '3.31.6'
 
       # ------------------------------------------------------------------
-      # Install Ninja.
-      # windows-latest ships with Ninja but pinning a known version is safer.
+      # Verify Ninja is available.
+      # windows-latest runners ship with Ninja pre-installed; no need to
+      # install via Chocolatey (which fails if a newer version exists).
       # ------------------------------------------------------------------
-      - name: Install Ninja
+      - name: Verify Ninja
         run: |
-          choco install ninja -y --version=1.12.1
+          $ninjaPath = (Get-Command ninja -ErrorAction SilentlyContinue).Source
+          if (-not $ninjaPath) {
+            Write-Error "Ninja not found on PATH"
+            exit 1
+          }
+          Write-Host "Ninja found at: $ninjaPath"
           ninja --version
 
       # ------------------------------------------------------------------
