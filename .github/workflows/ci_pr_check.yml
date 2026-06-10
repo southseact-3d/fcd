@@ -24,7 +24,8 @@
 # This workflow compiles changed files for Pull Requests.
 # It runs on all PR events and serves as a pass/fail check for compilation.
 # It does NOT create a Windows installer or modify the build cache.
-# It restores the build cache from main branch to enable incremental builds.
+# It only compiles files that changed in the PR, not the entire project.
+# Uses compile_commands.json to extract exact compiler commands for changed files.
 
 name: PR Build Check
 
@@ -42,24 +43,9 @@ jobs:
   Build:
     runs-on: windows-latest
     env:
-      # -------------------------------------------------------------------
-      # ccache settings - same as sub_buildWindows.yml
-      # -------------------------------------------------------------------
-      CCACHE_COMPILERCHECK: "content"
-      CCACHE_COMPRESS: true
-      CCACHE_COMPRESSLEVEL: 1
-      CCACHE_DIR: C:/FC/cache/
-      CCACHE_LOGFILE: C:/logs/ccache.log
-      CCACHE_MAXSIZE: 5G
-      CCACHE_NODIRECT: true
-      CCACHE_NOHASHDIR: true
-      CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,time_macros"
       builddir: D:/FC/build/release/
-      cacheKey: Windows
-      ccachebindir: C:/FC/ccache/
       libpackdir: D:/FC/libpack/
       logdir: C:/logs/
-      config: release
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -103,40 +89,6 @@ jobs:
           Write-Host "No source files changed in this PR - exiting early"
           exit 0
 
-      - name: Generate file hash for cache key
-        id: file-hash
-        run: |
-          $cmakeHash = Get-FileHash -Path CMakeLists.txt -Algorithm SHA256 | Select-Object -ExpandProperty Hash
-          $presetsHash = Get-FileHash -Path CMakePresets.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash
-          $combinedHash = "$cmakeHash-$presetsHash"
-          echo "cmake_hash=$cmakeHash" >> $env:GITHUB_OUTPUT
-          echo "combined_hash=$combinedHash" >> $env:GITHUB_OUTPUT
-          Write-Host "Combined hash: $combinedHash"
-        shell: pwsh
-
-      - name: Restore Ninja build cache
-        id: ninja-cache-restore
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.builddir }}
-          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
-          restore-keys: |
-            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main
-            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
-            FC-NINJA-${{ env.cacheKey }}-refs/heads/main
-            FC-NINJA-${{ env.cacheKey }}
-
-      - name: Print cache status
-        run: |
-          $ninjaKey = "FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-refs/heads/main"
-          Write-Host "Ninja cache key: $ninjaKey"
-          $ninjaHit = "${{ steps.ninja-cache-restore.outputs.cache-hit }}"
-          if ($ninjaHit -eq 'true') {
-            Write-Host "Cache HIT - incremental build will only compile changed files"
-          } else {
-            Write-Host "Cache MISS - full build required"
-          }
-
       - name: Make needed directories
         run: |
           New-Item -ItemType Directory -Force -Path ${{ env.libpackdir }} | Out-Null
@@ -163,39 +115,7 @@ jobs:
         with:
           arch: x64
 
-      - name: Clear stale CMake cache if generator changed
-        run: |
-          $cacheFile = "${{ env.builddir }}\CMakeCache.txt"
-          if (Test-Path $cacheFile) {
-            $cached = Select-String -Path $cacheFile -Pattern "CMAKE_GENERATOR:INTERNAL=" | Select-Object -First 1
-            $generatorOk = $cached -and $cached.Line -match "^CMAKE_GENERATOR:INTERNAL=Ninja$"
-            if (-not $generatorOk) {
-              Write-Host "CMake cache stale (generator or flags changed) - clearing..."
-              Remove-Item $cacheFile -Force
-              $cmakeFiles = "${{ env.builddir }}\CMakeFiles"
-              if (Test-Path $cmakeFiles) { Remove-Item $cmakeFiles -Recurse -Force }
-              Write-Host "Cache cleared - full reconfigure will run."
-            } else {
-              Write-Host "CMake cache valid - keeping cached generator state."
-            }
-          } else {
-            Write-Host "No CMakeCache.txt found - fresh configure."
-          }
-
-      - name: Check if CMake configure needed
-        id: cmake-needed
-        run: |
-          $buildNinja = "${{ env.builddir }}\build.ninja"
-          if (Test-Path $buildNinja) {
-            Write-Host "build.ninja already exists from cache - skipping CMake configure"
-            echo "needs_configure=false" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Host "build.ninja not found - need to run CMake configure"
-            echo "needs_configure=true" >> $env:GITHUB_OUTPUT
-          }
-
       - name: Configuring CMake
-        if: steps.cmake-needed.outputs.needs_configure == 'true'
         run: >
           cmake -B"${{ env.builddir }}" .
           -G "Ninja"
@@ -207,6 +127,7 @@ jobs:
           -DFREECAD_COPY_LIBPACK_BIN_TO_BUILD=ON
           -DFREECAD_COPY_PLUGINS_BIN_TO_BUILD=ON
           -DCMAKE_AUTOGEN_PARALLEL=4
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Check CMake configuration
         run: |
@@ -214,11 +135,148 @@ jobs:
             Write-Error "CMake configuration failed - build.ninja not found"
             exit 1
           }
+          if (-not (Test-Path "${{ env.builddir }}\compile_commands.json")) {
+            Write-Error "CMake configuration failed - compile_commands.json not found"
+            exit 1
+          }
           Write-Host "CMake configuration successful"
 
-      - name: Build with Ninja
+      - name: Resolve changed files to compile
+        id: resolve
         run: |
-          cmake --build "${{ env.builddir }}" --config Release -j32
+          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
+          if (-not $changedFiles) {
+            Write-Host "No changed files to resolve"
+            echo "compile_count=0" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          $repoRoot = (Get-Location).Path
+          $compileDbPath = "${{ env.builddir }}\compile_commands.json"
+          $compileDb = Get-Content $compileDbPath -Raw | ConvertFrom-Json
+
+          function Get-NormalizedPath($path) {
+            return $path.Replace('/', '\').ToLower()
+          }
+
+          $compileLookup = @{}
+          foreach ($entry in $compileDb) {
+            $normalized = Get-NormalizedPath $entry.file
+            if (-not $compileLookup.ContainsKey($normalized)) {
+              $compileLookup[$normalized] = $entry
+            }
+          }
+
+          $compileCommands = @()
+          $skipped = @()
+
+          foreach ($file in $changedFiles) {
+            if (-not (Test-Path $file)) {
+              Write-Host "SKIP (deleted): $file"
+              $skipped += $file
+              continue
+            }
+
+            $absolutePath = Join-Path $repoRoot $file
+            $normalized = Get-NormalizedPath $absolutePath
+
+            if ($file -match '\.(cpp|c|cc)$') {
+              if ($compileLookup.ContainsKey($normalized)) {
+                $entry = $compileLookup[$normalized]
+                $compileCommands += @{
+                  cmd = $entry.command
+                  dir = $entry.directory
+                  file = $file
+                }
+                Write-Host "COMPILE: $file"
+              } else {
+                Write-Host "SKIP (not in compile_commands.json): $file"
+                $skipped += $file
+              }
+            }
+            elseif ($file -match '\.(h|hpp)$') {
+              $headerName = Split-Path $file -Leaf
+              Write-Host "HEADER: $file - searching for includers..."
+              $includers = git grep -l "#include.*$headerName" -- '*.cpp' '*.c' '*.cc' 2>$null
+              if ($includers) {
+                foreach ($inc in $includers) {
+                  if (-not (Test-Path $inc)) { continue }
+                  $incAbsolute = Join-Path $repoRoot $inc
+                  $incNormalized = Get-NormalizedPath $incAbsolute
+                  if ($compileLookup.ContainsKey($incNormalized)) {
+                    $entry = $compileLookup[$incNormalized]
+                    $compileCommands += @{
+                      cmd = $entry.command
+                      dir = $entry.directory
+                      file = $inc
+                    }
+                    Write-Host "  COMPILE (includer): $inc"
+                  }
+                }
+              } else {
+                Write-Host "  No includers found"
+              }
+            }
+          }
+
+          $unique = @{}
+          foreach ($c in $compileCommands) {
+            $unique[$c.file] = $c
+          }
+          $compileCommands = $unique.Values
+
+          Write-Host ""
+          Write-Host "Total files to compile: $($compileCommands.Count)"
+          if ($skipped.Count -gt 0) {
+            Write-Host "Skipped files: $($skipped.Count)"
+          }
+
+          $outputPath = "${{ env.builddir }}\compile_commands_to_run.json"
+          $compileCommands | ConvertTo-Json -Depth 3 | Set-Content $outputPath
+
+          echo "compile_count=$($compileCommands.Count)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Compile changed files
+        if: steps.resolve.outputs.compile_count > 0
+        run: |
+          $commands = Get-Content "${{ env.builddir }}\compile_commands_to_run.json" -Raw | ConvertFrom-Json
+          $failed = @()
+          $succeeded = @()
+
+          foreach ($c in $commands) {
+            $file = $c.file
+            $cmd = $c.cmd
+            $dir = $c.dir
+
+            Write-Host ""
+            Write-Host "=== Compiling: $file ==="
+
+            $result = cmd /c "cd /d `"$dir`" && $cmd 2>&1"
+            $exitCode = $LASTEXITCODE
+
+            if ($exitCode -ne 0) {
+              Write-Host "FAILED: $file (exit code $exitCode)"
+              $result | ForEach-Object { Write-Host "  $_" }
+              $failed += $file
+            } else {
+              Write-Host "OK: $file"
+              $succeeded += $file
+            }
+          }
+
+          Write-Host ""
+          Write-Host "=== Summary ==="
+          Write-Host "Succeeded: $($succeeded.Count)"
+          Write-Host "Failed: $($failed.Count)"
+
+          if ($failed.Count -gt 0) {
+            Write-Host ""
+            Write-Host "Failed files:"
+            $failed | ForEach-Object { Write-Host "  $_" }
+            exit 1
+          }
+        shell: pwsh
 
       - name: Upload logs
         if: failure()
