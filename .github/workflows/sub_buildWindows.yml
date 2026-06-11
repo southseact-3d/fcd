@@ -371,6 +371,7 @@ jobs:
       # ------------------------------------------------------------------
       - name: Build with Ninja
         id: build
+        timeout-minutes: 210
         run: |
           # Honour forceRebuild flag - when true, run full build without dry-run check
           if ("${{ inputs.forceRebuild }}" -eq "true") {
