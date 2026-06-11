@@ -264,7 +264,8 @@ Gui::MenuItem* Workbench::setupMenuBar() const
                << "PartDesign_Revolution"
                << "PartDesign_AdditiveLoft"
                << "PartDesign_AdditivePipe"
-               << "PartDesign_AdditiveHelix";
+               << "PartDesign_AdditiveHelix"
+               << "PartDesign_AdditiveCoil";
 
     // subtractives
     Gui::MenuItem* subtractives = new Gui::MenuItem;
@@ -275,7 +276,8 @@ Gui::MenuItem* Workbench::setupMenuBar() const
                   << "PartDesign_Groove"
                   << "PartDesign_SubtractiveLoft"
                   << "PartDesign_SubtractivePipe"
-                  << "PartDesign_SubtractiveHelix";
+                  << "PartDesign_SubtractiveHelix"
+                  << "PartDesign_SubtractiveCoil";
 
     // transformations
     Gui::MenuItem* transformations = new Gui::MenuItem;
