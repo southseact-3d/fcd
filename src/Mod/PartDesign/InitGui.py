@@ -126,6 +126,10 @@ class PartDesignWorkbench(Workbench):
 
         FreeCADGui.addCommand("PartDesign_Sprocket", CommandSprocket())
 
+        from PartDesign.LadderFeature import CommandLadder
+
+        Gui.addCommand("PartDesign_Ladder", CommandLadder())
+
     def GetClassName(self):
         return "PartDesignGui::Workbench"
 
