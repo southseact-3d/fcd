@@ -1380,7 +1380,7 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
 
                 // Rotation axis from cross product of anchor and current
                 SbVec3f axis;
-                axis.cross(m_AnchorPoint, currentPoint);
+                axis = SbVec3f::cross(m_AnchorPoint, currentPoint);
                 float axisLen = axis.length();
                 if (axisLen > 1e-6f) {
                     axis /= axisLen;
