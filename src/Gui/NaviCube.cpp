@@ -1282,25 +1282,19 @@ SbVec3f NaviCubeImplementation::projectToSphere(const SbVec2f& screenPos)
 {
     float x = screenPos[0];
     float y = screenPos[1];
-    float r = 0.8f;
+    float radius = 1.1f;
+    float t = radius / sqrtf(2.0f);
 
-    float x2y2 = x * x + y * y;
-    float r2 = r * r;
+    float d = sqrtf(x * x + y * y);
 
     SbVec3f result;
-    if (x2y2 <= r2 * 0.5f) {
-        // Inside the inner hemisphere — project onto sphere
-        result.setValue(x, y, sqrtf(r2 - x2y2));
-    }
-    else if (x2y2 <= r2) {
-        // Between inner hemisphere and sphere edge — project onto hyperbolic sheet
-        float halfR2 = r2 * 0.5f;
-        result.setValue(x, y, halfR2 / sqrtf(x2y2));
+    if (d < t) {
+        // Inside sphere
+        result.setValue(x, y, sqrtf(radius * radius - d * d));
     }
     else {
-        // Outside the sphere — clamp to nearest point on sphere edge
-        float scale = r / sqrtf(x2y2);
-        result.setValue(x * scale, y * scale, 0.0f);
+        // On hyperbola — rotation never stops, just gets slower
+        result.setValue(x, y, (t * t) / d);
     }
     result.normalize();
     return result;
@@ -1367,16 +1361,32 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
                     }
                 }
 
-                // Compute current point on sphere and delta rotation from anchor
+                // Compute current trackball vector and delta from anchor
                 SbVec2f curPos(
                     (float)x / (float)halfSize,
                     (float)y / vHalfSize
                 );
                 SbVec3f currentPoint = projectToSphere(curPos);
 
-                SbVec3f axis = currentPoint.cross(m_AnchorPoint);
-                float dot = m_AnchorPoint.dot(currentPoint);
-                SbRotation deltaRotation(axis[0], axis[1], axis[2], dot);
+                // Blender-style: linear angle from vector distance
+                SbVec3f delta;
+                delta.setValue(
+                    currentPoint[0] - m_AnchorPoint[0],
+                    currentPoint[1] - m_AnchorPoint[1],
+                    currentPoint[2] - m_AnchorPoint[2]
+                );
+                float trackballSize = 1.1f;
+                float angle = (delta.length() / (2.0f * trackballSize)) * 3.14159265f;
+
+                // Rotation axis from cross product of anchor and current
+                SbVec3f axis;
+                axis.cross(m_AnchorPoint, currentPoint);
+                float axisLen = axis.length();
+                if (axisLen > 1e-6f) {
+                    axis /= axisLen;
+                }
+
+                SbRotation deltaRotation(axis, angle);
 
                 SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
                 if (cam) {
