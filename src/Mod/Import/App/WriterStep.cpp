@@ -29,6 +29,7 @@
 
 #include "WriterStep.h"
 #include <Base/Exception.h>
+#include <Base/Sequencer.h>
 #include <App/Application.h>
 #include <Mod/Part/App/encodeFilename.h>
 #include <Mod/Part/App/Interface.h>
@@ -46,7 +47,10 @@ void WriterStep::write(Handle(TDocStd_Document) hDoc) const  // NOLINT
 
     STEPCAFControl_Writer writer;
     Part::Interface::writeStepAssembly(Part::Interface::Assembly::On);
+
+    Base::SequencerLauncher seq("Writing STEP file...", 2);
     writer.Transfer(hDoc, STEPControl_AsIs);
+    seq.next();
 
     APIHeaderSection_MakeHeader makeHeader(writer.ChangeWriter().Model());
     Base::Reference<ParameterGrp> hGrp = App::GetApplication()
@@ -71,4 +75,5 @@ void WriterStep::write(Handle(TDocStd_Document) hDoc) const  // NOLINT
     if (ret == IFSelect_RetError || ret == IFSelect_RetFail || ret == IFSelect_RetStop) {
         throw Base::FileException("Cannot open file: ", file);
     }
+    seq.next();
 }

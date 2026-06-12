@@ -427,7 +427,7 @@ ProgressBar::ProgressBar(SequencerBar* s, QWidget* parent)
     m_taskbarButton = nullptr;
 #endif
     d = new Gui::ProgressBarPrivate;
-    d->minimumDuration = 2000;  // 2 seconds
+    d->minimumDuration = 1000;  // 1 second
     d->delayShowTimer = new QTimer(this);
     d->delayShowTimer->setSingleShot(true);
     connect(d->delayShowTimer, &QTimer::timeout, this, &ProgressBar::delayedShow);

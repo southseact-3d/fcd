@@ -39,6 +39,7 @@
 #include "ReaderGltf.h"
 #include "Tools.h"
 #include <Base/Exception.h>
+#include <Base/Sequencer.h>
 #include <Mod/Part/App/TopoShape.h>
 #include <Mod/Part/App/Tools.h>
 
@@ -59,13 +60,16 @@ void ReaderGltf::read(Handle(TDocStd_Document) hDoc)
     aReader.SetDocument(hDoc);
     aReader.SetParallel(true);
 
+    Base::SequencerLauncher seq("Reading glTF file...", 2);
     TCollection_AsciiString filename(file.filePath().c_str());
     Standard_Boolean ret = aReader.Perform(filename, Message_ProgressRange());
     if (!ret) {
         throw Base::FileException("Cannot read from file: ", file);
     }
+    seq.next();
 
     processDocument(hDoc);
+    seq.next();
 }
 
 // NOLINTNEXTLINE

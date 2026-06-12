@@ -390,6 +390,7 @@ void ProgressDialog::setValueEx(int value)
 
 void ProgressDialog::aboutToShow()
 {
+    show();
 #ifdef QT_WINEXTRAS_LIB
     setupTaskBarProgress();
     m_taskbarProgress->show();

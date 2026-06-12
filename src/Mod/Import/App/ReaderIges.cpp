@@ -35,6 +35,7 @@
 
 #include "ReaderIges.h"
 #include <Base/Exception.h>
+#include <Base/Sequencer.h>
 #include <App/Application.h>
 #include <Mod/Part/App/encodeFilename.h>
 
@@ -62,11 +63,15 @@ void ReaderIges::read(Handle(TDocStd_Document) hDoc)  // NOLINT
     aReader.SetColorMode(true);
     aReader.SetNameMode(true);
     aReader.SetLayerMode(true);
+
+    Base::SequencerLauncher seq("Reading IGES file...", 2);
     if (aReader.ReadFile(name8bit.c_str()) != IFSelect_RetDone) {
         throw Base::FileException("Cannot read IGES file", file);
     }
+    seq.next();
 
     aReader.Transfer(hDoc);
+    seq.next();
 
     // http://opencascade.blogspot.de/2009/03/unnoticeable-memory-leaks-part-2.html
     Handle(IGESToBRep_Actor)::DownCast(aReader.WS()->TransferReader()->Actor())
