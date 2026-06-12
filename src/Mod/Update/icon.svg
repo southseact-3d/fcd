@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Circular background -->
+  <circle cx="32" cy="32" r="30" fill="#4a9eff" stroke="#2d7dd2" stroke-width="2"/>
+  <!-- Download arrow -->
+  <path d="M32 12 L32 40 M22 32 L32 42 L42 32" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Base line -->
+  <path d="M18 50 L46 50" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+</svg>
