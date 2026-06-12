@@ -1346,13 +1346,13 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
             int dy = y - m_LastMouse[1];
             if (dx || dy) {
                 qreal halfSize = getPhysicalCubeWidgetSize() / 2.0;
-                float vHalfSize = (float)halfSize * 2.0f;
+                float normSize = (float)halfSize;
 
                 // On first frame of rotation, save anchor point and orientation
                 if (m_AnchorPoint == SbVec3f(0, 0, 0)) {
                     SbVec2f anchorPos(
-                        (float)m_LastMouse[0] / (float)halfSize,
-                        (float)m_LastMouse[1] / vHalfSize
+                        (float)m_LastMouse[0] / normSize,
+                        (float)m_LastMouse[1] / normSize
                     );
                     m_AnchorPoint = projectToSphere(anchorPos);
                     SoCamera* cam = m_View3DInventorViewer->getSoRenderManager()->getCamera();
@@ -1363,8 +1363,8 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
 
                 // Compute current trackball vector and delta from anchor
                 SbVec2f curPos(
-                    (float)x / (float)halfSize,
-                    (float)y / vHalfSize
+                    (float)x / normSize,
+                    (float)y / normSize
                 );
                 SbVec3f currentPoint = projectToSphere(curPos);
 
@@ -1376,7 +1376,8 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
                     currentPoint[2] - m_AnchorPoint[2]
                 );
                 float trackballSize = 1.1f;
-                float angle = (delta.length() / (2.0f * trackballSize)) * 3.14159265f;
+                float sensitivity = 0.15f;
+                float angle = (delta.length() / (2.0f * trackballSize)) * 3.14159265f * sensitivity;
 
                 // Rotation axis from cross product of anchor and current
                 SbVec3f axis;
