@@ -2108,6 +2108,14 @@ void MainWindowP::restoreWindowState(const QByteArray& windowState)
         getMainWindow()->restoreState(windowState);
     }
 
+    // Force ComboView visible after Qt restores dock state, since
+    // QMainWindow::restoreState() can hide it from a stale binary blob.
+    if (auto* dw = DockWindowManager::instance()->getDockContainer("Model")) {
+        if (dw->toggleViewAction()->data().toString() == QLatin1String("Std_ComboView")) {
+            dw->setVisible(true);
+        }
+    }
+
     Base::ConnectionBlocker block(connParam);
     // as a notification for user code on window state restore
     hGrp->SetBool("WindowStateRestored", !hGrp->GetBool("WindowStateRestored", false));
