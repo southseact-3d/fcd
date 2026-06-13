@@ -1376,12 +1376,13 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
                     currentPoint[2] - m_AnchorPoint[2]
                 );
                 float trackballSize = 1.1f;
-                float sensitivity = 0.15f;
+                float sensitivity = 1.0f;
                 float angle = (delta.length() / (2.0f * trackballSize)) * 3.14159265f * sensitivity;
 
-                // Rotation axis from cross product of anchor and current
+                // Rotation axis: current × anchor (reversed from Blender
+                // because FreeCAD screen-Y is flipped relative to Blender)
                 SbVec3f axis;
-                axis = m_AnchorPoint.cross(currentPoint);
+                axis = currentPoint.cross(m_AnchorPoint);
                 float axisLen = axis.length();
                 if (axisLen > 1e-6f) {
                     axis /= axisLen;
