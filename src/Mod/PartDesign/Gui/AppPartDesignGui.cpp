@@ -62,6 +62,7 @@
 #include "ViewProviderShapeBinder.h"
 #include "ViewProviderSketchBased.h"
 #include "ViewProviderThickness.h"
+#include "ViewProviderThread.h"
 #include "ViewProviderTransformed.h"
 
 
@@ -139,6 +140,7 @@ PyMOD_INIT_FUNC(PartDesignGui)
     PartDesignGui::ViewProviderDressUp       ::init();
     PartDesignGui::ViewProviderGroove        ::init();
     PartDesignGui::ViewProviderChamfer       ::init();
+    PartDesignGui::ViewProviderThread        ::init();
     PartDesignGui::ViewProviderFillet        ::init();
     PartDesignGui::ViewProviderDraft         ::init();
     PartDesignGui::ViewProviderThickness     ::init();

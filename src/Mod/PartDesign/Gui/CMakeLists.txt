@@ -49,6 +49,7 @@ set(PartDesignGui_UIC_SRCS
     DlgActiveBody.ui
     TaskHelixParameters.ui
     TaskBrickTextureParameters.ui
+    TaskThreadParameters.ui
 )
 
 SET(PartDesignGuiViewProvider_SRCS
@@ -78,6 +79,8 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderDressUp.h
     ViewProviderBrickTexture.cpp
     ViewProviderBrickTexture.h
+    ViewProviderThread.cpp
+    ViewProviderThread.h
     ViewProviderRevolution.cpp
     ViewProviderRevolution.h
     ViewProviderGroove.cpp
@@ -199,6 +202,9 @@ SET(PartDesignGuiTaskDlgs_SRCS
     TaskBrickTextureParameters.ui
     TaskBrickTextureParameters.cpp
     TaskBrickTextureParameters.h
+    TaskThreadParameters.ui
+    TaskThreadParameters.cpp
+    TaskThreadParameters.h
     DlgActiveBody.h
     DlgActiveBody.cpp
 )

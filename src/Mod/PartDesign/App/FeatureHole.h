@@ -302,6 +302,8 @@ private:
     friend void from_json(const nlohmann::json& j, CutDimensionSet& t);
 };
 
+std::vector<std::string> getThreadDesignations(int threadType);
+
 }  // namespace PartDesign
 
 

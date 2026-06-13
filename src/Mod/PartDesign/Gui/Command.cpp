@@ -3637,6 +3637,81 @@ bool CmdPartDesignChamfer::isActive()
 }
 
 //===========================================================================
+// PartDesign_Thread
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignThread)
+
+CmdPartDesignThread::CmdPartDesignThread()
+    : Command("PartDesign_Thread")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Thread");
+    sToolTipText
+        = QT_TR_NOOP("Creates a thread on the selected cylindrical or conical faces");
+    sWhatsThis = "PartDesign_Thread";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thread";
+}
+
+void CmdPartDesignThread::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    bool useAllEdges = false;
+    bool noSelection = false;
+    Gui::SelectionObject selected;
+    if (!dressupGetSelected(this, "Thread", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        const Part::TopoShape& TopShape = base->Shape.getShape();
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            std::string aSubName = SubNames.at(i);
+            if (aSubName.compare(0, 4, "Face") == 0) {
+                TopoDS_Face face = TopoDS::Face(TopShape.getSubShape(aSubName.c_str()));
+                BRepAdaptor_Surface sf(face);
+                if (sf.GetType() != GeomAbs_Cylinder && sf.GetType() != GeomAbs_Cone) {
+                    SubNames.erase(SubNames.begin() + i);
+                }
+                else {
+                    ++i;
+                }
+            }
+            else {
+                SubNames.erase(SubNames.begin() + i);
+            }
+        }
+
+        if (SubNames.empty()) {
+            QMessageBox::warning(
+                Gui::getMainWindow(),
+                QObject::tr("Wrong selection"),
+                QObject::tr("Select one or more cylindrical or conical faces.")
+            );
+            return;
+        }
+    }
+
+    finishDressupFeature(this, "Thread", base, SubNames, false);
+}
+
+bool CmdPartDesignThread::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // PartDesign_Draft
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignDraft)
@@ -4555,6 +4630,7 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignFillet());
     rcCmdMgr.addCommand(new CmdPartDesignDraft());
     rcCmdMgr.addCommand(new CmdPartDesignChamfer());
+    rcCmdMgr.addCommand(new CmdPartDesignThread());
     rcCmdMgr.addCommand(new CmdPartDesignThickness());
     rcCmdMgr.addCommand(new CmdPartDesignBrickTexture());
 

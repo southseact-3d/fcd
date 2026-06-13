@@ -246,6 +246,7 @@ PartDesignGroupWidget* PartDesignPartToolsWidget::createModifyGroup()
     QVector<const char*> commands = {
         "PartDesign_Fillet",
         "PartDesign_Chamfer",
+        "PartDesign_Thread",
         "PartDesign_Draft",
         "PartDesign_Thickness",
         "PartDesign_BrickTexture",
@@ -446,6 +447,7 @@ QMenu* PartDesignPartToolsWidget::buildModifyMenu()
     addSectionHeader(QObject::tr("DRESS-UP"));
     addMenuItem("PartDesign_Fillet");
     addMenuItem("PartDesign_Chamfer");
+    addMenuItem("PartDesign_Thread");
     addMenuItem("PartDesign_Draft");
     addMenuItem("PartDesign_Thickness");
     addMenuItem("PartDesign_BrickTexture");
