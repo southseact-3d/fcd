@@ -1074,6 +1074,7 @@ NaviCubeImplementation::PickId NaviCubeImplementation::pickFace(short x, short y
 bool NaviCubeImplementation::mousePressed(short x, short y)
 {
     m_Rotating = false;
+    m_Dragging = false;
     PickId pick = pickFace(x, y);
     setHilite(pick);
 
@@ -1400,7 +1401,7 @@ bool NaviCubeImplementation::mouseMoved(short x, short y)
         }
     }
 
-    return false;
+    return m_MouseDown;
 }
 
 bool NaviCubeImplementation::processSoEvent(const SoEvent* ev)
