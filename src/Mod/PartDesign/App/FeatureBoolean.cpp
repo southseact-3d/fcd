@@ -46,12 +46,13 @@ extern bool getPDRefineModelParameter();
 
 PROPERTY_SOURCE_WITH_EXTENSIONS(PartDesign::Boolean, PartDesign::FeatureRefine)
 
-const char* Boolean::TypeEnums[] = {"Fuse", "Cut", "Common", nullptr};
+const char* Boolean::TypeEnums[] = {"Join", "Cut", "Intersect", nullptr};
 
 Boolean::Boolean()
 {
     ADD_PROPERTY(Type, ((long)0));
     Type.setEnums(TypeEnums);
+    ADD_PROPERTY(KeepTools, (false));
 
     App::GeoFeatureGroupExtension::initExtension(this);
 }
@@ -123,13 +124,13 @@ App::DocumentObjectExecReturn* Boolean::execute()
     if (!tools.empty()) {
         const char* op = nullptr;
 
-        if (type == "Fuse") {
+        if (type == "Join") {
             op = Part::OpCodes::Fuse;
         }
         else if (type == "Cut") {
             op = Part::OpCodes::Cut;
         }
-        else if (type == "Common") {
+        else if (type == "Intersect") {
             op = Part::OpCodes::Common;
         }
         // LinkStage3 defines these other types of Boolean operations.  Removed for now pending
@@ -179,7 +180,7 @@ void Boolean::updatePreviewShape()
         return;
     }
 
-    if (strcmp(Type.getValueAsString(), "Fuse") == 0) {
+    if (strcmp(Type.getValueAsString(), "Join") == 0) {
         // if there are no other shapes to fuse just return itself
         if (Group.getValues().empty()) {
             PreviewShape.setValue(Shape.getShape());

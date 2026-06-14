@@ -61,21 +61,29 @@ public:
 
     const std::vector<std::string> getBodies() const;
     int getType() const;
+    bool getKeepTools() const;
+    std::string getTargetBody() const;
 
 private Q_SLOTS:
-    void onButtonBodyAdd(const bool checked);
-    void onButtonBodyRemove(const bool checked);
-    void onBodyDeleted();
+    void onButtonChangeTarget();
+    void onButtonRemoveTool();
     void onTypeChanged(int index);
-
-protected:
-    void exitSelectionMode();
+    void onKeepToolsChanged(int state);
+    void onSelectionModeTimer();
 
 protected:
     void changeEvent(QEvent* e) override;
     void onSelectionChanged(const Gui::SelectionChanges& msg) override;
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
+    void enterSelectionMode();
+    void exitSelectionMode();
+    void updateTargetLabel();
+    void addToolBody(App::DocumentObject* body);
+    void removeToolBody(int row);
+    bool isBodyInTools(App::DocumentObject* body) const;
+
     QWidget* proxy;
     std::unique_ptr<Ui_TaskBooleanParameters> ui;
     ViewProviderBoolean* BooleanView;
@@ -83,10 +91,12 @@ private:
     enum selectionModes
     {
         none,
-        bodyAdd,
-        bodyRemove
+        targetSelect,
+        toolSelect
     };
     selectionModes selectionMode;
+
+    QTimer* selectionTimer;
 };
 
 /// simulation dialog for the TaskView
