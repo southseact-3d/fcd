@@ -24,8 +24,7 @@
 # This workflow compiles changed files for Pull Requests.
 # It runs on all PR events and serves as a pass/fail check for compilation.
 # It does NOT create a Windows installer or modify the build cache.
-# It builds only the object files for changed sources via ninja, which
-# automatically handles all dependencies including UIC/MOC auto-generated files.
+# It compiles only changed .cpp files and generates needed ui_*.h headers.
 
 name: PR Build Check
 
@@ -146,7 +145,6 @@ jobs:
         run: |
           $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
           if (-not $changedFiles) {
-            Write-Host "No changed files to resolve"
             echo "file_count=0" >> $env:GITHUB_OUTPUT
             exit 0
           }
@@ -162,7 +160,7 @@ jobs:
             }
           }
 
-          $objFiles = @()
+          $filesToCompile = @()
 
           foreach ($file in $changedFiles) {
             if (-not (Test-Path $file)) {
@@ -175,71 +173,138 @@ jobs:
 
             if ($file -match '\.(cpp|c|cc)$') {
               if ($compileLookup.ContainsKey($normalized)) {
-                $entry = $compileLookup[$normalized]
-                if ($entry.output) {
-                  $objFiles += $entry.output
-                  Write-Host "COMPILE: $file"
-                }
+                $filesToCompile += $compileLookup[$normalized]
+                Write-Host "COMPILE: $file"
               } else {
-                Write-Host "SKIP (not in compile_commands.json): $file"
+                Write-Host "SKIP: $file"
               }
             }
             elseif ($file -match '\.(h|hpp)$') {
               $headerName = Split-Path $file -Leaf
-              Write-Host "HEADER: $file - searching for includers..."
+              Write-Host "HEADER: $file"
               $includers = git grep -l "#include.*$headerName" -- '*.cpp' '*.c' '*.cc' 2>$null
               if ($includers) {
                 foreach ($inc in $includers) {
                   if (-not (Test-Path $inc)) { continue }
-                  $incAbsolute = Join-Path $repoRoot $inc
-                  $incNormalized = $incAbsolute.Replace('/', '\').ToLower()
-                  if ($compileLookup.ContainsKey($incNormalized)) {
-                    $entry = $compileLookup[$incNormalized]
-                    if ($entry.output -and ($objFiles -notcontains $entry.output)) {
-                      $objFiles += $entry.output
+                  $incAbs = (Join-Path $repoRoot $inc).Replace('/', '\').ToLower()
+                  if ($compileLookup.ContainsKey($incAbs)) {
+                    $alreadyAdded = $filesToCompile | Where-Object { $_.file.Replace('/','\').ToLower() -eq $incAbs }
+                    if (-not $alreadyAdded) {
+                      $filesToCompile += $compileLookup[$incAbs]
                       Write-Host "  INCLUDER: $inc"
                     }
                   }
                 }
-              } else {
-                Write-Host "  No includers found"
               }
             }
           }
 
+          $filesToCompile | ConvertTo-Json -Depth 3 | Set-Content "${{ env.builddir }}\files_to_compile.json"
+          echo "file_count=$($filesToCompile.Count)" >> $env:GITHUB_OUTPUT
           Write-Host ""
-          Write-Host "Object files to build: $($objFiles.Count)"
-
-          $objFiles | ConvertTo-Json | Set-Content "${{ env.builddir }}\obj_files.json"
-          echo "file_count=$($objFiles.Count)" >> $env:GITHUB_OUTPUT
+          Write-Host "Files to compile: $($filesToCompile.Count)"
         shell: pwsh
 
-      - name: Build changed object files
+      - name: Generate ui_*.h headers
         if: steps.resolve.outputs.file_count > 0
         run: |
-          $objFiles = Get-Content "${{ env.builddir }}\obj_files.json" -Raw | ConvertFrom-Json
-          Write-Host "Building $($objFiles.Count) object files via ninja..."
-          Write-Host "(Ninja handles all UIC/MOC dependencies automatically)"
-          Write-Host ""
+          $commands = Get-Content "${{ env.builddir }}\files_to_compile.json" -Raw | ConvertFrom-Json
 
-          $failed = @()
-          foreach ($obj in $objFiles) {
-            Write-Host "=== $obj ==="
-            ninja -C "${{ env.builddir }}" $obj 2>&1 | ForEach-Object { Write-Host "  $_" }
+          Write-Host "Scanning files for ui_*.h includes..."
+          $needed = @{}
+          $fileForUi = @{}
+          foreach ($c in $commands) {
+            $filePath = $c.file
+            if (-not (Test-Path $filePath)) { continue }
+            $content = Get-Content $filePath -Raw -ErrorAction SilentlyContinue
+            $uiMatches = [regex]::Matches($content, '"ui_(\w+)\.h"')
+            foreach ($m in $uiMatches) {
+              $name = $m.Groups[1].Value
+              $needed[$name] = $true
+              if (-not $fileForUi.ContainsKey($name)) {
+                $fileForUi[$name] = $c
+              }
+            }
+          }
+
+          if ($needed.Count -eq 0) {
+            Write-Host "No ui_*.h includes found - skipping"
+            exit 0
+          }
+
+          Write-Host "Need: $($needed.Keys -join ', ')"
+
+          $uic = Get-ChildItem -Path "${{ env.libpackdir }}" -Filter "uic.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $uic) {
+            Write-Error "uic.exe not found"
+            exit 1
+          }
+          Write-Host "uic: $($uic.FullName)"
+
+          $failed = 0
+          foreach ($name in $needed.Keys) {
+            $uiFile = Get-ChildItem -Path "src" -Filter "$name.ui" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $uiFile) {
+              Write-Warning "Cannot find ${name}.ui"
+              $failed++
+              continue
+            }
+
+            $entry = $fileForUi[$name]
+            $autogenDir = ""
+            if ($entry.command -match '/I(\S+_autogen[/\\]include)') {
+              $autogenDir = $Matches[1]
+            }
+            if (-not $autogenDir) {
+              Write-Warning "No autogen dir in compile command for $name"
+              $failed++
+              continue
+            }
+
+            $outFile = "$autogenDir\ui_$name.h"
+            Write-Host "uic: $name -> $outFile"
+            & "$($uic.FullName)" "$($uiFile.FullName)" -o "$outFile"
             if ($LASTEXITCODE -ne 0) {
-              Write-Host "FAILED"
-              $failed += $obj
+              Write-Warning "uic failed for $name"
+              $failed++
+            }
+          }
+
+          if ($failed -gt 0) {
+            Write-Error "$failed uic generations failed"
+            exit 1
+          }
+          Write-Host "UIC complete"
+        shell: pwsh
+
+      - name: Compile changed files
+        if: steps.resolve.outputs.file_count > 0
+        run: |
+          $commands = Get-Content "${{ env.builddir }}\files_to_compile.json" -Raw | ConvertFrom-Json
+          $failed = @()
+
+          foreach ($c in $commands) {
+            $file = $c.file
+            $cmd = $c.command
+            $dir = $c.directory
+
+            Write-Host ""
+            Write-Host "=== $file ==="
+            $result = cmd /c "cd /d `"$dir`" && $cmd 2>&1"
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "FAILED (exit $LASTEXITCODE)"
+              $result | ForEach-Object { Write-Host "  $_" }
+              $failed += $file
             } else {
               Write-Host "OK"
             }
           }
 
           Write-Host ""
-          Write-Host "Succeeded: $($objFiles.Count - $failed.Count)/$($objFiles.Count)"
+          Write-Host "Results: $($commands.Count - $failed.Count)/$($commands.Count) succeeded"
 
           if ($failed.Count -gt 0) {
-            Write-Host "Failed:"
-            $failed | ForEach-Object { Write-Host "  $_" }
+            $failed | ForEach-Object { Write-Host "FAILED: $_" }
             exit 1
           }
         shell: pwsh
