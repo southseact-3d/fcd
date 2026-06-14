@@ -141,6 +141,29 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
+      - name: Generate auto-generated files (UIC/MOC)
+        run: |
+          Write-Host "Building autogen targets to generate ui_*.h, moc_*.h, etc."
+          $raw = ninja -C "${{ env.builddir }}" -t targets all 2>$null
+          $targets = $raw |
+            Where-Object { $_ -match 'autogen' } |
+            ForEach-Object { ($_ -split ':')[0].Trim() } |
+            Where-Object { $_ -ne '' }
+          if ($targets) {
+            $targetArray = @($targets)
+            Write-Host "Found $($targetArray.Count) autogen targets"
+            $targetArray | ForEach-Object { Write-Host "  $_" }
+            $targetList = $targetArray -join ' '
+            ninja -C "${{ env.builddir }}" $targetList
+            if ($LASTEXITCODE -ne 0) {
+              Write-Warning "Some autogen targets reported errors, continuing anyway"
+            }
+            Write-Host "Autogen generation complete"
+          } else {
+            Write-Host "No autogen targets found - skipping"
+          }
+        shell: pwsh
+
       - name: Resolve changed files to compile
         id: resolve
         run: |
