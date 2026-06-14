@@ -24,8 +24,8 @@
 # This workflow compiles changed files for Pull Requests.
 # It runs on all PR events and serves as a pass/fail check for compilation.
 # It does NOT create a Windows installer or modify the build cache.
-# It only compiles files that changed in the PR, not the entire project.
-# Uses compile_commands.json to extract exact compiler commands for changed files.
+# It builds only the CMake targets containing changed files, not the entire project.
+# Ninja handles all dependencies including UIC/MOC auto-generated files.
 
 name: PR Build Check
 
@@ -141,68 +141,56 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
-      - name: Resolve changed files to compile
+      - name: Resolve changed files to targets
         id: resolve
         run: |
           $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
           if (-not $changedFiles) {
             Write-Host "No changed files to resolve"
-            echo "compile_count=0" >> $env:GITHUB_OUTPUT
+            echo "target_count=0" >> $env:GITHUB_OUTPUT
             exit 0
           }
 
           $repoRoot = (Get-Location).Path
-          $compileDbPath = "${{ env.builddir }}\compile_commands.json"
-          $compileDb = Get-Content $compileDbPath -Raw | ConvertFrom-Json
-
-          function Get-NormalizedPath($path) {
-            return $path.Replace('/', '\').ToLower()
-          }
+          $compileDb = Get-Content "${{ env.builddir }}\compile_commands.json" -Raw | ConvertFrom-Json
 
           $compileLookup = @{}
           foreach ($entry in $compileDb) {
-            $normalized = Get-NormalizedPath $entry.file
+            $normalized = $entry.file.Replace('/', '\').ToLower()
             if (-not $compileLookup.ContainsKey($normalized)) {
               $compileLookup[$normalized] = $entry
             }
           }
 
-          $compileCommands = @()
-          $skipped = @()
-
-          function Remove-PchFlags($cmd) {
-            $cmd = $cmd -replace '/Yu"[^"]*"', ''
-            $cmd = $cmd -replace '/Yu\S+', ''
-            $cmd = $cmd -replace '/FI"[^"]*cmake_pch[^"]*"', ''
-            $cmd = $cmd -replace '/Yc"[^"]*"', ''
-            if ($cmd -notmatch '/Y-') {
-              $cmd = "$cmd /Y-"
+          function Get-TargetFromCommand($cmd) {
+            if ($cmd -match 'CMakeFiles[/\\]([^\s/\\]+)\.dir[/\\]') {
+              return $Matches[1]
             }
-            return $cmd
+            return $null
           }
+
+          $targets = @{}
 
           foreach ($file in $changedFiles) {
             if (-not (Test-Path $file)) {
               Write-Host "SKIP (deleted): $file"
-              $skipped += $file
               continue
             }
 
             $absolutePath = Join-Path $repoRoot $file
-            $normalized = Get-NormalizedPath $absolutePath
+            $normalized = $absolutePath.Replace('/', '\').ToLower()
 
             if ($file -match '\.(cpp|c|cc)$') {
               if ($compileLookup.ContainsKey($normalized)) {
-                $entry = $compileLookup[$normalized]
-                $compileCommands += @{
-                  cmd = Remove-PchFlags $entry.command
-                  dir = $entry.directory
-                  file = $file
+                $target = Get-TargetFromCommand $compileLookup[$normalized].command
+                if ($target) {
+                  $targets[$target] = $true
+                  Write-Host "FILE: $file -> target: $target"
+                } else {
+                  Write-Host "FILE: $file -> could not determine target"
                 }
-                Write-Host "COMPILE: $file"
               } else {
                 Write-Host "SKIP (not in compile_commands.json): $file"
-                $skipped += $file
               }
             }
             elseif ($file -match '\.(h|hpp)$') {
@@ -213,15 +201,13 @@ jobs:
                 foreach ($inc in $includers) {
                   if (-not (Test-Path $inc)) { continue }
                   $incAbsolute = Join-Path $repoRoot $inc
-                  $incNormalized = Get-NormalizedPath $incAbsolute
+                  $incNormalized = $incAbsolute.Replace('/', '\').ToLower()
                   if ($compileLookup.ContainsKey($incNormalized)) {
-                    $entry = $compileLookup[$incNormalized]
-                    $compileCommands += @{
-                      cmd = Remove-PchFlags $entry.command
-                      dir = $entry.directory
-                      file = $inc
+                    $target = Get-TargetFromCommand $compileLookup[$incNormalized].command
+                    if ($target) {
+                      $targets[$target] = $true
+                      Write-Host "  INCLUDER: $inc -> target: $target"
                     }
-                    Write-Host "  COMPILE (includer): $inc"
                   }
                 }
               } else {
@@ -230,140 +216,45 @@ jobs:
             }
           }
 
-          $unique = @{}
-          foreach ($c in $compileCommands) {
-            $unique[$c.file] = $c
-          }
-          $compileCommands = $unique.Values
-
+          $targetList = $targets.Keys | Sort-Object
           Write-Host ""
-          Write-Host "Total files to compile: $($compileCommands.Count)"
-          if ($skipped.Count -gt 0) {
-            Write-Host "Skipped files: $($skipped.Count)"
-          }
+          Write-Host "Targets to build: $($targetList -join ', ')"
+          Write-Host "Total targets: $($targetList.Count)"
 
-          $outputPath = "${{ env.builddir }}\compile_commands_to_run.json"
-          $compileCommands | ConvertTo-Json -Depth 3 | Set-Content $outputPath
+          $targetList | ForEach-Object { Write-Host "TARGET: $_" } | Out-Null
+          $targetJson = $targetList | ConvertTo-Json
+          Set-Content "${{ env.builddir }}\targets_to_build.json" $targetJson
 
-          echo "compile_count=$($compileCommands.Count)" >> $env:GITHUB_OUTPUT
+          echo "target_count=$($targetList.Count)" >> $env:GITHUB_OUTPUT
+          echo "targets=$($targetList -join ',')" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
-      - name: Generate auto-generated files (UIC)
-        if: steps.resolve.outputs.compile_count > 0
+      - name: Build changed targets
+        if: steps.resolve.outputs.target_count > 0
         run: |
-          $commands = Get-Content "${{ env.builddir }}\compile_commands_to_run.json" -Raw | ConvertFrom-Json
+          $targets = Get-Content "${{ env.builddir }}\targets_to_build.json" -Raw | ConvertFrom-Json
+          Write-Host "Building targets: $($targets -join ', ')"
+          Write-Host ""
 
-          Write-Host "Scanning compiled files for ui_*.h includes..."
-          $needed = @{}
-          $fileAutogenMap = @{}
-          foreach ($c in $commands) {
-            $file = $c.file
-            if (-not (Test-Path $file)) { continue }
-            $content = Get-Content $file -Raw -ErrorAction SilentlyContinue
-            if ($content -match 'ui_\w+\.h') {
-              $uiMatches = [regex]::Matches($content, '"ui_(\w+)\.h"')
-              foreach ($m in $uiMatches) {
-                $needed[$m.Groups[1].Value] = $true
-                if (-not $fileAutogenMap.ContainsKey($m.Groups[1].Value)) {
-                  $fileAutogenMap[$m.Groups[1].Value] = $c
-                }
-              }
-            }
-          }
-
-          if ($needed.Count -eq 0) {
-            Write-Host "No ui_*.h includes found - skipping UIC"
-            exit 0
-          }
-
-          Write-Host "Need to generate: $($needed.Keys -join ', ')"
-
-          $uic = Get-ChildItem -Path "${{ env.libpackdir }}" -Filter "uic.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $uic) {
-            Write-Error "uic.exe not found in libpack"
-            exit 1
-          }
-          Write-Host "Found uic: $($uic.FullName)"
-
-          $repoRoot = (Get-Location).Path
-          $failed = 0
-          foreach ($name in $needed.Keys) {
-            $uiFile = Get-ChildItem -Path "src" -Filter "$name.ui" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-            if (-not $uiFile) {
-              Write-Warning "Cannot find ${name}.ui"
-              $failed++
-              continue
-            }
-
-            $entry = $fileAutogenMap[$name]
-            $autogenDir = ""
-            if ($entry.command -match '-I(\S+_autogen[/\\]include)') {
-              $autogenDir = $Matches[1]
-            }
-            if (-not $autogenDir) {
-              Write-Warning "Could not find autogen include directory for $name"
-              $failed++
-              continue
-            }
-            Write-Host "Autogen dir: $autogenDir"
-
-            $outFile = "$autogenDir\ui_$name.h"
-            Write-Host "Generating: $outFile from $($uiFile.FullName)"
-            & "$($uic.FullName)" "$($uiFile.FullName)" -o "$outFile"
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "  OK"
-            } else {
-              Write-Warning "  Failed to generate ui_$name.h"
-              $failed++
-            }
-          }
-
-          if ($failed -gt 0) {
-            Write-Error "$failed ui_*.h files could not be generated"
-            exit 1
-          }
-          Write-Host "UIC generation complete"
-        shell: pwsh
-
-      - name: Compile changed files
-        if: steps.resolve.outputs.compile_count > 0
-        run: |
-          $commands = Get-Content "${{ env.builddir }}\compile_commands_to_run.json" -Raw | ConvertFrom-Json
           $failed = @()
-          $succeeded = @()
-
-          foreach ($c in $commands) {
-            $file = $c.file
-            $cmd = $c.cmd
-            $dir = $c.dir
-
-            Write-Host ""
-            Write-Host "=== Compiling: $file ==="
-
-            $result = cmd /c "cd /d `"$dir`" && $cmd 2>&1"
-            $exitCode = $LASTEXITCODE
-
-            if ($exitCode -ne 0) {
-              Write-Host "FAILED: $file (exit code $exitCode)"
-              $result | ForEach-Object { Write-Host "  $_" }
-              $failed += $file
+          foreach ($target in $targets) {
+            Write-Host "=== Building target: $target ==="
+            cmake --build "${{ env.builddir }}" --config Release --target $target -j32 2>&1 | ForEach-Object { Write-Host "  $_" }
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "FAILED: target $target"
+              $failed += $target
             } else {
-              Write-Host "OK: $file"
-              $succeeded += $file
+              Write-Host "OK: target $target"
             }
+            Write-Host ""
           }
-
-          Write-Host ""
-          Write-Host "=== Summary ==="
-          Write-Host "Succeeded: $($succeeded.Count)"
-          Write-Host "Failed: $($failed.Count)"
 
           if ($failed.Count -gt 0) {
-            Write-Host ""
-            Write-Host "Failed files:"
-            $failed | ForEach-Object { Write-Host "  $_" }
+            Write-Host "Failed targets: $($failed -join ', ')"
             exit 1
           }
+
+          Write-Host "All targets built successfully"
         shell: pwsh
 
       - name: Upload logs
