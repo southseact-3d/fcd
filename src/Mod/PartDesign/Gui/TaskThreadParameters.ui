@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PartDesignGui::TaskThreadParameters</class>
+ <widget class="QWidget" name="PartDesignGui::TaskThreadParameters">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>520</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QToolButton" name="buttonRefSel">
+     <property name="toolTip">
+      <string>Select cylindrical faces to thread</string>
+     </property>
+     <property name="text">
+      <string>Select</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listWidgetReferences">
+     <property name="toolTip">
+      <string>Selected faces for threading</string>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="threadTypeLabel">
+       <property name="text">
+        <string>Thread Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="threadType">
+       <item>
+        <property name="text">
+         <string>ISO Metric Coarse</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>ISO Metric Fine</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>UNC</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>UNF</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>UNEF</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>NPT</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>BSP</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>BSW</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>BSF</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>ISO Tyre Valve</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="threadSizeLabel">
+       <property name="text">
+        <string>Size</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="threadSize">
+       <property name="sizeAdjustPolicy">
+        <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="threadDirectionLabel">
+       <property name="text">
+        <string>Direction</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="threadDirection">
+       <item>
+        <property name="text">
+         <string>Right</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Left</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="threadModeLabel">
+       <property name="text">
+        <string>Mode</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="threadMode">
+       <item>
+        <property name="text">
+         <string>Auto</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>External</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Internal</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="threadLengthLabel">
+       <property name="text">
+        <string>Length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="Gui::QuantitySpinBox" name="threadLength">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
+       <property name="value">
+        <double>10.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="threadPitchLabel">
+       <property name="text">
+        <string>Pitch</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="Gui::QuantitySpinBox" name="threadPitch">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="taperAngleLabel">
+       <property name="text">
+        <string>Taper Angle</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="Gui::QuantitySpinBox" name="taperAngle">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
+       <property name="minimum">
+        <double>0.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>90.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout_3">
+     <item row="0" column="0">
+      <widget class="QLabel" name="threadDepthTypeLabel">
+       <property name="text">
+        <string>Depth Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="threadDepthType">
+       <item>
+        <property name="text">
+         <string>Dimension</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Through Face</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="threadDepthLabel">
+       <property name="text">
+        <string>Depth</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="Gui::QuantitySpinBox" name="threadDepth">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxUseCustomClearance">
+     <property name="text">
+      <string>Use custom clearance</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout_4">
+     <item row="0" column="0">
+      <widget class="QLabel" name="customClearanceLabel">
+       <property name="text">
+        <string>Clearance</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="Gui::QuantitySpinBox" name="customClearance">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Gui::QuantitySpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
