@@ -778,3 +778,4 @@ std::tuple<int, int> ApplicationDirectories::extractVersionFromConfigMap(const s
         throw Base::RuntimeError("Failed to parse version from config: " + std::string(e.what()));
     }
 }
+
