@@ -908,7 +908,7 @@ StdCmdToggleVisibility::StdCmdToggleVisibility()
     sStatusTip = sToolTipText;
     sWhatsThis = "Std_ToggleVisibility";
     sPixmap = "Std_ToggleVisibility";
-    sAccel = "Space";
+    sAccel = "V";
     eType = Alter3DView;
 }
 
@@ -1387,7 +1387,7 @@ StdCmdViewBottom::StdCmdViewBottom()
     sWhatsThis = "Std_ViewBottom";
     sStatusTip = sToolTipText;
     sPixmap = "view-bottom";
-    sAccel = "5";
+    sAccel = "Ctrl+6";
     eType = Alter3DView;
 }
 
@@ -1411,7 +1411,7 @@ StdCmdViewFront::StdCmdViewFront()
     sWhatsThis = "Std_ViewFront";
     sStatusTip = sToolTipText;
     sPixmap = "view-front";
-    sAccel = "1";
+    sAccel = "Ctrl+1";
     eType = Alter3DView;
 }
 
@@ -1435,7 +1435,7 @@ StdCmdViewLeft::StdCmdViewLeft()
     sWhatsThis = "Std_ViewLeft";
     sStatusTip = sToolTipText;
     sPixmap = "view-left";
-    sAccel = "6";
+    sAccel = "Ctrl+3";
     eType = Alter3DView;
 }
 
@@ -1459,7 +1459,7 @@ StdCmdViewRear::StdCmdViewRear()
     sWhatsThis = "Std_ViewRear";
     sStatusTip = sToolTipText;
     sPixmap = "view-rear";
-    sAccel = "4";
+    sAccel = "Ctrl+2";
     eType = Alter3DView;
 }
 
@@ -1483,7 +1483,7 @@ StdCmdViewRight::StdCmdViewRight()
     sWhatsThis = "Std_ViewRight";
     sStatusTip = sToolTipText;
     sPixmap = "view-right";
-    sAccel = "3";
+    sAccel = "Ctrl+4";
     eType = Alter3DView;
 }
 
@@ -1507,7 +1507,7 @@ StdCmdViewTop::StdCmdViewTop()
     sWhatsThis = "Std_ViewTop";
     sStatusTip = sToolTipText;
     sPixmap = "view-top";
-    sAccel = "2";
+    sAccel = "Ctrl+5";
     eType = Alter3DView;
 }
 
@@ -1532,7 +1532,7 @@ StdCmdViewIsometric::StdCmdViewIsometric()
     sWhatsThis = "Std_ViewIsometric";
     sStatusTip = sToolTipText;
     sPixmap = "view-axonometric";
-    sAccel = "0";
+    sAccel = "Ctrl+7";
     eType = Alter3DView;
 }
 

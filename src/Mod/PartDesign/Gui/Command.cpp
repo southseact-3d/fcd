@@ -2772,7 +2772,7 @@ CmdPartDesignPad::CmdPartDesignPad()
     sWhatsThis = "PartDesign_Pad";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Pad";
-    sAccel = "Ctrl+E";
+    sAccel = "E";
 }
 
 void CmdPartDesignPad::activated(int iMsg)
@@ -2844,8 +2844,8 @@ void CmdPartDesignExtrude::activated(int iMsg)
     msgBox.setWindowTitle(QObject::tr("Extrude"));
     msgBox.setText(QObject::tr("Select extrude type:"));
     msgBox.setIcon(QMessageBox::Question);
-    auto* padBtn = msgBox.addButton(QObject::tr("Pad (Add Material)"), QMessageBox::AcceptRole);
-    auto* pocketBtn = msgBox.addButton(QObject::tr("Pocket (Remove Material)"), QMessageBox::RejectRole);
+    QAbstractButton* padBtn = msgBox.addButton(QObject::tr("Pad (Add Material)"), QMessageBox::AcceptRole);
+    QAbstractButton* pocketBtn = msgBox.addButton(QObject::tr("Pocket (Remove Material)"), QMessageBox::RejectRole);
     msgBox.addButton(QMessageBox::Cancel);
     msgBox.exec();
 
@@ -2878,6 +2878,7 @@ CmdPartDesignHole::CmdPartDesignHole()
     sWhatsThis = "PartDesign_Hole";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Hole";
+    sAccel = "H";
 }
 
 void CmdPartDesignHole::activated(int iMsg)
@@ -3592,7 +3593,7 @@ CmdPartDesignFillet::CmdPartDesignFillet()
     sWhatsThis = "PartDesign_Fillet";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Fillet";
-    sAccel = "Ctrl+F";
+    sAccel = "F";
 }
 
 void CmdPartDesignFillet::activated(int iMsg)
