@@ -55,6 +55,7 @@ namespace sp = std::placeholders;
     qApp->translate("Workbench", "Dress-Up Features");
     qApp->translate("Workbench", "Transformation Features");
     qApp->translate("Workbench", "Sprocket…");
+    qApp->translate("Workbench", "Chain…");
     qApp->translate("Workbench", "Involute Gear");
 
     qApp->translate("Workbench", "Shaft Design Wizard");
@@ -338,7 +339,8 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "PartDesign_PartCheckGeometry"
           << "Separator"
           << "PartDesign_InvoluteGear"
-          << "PartDesign_Sprocket";
+          << "PartDesign_Sprocket"
+          << "PartDesign_Chain";
 
     // For 0.13 a couple of python packages like numpy, matplotlib and others
     // are not deployed with the installer on Windows. Thus, the WizardShaft is

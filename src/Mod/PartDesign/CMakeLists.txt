@@ -24,6 +24,8 @@ if(BUILD_GUI)
           InvoluteGearFeature.ui
           SprocketFeature.py
           SprocketFeature.ui
+          ChainFeature.py
+          ChainFeature.ui
     )
 endif(BUILD_GUI)
 
@@ -112,6 +114,11 @@ set(PartDesign_SprocketScripts
     fcsprocket/sprocket.py
 )
 
+set(PartDesign_ChainScripts
+    fchain/__init__.py
+    fchain/chain.py
+)
+
 set(PartDesign_WizardShaft
     WizardShaft/__init__.py
     WizardShaft/WizardShaft.svg
@@ -132,6 +139,7 @@ add_custom_target(PartDesignScripts ALL SOURCES
     ${PartDesign_TestFixtures}
     ${PartDesign_GearScripts}
     ${PartDesign_SprocketScripts}
+    ${PartDesign_ChainScripts}
 )
 
 fc_target_copy_resource(PartDesignScripts
@@ -145,6 +153,7 @@ fc_target_copy_resource(PartDesignScripts
     ${PartDesign_TestFixtures}
     ${PartDesign_GearScripts}
     ${PartDesign_SprocketScripts}
+    ${PartDesign_ChainScripts}
 )
 
 INSTALL(
@@ -201,6 +210,13 @@ INSTALL(
         ${PartDesign_SprocketScripts}
     DESTINATION
         Mod/PartDesign/fcsprocket
+)
+
+INSTALL(
+    FILES
+        ${PartDesign_ChainScripts}
+    DESTINATION
+        Mod/PartDesign/fchain
 )
 
 set(PartDesignHoleDefines
