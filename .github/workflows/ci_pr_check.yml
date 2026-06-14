@@ -143,24 +143,59 @@ jobs:
 
       - name: Generate auto-generated files (UIC/MOC)
         run: |
-          Write-Host "Building autogen targets to generate ui_*.h, moc_*.h, etc."
-          $raw = ninja -C "${{ env.builddir }}" -t targets all 2>$null
-          $targets = $raw |
-            Where-Object { $_ -match 'autogen' } |
-            ForEach-Object { ($_ -split ':')[0].Trim() } |
-            Where-Object { $_ -ne '' }
-          if ($targets) {
-            $targetArray = @($targets)
-            Write-Host "Found $($targetArray.Count) autogen targets"
-            $failed = 0
-            foreach ($t in $targetArray) {
-              ninja -C "${{ env.builddir }}" $t 2>$null
-              if ($LASTEXITCODE -ne 0) { $failed++ }
-            }
-            Write-Host "Autogen generation complete ($failed targets had errors)"
-          } else {
-            Write-Host "No autogen targets found - skipping"
+          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
+          if (-not $changedFiles) {
+            Write-Host "No source files changed - skipping autogen"
+            exit 0
           }
+
+          Write-Host "Scanning changed files for ui_*.h includes..."
+          $needed = @{}
+          foreach ($file in $changedFiles) {
+            if (-not (Test-Path $file)) { continue }
+            $content = Get-Content $file -Raw -ErrorAction SilentlyContinue
+            if ($content -match 'ui_\w+\.h') {
+              $matches = [regex]::Matches($content, 'ui_(\w+)\.h')
+              foreach ($m in $matches) {
+                $needed[$m.Groups[1].Value] = $true
+              }
+            }
+          }
+
+          if ($needed.Count -eq 0) {
+            Write-Host "No ui_*.h includes found - skipping autogen"
+            exit 0
+          }
+
+          Write-Host "Need to generate: $($needed.Keys -join ', ')"
+          $allTargets = ninja -C "${{ env.builddir }}" -t targets all 2>$null
+          $failed = 0
+          foreach ($name in $needed.Keys) {
+            $matchingTargets = $allTargets |
+              Where-Object { $_ -match "ui_$name\.h" } |
+              ForEach-Object { ($_ -split ':')[0].Trim() } |
+              Where-Object { $_ -ne '' }
+            if ($matchingTargets) {
+              foreach ($target in $matchingTargets) {
+                Write-Host "Generating: $target"
+                ninja -C "${{ env.builddir }}" $target 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                  Write-Host "  OK"
+                  break
+                }
+                Write-Warning "  Failed: $target"
+                $failed++
+              }
+            } else {
+              Write-Warning "No ninja target found for ui_$name.h"
+              $failed++
+            }
+          }
+
+          if ($failed -gt 0) {
+            Write-Warning "$failed ui_*.h targets could not be generated"
+          }
+          Write-Host "Autogen generation complete"
         shell: pwsh
 
       - name: Resolve changed files to compile
