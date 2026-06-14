@@ -141,13 +141,13 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
-      - name: Resolve changed files to targets
+      - name: Resolve changed files
         id: resolve
         run: |
           $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
           if (-not $changedFiles) {
             Write-Host "No changed files to resolve"
-            echo "target_count=0" >> $env:GITHUB_OUTPUT
+            echo "file_count=0" >> $env:GITHUB_OUTPUT
             exit 0
           }
 
@@ -169,6 +169,7 @@ jobs:
             return $null
           }
 
+          $filesToCompile = @()
           $targets = @{}
 
           foreach ($file in $changedFiles) {
@@ -182,13 +183,15 @@ jobs:
 
             if ($file -match '\.(cpp|c|cc)$') {
               if ($compileLookup.ContainsKey($normalized)) {
-                $target = Get-TargetFromCommand $compileLookup[$normalized].command
-                if ($target) {
-                  $targets[$target] = $true
-                  Write-Host "FILE: $file -> target: $target"
-                } else {
-                  Write-Host "FILE: $file -> could not determine target"
+                $entry = $compileLookup[$normalized]
+                $target = Get-TargetFromCommand $entry.command
+                $targets[$target] = $true
+                $filesToCompile += @{
+                  cmd = $entry.command
+                  dir = $entry.directory
+                  file = $file
                 }
+                Write-Host "COMPILE: $file -> target: $target"
               } else {
                 Write-Host "SKIP (not in compile_commands.json): $file"
               }
@@ -203,11 +206,18 @@ jobs:
                   $incAbsolute = Join-Path $repoRoot $inc
                   $incNormalized = $incAbsolute.Replace('/', '\').ToLower()
                   if ($compileLookup.ContainsKey($incNormalized)) {
-                    $target = Get-TargetFromCommand $compileLookup[$incNormalized].command
-                    if ($target) {
-                      $targets[$target] = $true
-                      Write-Host "  INCLUDER: $inc -> target: $target"
+                    $entry = $compileLookup[$incNormalized]
+                    $target = Get-TargetFromCommand $entry.command
+                    $targets[$target] = $true
+                    $alreadyAdded = $filesToCompile | Where-Object { $_.file -eq $inc }
+                    if (-not $alreadyAdded) {
+                      $filesToCompile += @{
+                        cmd = $entry.command
+                        dir = $entry.directory
+                        file = $inc
+                      }
                     }
+                    Write-Host "  INCLUDER: $inc -> target: $target"
                   }
                 }
               } else {
@@ -216,45 +226,90 @@ jobs:
             }
           }
 
-          $targetList = $targets.Keys | Sort-Object
+          $targetList = $targets.Keys | Where-Object { $_ } | Sort-Object
           Write-Host ""
-          Write-Host "Targets to build: $($targetList -join ', ')"
-          Write-Host "Total targets: $($targetList.Count)"
+          Write-Host "Files to compile: $($filesToCompile.Count)"
+          Write-Host "Affected targets: $($targetList -join ', ')"
 
-          $targetList | ForEach-Object { Write-Host "TARGET: $_" } | Out-Null
-          $targetJson = $targetList | ConvertTo-Json
-          Set-Content "${{ env.builddir }}\targets_to_build.json" $targetJson
+          $filesToCompile | ConvertTo-Json -Depth 3 | Set-Content "${{ env.builddir }}\files_to_compile.json"
+          $targetList | ConvertTo-Json | Set-Content "${{ env.builddir }}\targets.json"
 
+          echo "file_count=$($filesToCompile.Count)" >> $env:GITHUB_OUTPUT
           echo "target_count=$($targetList.Count)" >> $env:GITHUB_OUTPUT
           echo "targets=$($targetList -join ',')" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
-      - name: Build changed targets
+      - name: Generate auto-generated files (autogen)
         if: steps.resolve.outputs.target_count > 0
         run: |
-          $targets = Get-Content "${{ env.builddir }}\targets_to_build.json" -Raw | ConvertFrom-Json
-          Write-Host "Building targets: $($targets -join ', ')"
+          $targets = Get-Content "${{ env.builddir }}\targets.json" -Raw | ConvertFrom-Json
+          if (-not $targets) {
+            Write-Host "No targets - skipping autogen"
+            exit 0
+          }
+
+          Write-Host "Building autogen for targets: $($targets -join ', ')"
           Write-Host ""
 
           $failed = @()
           foreach ($target in $targets) {
-            Write-Host "=== Building target: $target ==="
-            cmake --build "${{ env.builddir }}" --config Release --target $target -j32 2>&1 | ForEach-Object { Write-Host "  $_" }
+            $autogenTarget = "${target}_autogen"
+            Write-Host "=== $autogenTarget ==="
+            cmake --build "${{ env.builddir }}" --config Release --target $autogenTarget -j32 2>&1 | ForEach-Object { Write-Host "  $_" }
             if ($LASTEXITCODE -ne 0) {
-              Write-Host "FAILED: target $target"
-              $failed += $target
+              Write-Warning "Autogen failed for $target (target $autogenTarget may not exist), building full target..."
+              cmake --build "${{ env.builddir }}" --config Release --target $target -j32 2>&1 | ForEach-Object { Write-Host "  $_" }
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "FAILED: target $target"
+                $failed += $target
+              } else {
+                Write-Host "OK (full target): $target"
+              }
             } else {
-              Write-Host "OK: target $target"
+              Write-Host "OK: $autogenTarget"
             }
-            Write-Host ""
           }
 
           if ($failed.Count -gt 0) {
             Write-Host "Failed targets: $($failed -join ', ')"
             exit 1
           }
+        shell: pwsh
 
-          Write-Host "All targets built successfully"
+      - name: Compile changed files
+        if: steps.resolve.outputs.file_count > 0
+        run: |
+          $commands = Get-Content "${{ env.builddir }}\files_to_compile.json" -Raw | ConvertFrom-Json
+          $failed = @()
+
+          foreach ($c in $commands) {
+            $file = $c.file
+            $cmd = $c.cmd
+            $dir = $c.dir
+
+            Write-Host ""
+            Write-Host "=== Compiling: $file ==="
+
+            $result = cmd /c "cd /d `"$dir`" && $cmd 2>&1"
+            $exitCode = $LASTEXITCODE
+
+            if ($exitCode -ne 0) {
+              Write-Host "FAILED: $file (exit code $exitCode)"
+              $result | ForEach-Object { Write-Host "  $_" }
+              $failed += $file
+            } else {
+              Write-Host "OK: $file"
+            }
+          }
+
+          Write-Host ""
+          Write-Host "Succeeded: $($commands.Count - $failed.Count)/$($commands.Count)"
+
+          if ($failed.Count -gt 0) {
+            Write-Host "Failed files:"
+            $failed | ForEach-Object { Write-Host "  $_" }
+            exit 1
+          }
         shell: pwsh
 
       - name: Upload logs
