@@ -152,13 +152,12 @@ jobs:
           if ($targets) {
             $targetArray = @($targets)
             Write-Host "Found $($targetArray.Count) autogen targets"
-            $targetArray | ForEach-Object { Write-Host "  $_" }
-            $targetList = $targetArray -join ' '
-            ninja -C "${{ env.builddir }}" $targetList
-            if ($LASTEXITCODE -ne 0) {
-              Write-Warning "Some autogen targets reported errors, continuing anyway"
+            $failed = 0
+            foreach ($t in $targetArray) {
+              ninja -C "${{ env.builddir }}" $t 2>$null
+              if ($LASTEXITCODE -ne 0) { $failed++ }
             }
-            Write-Host "Autogen generation complete"
+            Write-Host "Autogen generation complete ($failed targets had errors)"
           } else {
             Write-Host "No autogen targets found - skipping"
           }
