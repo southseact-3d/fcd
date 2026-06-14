@@ -141,96 +141,6 @@ jobs:
           }
           Write-Host "CMake configuration successful"
 
-      - name: Generate auto-generated files (UIC)
-        run: |
-          $changedFiles = git diff --name-only main...HEAD -- '*.cpp' '*.h' '*.hpp' '*.c' '*.cc'
-          if (-not $changedFiles) {
-            Write-Host "No source files changed - skipping UIC"
-            exit 0
-          }
-
-          Write-Host "Scanning changed files for ui_*.h includes..."
-          $needed = @{}
-          foreach ($file in $changedFiles) {
-            if (-not (Test-Path $file)) { continue }
-            $content = Get-Content $file -Raw -ErrorAction SilentlyContinue
-            if ($content -match 'ui_\w+\.h') {
-              $uiMatches = [regex]::Matches($content, '"ui_(\w+)\.h"')
-              foreach ($m in $uiMatches) {
-                $needed[$m.Groups[1].Value] = $true
-              }
-            }
-          }
-
-          if ($needed.Count -eq 0) {
-            Write-Host "No ui_*.h includes found - skipping UIC"
-            exit 0
-          }
-
-          Write-Host "Need to generate: $($needed.Keys -join ', ')"
-
-          $uic = Get-ChildItem -Path "${{ env.libpackdir }}" -Filter "uic.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $uic) {
-            Write-Error "uic.exe not found in libpack"
-            exit 1
-          }
-          Write-Host "Found uic: $($uic.FullName)"
-
-          $compileDb = Get-Content "${{ env.builddir }}\compile_commands.json" -Raw | ConvertFrom-Json
-          $compileLookup = @{}
-          foreach ($entry in $compileDb) {
-            $normalized = $entry.file.Replace('/', '\').ToLower()
-            if (-not $compileLookup.ContainsKey($normalized)) {
-              $compileLookup[$normalized] = $entry
-            }
-          }
-
-          $repoRoot = (Get-Location).Path
-          $failed = 0
-          foreach ($name in $needed.Keys) {
-            $uiFile = Get-ChildItem -Path "src" -Filter "$name.ui" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-            if (-not $uiFile) {
-              Write-Warning "Cannot find ${name}.ui"
-              $failed++
-              continue
-            }
-
-            $autogenDir = ""
-            foreach ($file in $changedFiles) {
-              $absPath = (Join-Path $repoRoot $file).Replace('/', '\').ToLower()
-              if ($compileLookup.ContainsKey($absPath)) {
-                $cmd = $compileLookup[$absPath].command
-                if ($cmd -match '-I(\S+_autogen[/\\]include)') {
-                  $autogenDir = $Matches[1]
-                  break
-                }
-              }
-            }
-            if (-not $autogenDir) {
-              Write-Error "Could not find autogen include directory"
-              $failed++
-              continue
-            }
-            Write-Host "Autogen dir: $autogenDir"
-
-            $outFile = "$autogenDir\ui_$name.h"
-            Write-Host "Generating: $outFile from $($uiFile.FullName)"
-            & "$($uic.FullName)" "$($uiFile.FullName)" -o "$outFile"
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "  OK"
-            } else {
-              Write-Warning "  Failed to generate ui_$name.h"
-              $failed++
-            }
-          }
-
-          if ($failed -gt 0) {
-            Write-Error "$failed ui_*.h files could not be generated"
-            exit 1
-          }
-          Write-Host "UIC generation complete"
-        shell: pwsh
-
       - name: Resolve changed files to compile
         id: resolve
         run: |
@@ -336,6 +246,83 @@ jobs:
           $compileCommands | ConvertTo-Json -Depth 3 | Set-Content $outputPath
 
           echo "compile_count=$($compileCommands.Count)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Generate auto-generated files (UIC)
+        if: steps.resolve.outputs.compile_count > 0
+        run: |
+          $commands = Get-Content "${{ env.builddir }}\compile_commands_to_run.json" -Raw | ConvertFrom-Json
+
+          Write-Host "Scanning compiled files for ui_*.h includes..."
+          $needed = @{}
+          $fileAutogenMap = @{}
+          foreach ($c in $commands) {
+            $file = $c.file
+            if (-not (Test-Path $file)) { continue }
+            $content = Get-Content $file -Raw -ErrorAction SilentlyContinue
+            if ($content -match 'ui_\w+\.h') {
+              $uiMatches = [regex]::Matches($content, '"ui_(\w+)\.h"')
+              foreach ($m in $uiMatches) {
+                $needed[$m.Groups[1].Value] = $true
+                if (-not $fileAutogenMap.ContainsKey($m.Groups[1].Value)) {
+                  $fileAutogenMap[$m.Groups[1].Value] = $c
+                }
+              }
+            }
+          }
+
+          if ($needed.Count -eq 0) {
+            Write-Host "No ui_*.h includes found - skipping UIC"
+            exit 0
+          }
+
+          Write-Host "Need to generate: $($needed.Keys -join ', ')"
+
+          $uic = Get-ChildItem -Path "${{ env.libpackdir }}" -Filter "uic.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $uic) {
+            Write-Error "uic.exe not found in libpack"
+            exit 1
+          }
+          Write-Host "Found uic: $($uic.FullName)"
+
+          $repoRoot = (Get-Location).Path
+          $failed = 0
+          foreach ($name in $needed.Keys) {
+            $uiFile = Get-ChildItem -Path "src" -Filter "$name.ui" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $uiFile) {
+              Write-Warning "Cannot find ${name}.ui"
+              $failed++
+              continue
+            }
+
+            $entry = $fileAutogenMap[$name]
+            $autogenDir = ""
+            if ($entry.command -match '-I(\S+_autogen[/\\]include)') {
+              $autogenDir = $Matches[1]
+            }
+            if (-not $autogenDir) {
+              Write-Warning "Could not find autogen include directory for $name"
+              $failed++
+              continue
+            }
+            Write-Host "Autogen dir: $autogenDir"
+
+            $outFile = "$autogenDir\ui_$name.h"
+            Write-Host "Generating: $outFile from $($uiFile.FullName)"
+            & "$($uic.FullName)" "$($uiFile.FullName)" -o "$outFile"
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "  OK"
+            } else {
+              Write-Warning "  Failed to generate ui_$name.h"
+              $failed++
+            }
+          }
+
+          if ($failed -gt 0) {
+            Write-Error "$failed ui_*.h files could not be generated"
+            exit 1
+          }
+          Write-Host "UIC generation complete"
         shell: pwsh
 
       - name: Compile changed files
