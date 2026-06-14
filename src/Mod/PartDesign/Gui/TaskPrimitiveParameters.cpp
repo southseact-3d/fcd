@@ -59,6 +59,28 @@ TaskBoxPrimitives::TaskBoxPrimitives(ViewProviderPrimitive* vp, QWidget* parent)
     proxy = new QWidget(this);
     ui->setupUi(proxy);
 
+    // Add Operation combo box (Join/Cut) at the top of the dialog
+    auto* opLayout = new QHBoxLayout();
+    auto* opLabel = new QLabel(tr("Operation:"), proxy);
+    operationCombo = new QComboBox(proxy);
+    operationCombo->addItem(tr("Join"));  // Index 0 = Additive
+    operationCombo->addItem(tr("Cut"));   // Index 1 = Subtractive
+    opLayout->addWidget(opLabel);
+    opLayout->addWidget(operationCombo);
+    
+    // Insert the operation layout at the top of the vertical layout
+    ui->verticalLayout->insertLayout(0, opLayout);
+    
+    // Initialize the combo box from the feature's Operation property
+    if (auto* feat = getObject<PartDesign::FeatureAddSub>()) {
+        int opIndex = feat->Operation.getValue();
+        operationCombo->setCurrentIndex(opIndex);
+    }
+    
+    // Connect the combo box to update the feature's Operation property
+    connect(operationCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &TaskBoxPrimitives::onOperationChanged);
+
     this->groupLayout()->addWidget(proxy);
 
     int index = 0;
@@ -403,6 +425,14 @@ void TaskBoxPrimitives::slotDeletedObject(const Gui::ViewProviderDocumentObject&
 {
     if (this->vp == &Obj) {
         this->vp = nullptr;
+    }
+}
+
+void TaskBoxPrimitives::onOperationChanged(int index)
+{
+    if (auto* feat = getObject<PartDesign::FeatureAddSub>()) {
+        feat->Operation.setValue(index);
+        feat->recomputeFeature();
     }
 }
 
@@ -832,9 +862,13 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
         std::string cmd;
         std::string name(Gui::Command::getObjectCmd(obj));
         Base::QuantityFormat format(Base::QuantityFormat::Fixed, Base::UnitsApi::getDecimals());
+        
+        // Add Operation property command
+        std::string opCmd = fmt::format("{0}.Operation = {1}\n", name, operationCombo->currentIndex());
+        
         switch (ui->widgetStack->currentIndex()) {
             case 1:  // box
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Length='{1}'\n"
                     "{0}.Width='{2}'\n"
                     "{0}.Height='{3}'\n",
@@ -846,7 +880,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                 break;
 
             case 2:  // cylinder
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Radius='{1}'\n"
                     "{0}.Height='{2}'\n"
                     "{0}.Angle='{3}'\n"
@@ -862,7 +896,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                 break;
 
             case 3:  // cone
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Radius1='{1}'\n"
                     "{0}.Radius2='{2}'\n"
                     "{0}.Height='{3}'\n"
@@ -876,7 +910,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                 break;
 
             case 4:  // sphere
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Radius='{1}'\n"
                     "{0}.Angle1='{2}'\n"
                     "{0}.Angle2='{3}'\n"
@@ -889,7 +923,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                 );
                 break;
             case 5:  // ellipsoid
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Radius1='{1}'\n"
                     "{0}.Radius2='{2}'\n"
                     "{0}.Radius3='{3}'\n"
@@ -907,7 +941,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                 break;
 
             case 6:  // torus
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Radius1='{1}'\n"
                     "{0}.Radius2='{2}'\n"
                     "{0}.Angle1='{3}'\n"
@@ -922,7 +956,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                 );
                 break;
             case 7:  // prism
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Polygon={1}\n"
                     "{0}.Circumradius='{2}'\n"
                     "{0}.Height='{3}'\n"
@@ -962,7 +996,7 @@ bool TaskBoxPrimitives::setPrimitive(App::DocumentObject* obj)
                     );
                     return false;
                 }
-                cmd = fmt::format(
+                cmd = opCmd + fmt::format(
                     "{0}.Xmin='{1}'\n"
                     "{0}.Ymin='{2}'\n"
                     "{0}.Zmin='{3}'\n"

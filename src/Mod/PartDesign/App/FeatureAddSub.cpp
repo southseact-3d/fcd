@@ -45,13 +45,33 @@ extern bool getPDRefineModelParameter();
 
 PROPERTY_SOURCE(PartDesign::FeatureAddSub, PartDesign::FeatureRefine)
 
+static const char* operationTypes[] = {"Additive", "Subtractive", nullptr};
+
 FeatureAddSub::FeatureAddSub()
 {
     ADD_PROPERTY(AddSubShape, (TopoDS_Shape()));
+    ADD_PROPERTY_TYPE(
+        Operation,
+        (0),
+        "Base",
+        App::PropertyHidden,
+        "Operation type (Additive or Subtractive)"
+    );
+    Operation.setEnums(operationTypes);
 }
 
 void FeatureAddSub::onChanged(const App::Property* property)
 {
+    if (property == &Operation) {
+        int opIndex = Operation.getValue();
+        if (opIndex == 0) {
+            addSubType = Additive;
+        }
+        else if (opIndex == 1) {
+            addSubType = Subtractive;
+        }
+    }
+
     Feature::onChanged(property);
 }
 
@@ -152,6 +172,7 @@ PROPERTY_SOURCE(PartDesign::FeatureAdditivePython, PartDesign::FeatureAddSubPyth
 FeatureAdditivePython::FeatureAdditivePython()
 {
     addSubType = Additive;
+    Operation.setValue(0);
 }
 
 FeatureAdditivePython::~FeatureAdditivePython() = default;
@@ -162,6 +183,7 @@ PROPERTY_SOURCE(PartDesign::FeatureSubtractivePython, PartDesign::FeatureAddSubP
 FeatureSubtractivePython::FeatureSubtractivePython()
 {
     addSubType = Subtractive;
+    Operation.setValue(1);
 }
 
 FeatureSubtractivePython::~FeatureSubtractivePython() = default;

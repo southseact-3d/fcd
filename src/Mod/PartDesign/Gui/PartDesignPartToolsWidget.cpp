@@ -228,8 +228,7 @@ PartDesignGroupWidget* PartDesignPartToolsWidget::createCreateGroup()
         "PartDesign_Pocket",
         "PartDesign_Hole",
         "PartDesign_Groove",
-        "PartDesign_PartBox",
-        "PartDesign_PartCylinder",
+        "PartDesign_CompPrimitive",
         "PartDesign_Boolean",
     };
 
@@ -369,7 +368,6 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addMenuItem("PartDesign_AdditiveLoft");
     addMenuItem("PartDesign_AdditivePipe");
     addMenuItem("PartDesign_AdditiveHelix");
-    addMenuItem("PartDesign_CompPrimitiveAdditive");
 
     addSeparator();
 
@@ -381,12 +379,12 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addMenuItem("PartDesign_SubtractiveLoft");
     addMenuItem("PartDesign_SubtractivePipe");
     addMenuItem("PartDesign_SubtractiveHelix");
-    addMenuItem("PartDesign_CompPrimitiveSubtractive");
 
     addSeparator();
 
-    // Primitives section
+    // Primitives section (unified with Join/Cut toggle)
     addSectionHeader(QObject::tr("PRIMITIVES"));
+    addMenuItem("PartDesign_CompPrimitive");
     addMenuItem("PartDesign_PartBox");
     addMenuItem("PartDesign_PartCylinder");
     addMenuItem("PartDesign_PartSphere");
