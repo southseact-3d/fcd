@@ -1,0 +1,20 @@
+{
+  "name": "Elegoo Mars 3",
+  "type": "resin",
+  "manufacturer": "Elegoo",
+  "model": "Mars 3",
+  "resolution_x": 4098,
+  "resolution_y": 2560,
+  "pixel_size_x": 0.035,
+  "pixel_size_y": 0.035,
+  "build_area_x": 143.36,
+  "build_area_y": 89.6,
+  "build_height": 180.0,
+  "has_tilt": false,
+  "lift_height": 5.0,
+  "lift_speed": 1.0,
+  "retract_speed": 1.5,
+  "light_type": "LCD",
+  "light_power": 5500,
+  "default_material": "Grey Resin"
+}

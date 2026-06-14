@@ -1,0 +1,18 @@
+{
+  "name": "Grey Resin",
+  "type": "resin_material",
+  "manufacturer": "Generic",
+  "wavelength": 405,
+  "exposure_time": 2.5,
+  "bottom_exposure_time": 30.0,
+  "bottom_layer_count": 6,
+  "layer_height": 0.05,
+  "light_off_delay": 1.0,
+  "lift_height": 5.0,
+  "lift_speed": 1.0,
+  "retract_speed": 1.0,
+  "shrinkage_factor": 0.3,
+  "density": 1.1,
+  "price_per_ml": 0.05,
+  "color": "#808080"
+}

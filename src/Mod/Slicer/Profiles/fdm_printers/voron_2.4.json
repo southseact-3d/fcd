@@ -1,0 +1,15 @@
+{
+  "name": "Voron 2.4",
+  "type": "fdm",
+  "manufacturer": "Voron Design",
+  "model": "2.4",
+  "bed_size": [350, 350, 340],
+  "nozzle_diameter": 0.4,
+  "heated_bed": true,
+  "heated_chamber": true,
+  "max_feedrate": {"x": 300, "y": 300, "z": 25, "e": 150},
+  "max_acceleration": {"x": 3000, "y": 3000, "z": 500, "e": 10000},
+  "firmware": "repRap",
+  "has_auto_bed_leveling": true,
+  "default_material": "ABS"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Prusa MK3S+",
+  "type": "fdm",
+  "manufacturer": "Prusa",
+  "model": "MK3S+",
+  "bed_size": [250, 210, 210],
+  "nozzle_diameter": 0.4,
+  "heated_bed": true,
+  "heated_chamber": false,
+  "max_feedrate": {"x": 200, "y": 200, "z": 12, "e": 120},
+  "max_acceleration": {"x": 1000, "y": 1000, "z": 500, "e": 5000},
+  "firmware": "marlin",
+  "has_auto_bed_leveling": true,
+  "default_material": "PLA"
+}
