@@ -24,6 +24,8 @@ if(BUILD_GUI)
           InvoluteGearFeature.ui
           SprocketFeature.py
           SprocketFeature.ui
+          LadderFeature.py
+          LadderFeature.ui
     )
 endif(BUILD_GUI)
 

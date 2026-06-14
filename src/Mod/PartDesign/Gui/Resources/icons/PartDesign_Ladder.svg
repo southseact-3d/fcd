@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Left rail -->
+  <rect x="10" y="4" width="4" height="56" fill="#A0A0A0" stroke="#606060" stroke-width="1" rx="1"/>
+  <!-- Right rail -->
+  <rect x="50" y="4" width="4" height="56" fill="#A0A0A0" stroke="#606060" stroke-width="1" rx="1"/>
+  <!-- Rungs -->
+  <rect x="14" y="10" width="36" height="3" fill="#C0C0C0" stroke="#808080" stroke-width="0.5" rx="1"/>
+  <rect x="14" y="20" width="36" height="3" fill="#C0C0C0" stroke="#808080" stroke-width="0.5" rx="1"/>
+  <rect x="14" y="30" width="36" height="3" fill="#C0C0C0" stroke="#808080" stroke-width="0.5" rx="1"/>
+  <rect x="14" y="40" width="36" height="3" fill="#C0C0C0" stroke="#808080" stroke-width="0.5" rx="1"/>
+  <rect x="14" y="50" width="36" height="3" fill="#C0C0C0" stroke="#808080" stroke-width="0.5" rx="1"/>
+</svg>
