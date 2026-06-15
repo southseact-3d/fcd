@@ -13,7 +13,7 @@ import FreeCAD
 import FreeCADGui
 import Mesh
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 try:
     from SlicerUi import (

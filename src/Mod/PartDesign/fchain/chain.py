@@ -20,7 +20,7 @@ def _makeOblongWire(link_length, link_width, wire_diameter):
     Returns:
         A closed Part.Wire representing the centerline path of one link.
     """
-    L = link_length - wire_diameter
+    L = max(link_length - link_width, 0.01)
     W = link_width - wire_diameter
 
     if L < 0:
@@ -174,11 +174,11 @@ def _buildLinkTransform(position, tangent, up_hint=Base.Vector(0, 0, 1)):
     y_axis = z_axis.cross(x_axis)
     y_axis = y_axis.normalize()
 
-    # Build rotation matrix (columns are the new axes)
+    # Build rotation+translation matrix (columns are the new axes + position)
     mat = Base.Matrix(
-        x_axis.x, y_axis.x, z_axis.x, 0,
-        x_axis.y, y_axis.y, z_axis.y, 0,
-        x_axis.z, y_axis.z, z_axis.z, 0,
+        x_axis.x, y_axis.x, z_axis.x, position.x,
+        x_axis.y, y_axis.y, z_axis.y, position.y,
+        x_axis.z, y_axis.z, z_axis.z, position.z,
         0, 0, 0, 1,
     )
     return mat

@@ -264,6 +264,12 @@ void TaskBrickTextureParameters::onScaleChanged(int val)
             setSelectionMode(none);
             setupTransaction();
 
+            // Reset scale to 1:1 FIRST so any intermediate recompute uses scaleFactor=1.0
+            brick->Scale.setValue(static_cast<long>(0));
+            ui->scale->blockSignals(true);
+            ui->scale->setCurrentIndex(0);
+            ui->scale->blockSignals(false);
+
             // Block signals to avoid per-field recomputes
             ui->brickWidth->blockSignals(true);
             ui->brickHeight->blockSignals(true);
@@ -296,12 +302,6 @@ void TaskBrickTextureParameters::onScaleChanged(int val)
             ui->brickDepth->blockSignals(false);
             ui->mortarThickness->blockSignals(false);
             ui->mortarDepth->blockSignals(false);
-
-            // Reset scale to 1:1 since parameters now incorporate the scale
-            brick->Scale.setValue(static_cast<long>(0));
-            ui->scale->blockSignals(true);
-            ui->scale->setCurrentIndex(0);
-            ui->scale->blockSignals(false);
         }
         else {
             // Custom or same selection — just apply the scale factor directly

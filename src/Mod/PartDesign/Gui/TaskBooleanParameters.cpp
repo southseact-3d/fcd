@@ -36,7 +36,6 @@
 #include <Gui/BitmapFactory.h>
 #include <Gui/Command.h>
 #include <Gui/Selection/Selection.h>
-#include <Gui/Selection/SelectionFilter.h>
 #include <Gui/Tools.h>
 #include <Gui/ViewProvider.h>
 #include <Mod/PartDesign/App/Body.h>
@@ -140,8 +139,6 @@ void TaskBooleanParameters::enterSelectionMode()
     }
     selectionMode = toolSelect;
     Gui::Selection().clearSelection();
-    Gui::Selection().rmvSelectionGate();
-    Gui::Selection().addSelectionGate(new SelectionFilterGate("SELECT PartDesign::Body COUNT 1.."));
     ui->labelHint->setText(tr("Click bodies in 3D view to add as tools."));
 }
 
@@ -314,8 +311,6 @@ void TaskBooleanParameters::onButtonChangeTarget()
 {
     selectionMode = targetSelect;
     Gui::Selection().clearSelection();
-    Gui::Selection().rmvSelectionGate();
-    Gui::Selection().addSelectionGate(new SelectionFilterGate("SELECT PartDesign::Body COUNT 1"));
     ui->labelHint->setText(tr("Click a body in 3D view to set as target."));
 }
 
