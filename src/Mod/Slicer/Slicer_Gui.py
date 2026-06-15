@@ -192,7 +192,7 @@ def _ensure_mesh_data(obj):
     if obj.isDerivedFrom("Mesh::Feature"):
         return obj.Mesh
     if hasattr(obj, "Shape"):
-        mesh = Mesh.Mesh(obj.Shape tessellation=0.1)
+        mesh = Mesh.Mesh(obj.Shape.tessellate(0.1))
         return mesh
     return None
 
