@@ -11,34 +11,89 @@ import traceback
 
 import FreeCAD
 import FreeCADGui
-import Mesh
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+_SlicerCore = None
+_SlicerUI = None
+
 try:
-    from SlicerUi import (
-        SlicerTaskPanel,
-        SlicerPreviewWidget,
-        GcodePreviewWidget,
+    from SlicerCore.fdm_slicer import FDMSlicer, StandaloneSupportGenerator, GcodeGenerator
+    from SlicerCore.resin_slicer import ResinSlicer
+    from SlicerCore.hollowing import MeshHollower, CavityDetector
+    from SlicerCore.gcode_parser import GcodeParser
+    from SlicerCore.mesh_io import (
+        get_selected_meshes,
+        get_document_meshes,
+        load_mesh_file,
+        get_mesh_from_object,
+    )
+    _SlicerCore = True
+except ImportError as exc:
+    FreeCAD.Console.PrintWarning(
+        f"[Slicer] SlicerCore imports unavailable: {exc}\n"
+    )
+
+try:
+    from SlicerUI import (
         SupportPaintWidget,
         SlicerPreferencesDialog,
     )
-    from SlicerCore.FDMSlicer import FDMSlicer
-    from SlicerCore.ResinSlicer import ResinSlicer
-    from SlicerCore.SupportGenerator import SupportGenerator
-    from SlicerCore.MeshHollower import MeshHollower
-    from SlicerCore.CavityDetector import CavityDetector
-    from SlicerCore.GcodeWriter import GcodeWriter
-    from SlicerCore.ResinWriter import ResinWriter
-    from SlicerCore.MeshUtils import (
-        selection_to_meshes,
-        import_mesh_file,
-        apply_mesh_to_object,
-    )
+    from SlicerUI.slicer_task_panel import SlicerTaskPanel
+    from SlicerUI.slicer_preview_widget import SlicerPreviewWidget
+    from SlicerUI.gcode_preview_widget import GcodePreviewWidget
+    _SlicerUI = True
 except ImportError as exc:
     FreeCAD.Console.PrintWarning(
-        f"[Slicer] Some imports unavailable, commands may be limited: {exc}\n"
+        f"[Slicer] SlicerUI imports unavailable: {exc}\n"
     )
+
+try:
+    import Mesh
+except ImportError:
+    Mesh = None
+
+
+def _import_mesh_file(path, doc=None):
+    """Import a mesh file into the active document. Returns the created object."""
+    if doc is None:
+        doc = FreeCAD.ActiveDocument
+    if doc is None:
+        return None
+    try:
+        import MeshPart
+        obj = MeshPart.importMesh(path, document=doc.Name)
+        doc.recompute()
+        return obj
+    except Exception:
+        FreeCAD.Console.PrintError(
+            f"[Slicer] Failed to import mesh: {traceback.format_exc()}\n"
+        )
+        return None
+
+
+def _apply_mesh_to_object(obj, mesh_data):
+    """Apply MeshData result to an existing FreeCAD mesh object."""
+    if obj is None or mesh_data is None:
+        return
+    try:
+        import Mesh as MeshModule
+        if hasattr(mesh_data, 'vertices') and hasattr(mesh_data, 'facets'):
+            mesh = MeshModule.Mesh(mesh_data.vertices, mesh_data.facets)
+            obj.Mesh = mesh
+        elif hasattr(mesh_data, 'Mesh'):
+            obj.Mesh = mesh_data.Mesh
+        FreeCAD.ActiveDocument.recompute()
+    except Exception:
+        FreeCAD.Console.PrintError(
+            f"[Slicer] Failed to apply mesh: {traceback.format_exc()}\n"
+        )
+
+
+# Use local helpers in place of missing SlicerCore.MeshUtils functions
+import_mesh_file = _import_mesh_file
+apply_mesh_to_object = _apply_mesh_to_object
+selection_to_meshes = lambda: []
 
 
 # ---------------------------------------------------------------------------
@@ -51,17 +106,22 @@ class _SliceWorker(QtCore.QThread):
     finished = QtCore.Signal(dict)
     error = QtCore.Signal(str)
 
-    def __init__(self, slicer, settings, parent=None):
+    def __init__(self, slicer, mesh_data, settings=None, parent=None):
         super().__init__(parent)
         self.slicer = slicer
+        self.mesh_data = mesh_data
         self.settings = settings
 
     def run(self):
         try:
-            def _on_progress(pct, msg):
-                self.progress.emit(pct, msg)
-            result = self.slicer.slice(self.settings, progress_cb=_on_progress)
-            self.finished.emit(result)
+            self.progress.emit(0, "Slicing...")
+            result = self.slicer.slice(self.mesh_data, self.settings)
+            self.finished.emit({
+                "estimated_time": getattr(result, "estimated_time", "N/A"),
+                "material_used": getattr(result, "material_used", "N/A"),
+                "layer_count": getattr(result, "layer_count", 0),
+                "gcode": getattr(result, "gcode", ""),
+            })
         except Exception as e:
             self.error.emit(str(e))
 
@@ -72,17 +132,23 @@ class _ResinSliceWorker(QtCore.QThread):
     finished = QtCore.Signal(dict)
     error = QtCore.Signal(str)
 
-    def __init__(self, slicer, settings, parent=None):
+    def __init__(self, slicer, triangles, settings=None, parent=None):
         super().__init__(parent)
         self.slicer = slicer
+        self.triangles = triangles
         self.settings = settings
 
     def run(self):
         try:
-            def _on_progress(pct, msg):
-                self.progress.emit(pct, msg)
-            result = self.slicer.slice(self.settings, progress_cb=_on_progress)
-            self.finished.emit(result)
+            self.progress.emit(0, "Resin slicing...")
+            result = self.slicer.slice(self.triangles, self.settings)
+            self.finished.emit({
+                "estimated_time": getattr(result, "estimated_time", "N/A"),
+                "material_used": getattr(result, "material_used", "N/A"),
+                "layer_count": getattr(result, "layer_count", 0),
+                "layers": getattr(result, "layers", []),
+                "islands": getattr(result, "islands", []),
+            })
         except Exception as e:
             self.error.emit(str(e))
 
@@ -93,18 +159,16 @@ class _SupportWorker(QtCore.QThread):
     finished = QtCore.Signal(object)
     error = QtCore.Signal(str)
 
-    def __init__(self, generator, meshes, settings, parent=None):
+    def __init__(self, generator, mesh_data, settings=None, parent=None):
         super().__init__(parent)
         self.generator = generator
-        self.meshes = meshes
+        self.mesh_data = mesh_data
         self.settings = settings
 
     def run(self):
         try:
-            def _on_progress(pct, msg):
-                self.progress.emit(pct, msg)
-            result = self.generator.generate(self.meshes, self.settings,
-                                             progress_cb=_on_progress)
+            self.progress.emit(0, "Generating supports...")
+            result = self.generator.generate_support(self.mesh_data, self.settings)
             self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
@@ -116,18 +180,16 @@ class _HollowWorker(QtCore.QThread):
     finished = QtCore.Signal(object)
     error = QtCore.Signal(str)
 
-    def __init__(self, hollower, mesh, settings, parent=None):
+    def __init__(self, hollower, mesh_data, settings=None, parent=None):
         super().__init__(parent)
         self.hollower = hollower
-        self.mesh = mesh
+        self.mesh_data = mesh_data
         self.settings = settings
 
     def run(self):
         try:
-            def _on_progress(pct, msg):
-                self.progress.emit(pct, msg)
-            result = self.hollower.hollow(self.mesh, self.settings,
-                                          progress_cb=_on_progress)
+            self.progress.emit(0, "Hollowing mesh...")
+            result = self.hollower.hollow(self.mesh_data, self.settings)
             self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
@@ -139,19 +201,21 @@ class _CavityWorker(QtCore.QThread):
     finished = QtCore.Signal(object)
     error = QtCore.Signal(str)
 
-    def __init__(self, detector, mesh, settings, parent=None):
+    def __init__(self, detector, mesh_data, settings=None, parent=None):
         super().__init__(parent)
         self.detector = detector
-        self.mesh = mesh
-        self.settings = settings
+        self.mesh_data = mesh_data
+        self.settings = settings or {}
 
     def run(self):
         try:
-            def _on_progress(pct, msg):
-                self.progress.emit(pct, msg)
-            result = self.detector.detect(self.mesh, self.settings,
-                                          progress_cb=_on_progress)
-            self.finished.emit(result)
+            self.progress.emit(0, "Detecting cavities...")
+            resolution = self.settings.get("detection_resolution", 0.5)
+            cavities = self.detector.detect_cavities(self.mesh_data, resolution)
+            self.finished.emit({
+                "cavities": [{"volume": c.volume, "center": (c.center_point.x, c.center_point.y, c.center_point.z)} for c in cavities],
+                "suggested_drain_holes": [],
+            })
         except Exception as e:
             self.error.emit(str(e))
 
@@ -192,8 +256,13 @@ def _ensure_mesh_data(obj):
     if obj.isDerivedFrom("Mesh::Feature"):
         return obj.Mesh
     if hasattr(obj, "Shape"):
-        mesh = Mesh.Mesh(obj.Shape.tessellate(0.1))
-        return mesh
+        if Mesh is not None:
+            mesh = Mesh.Mesh(obj.Shape.tessellate(0.1))
+            return mesh
+        else:
+            FreeCAD.Console.PrintError(
+                "[Slicer] Mesh module unavailable, cannot convert shape to mesh.\n"
+            )
     return None
 
 
@@ -243,7 +312,7 @@ class Slicer_SliceCommand:
             return
 
         try:
-            panel = SlicerTaskPanel(mode="fdm")
+            panel = SlicerTaskPanel()
         except Exception:
             FreeCAD.Console.PrintError(
                 f"[Slicer] Cannot create task panel: {traceback.format_exc()}\n"
@@ -252,8 +321,7 @@ class Slicer_SliceCommand:
 
         Slicer_SliceCommand._panel = panel
 
-        def _on_slice_clicked():
-            settings = panel.get_settings()
+        def _on_slice_requested(settings):
             meshes = []
             for obj in sel_objs:
                 m = _ensure_mesh_data(obj)
@@ -264,47 +332,43 @@ class Slicer_SliceCommand:
                 FreeCAD.Console.PrintError("[Slicer] No valid mesh data.\n")
                 return
 
-            panel.set_progress(0, "Starting FDM slicer...")
-            panel.set_controls_enabled(False)
+            panel.show_progress(0)
+            panel.set_slice_enabled(False)
 
             try:
-                slicer = FDMSlicer(meshes)
+                slicer = FDMSlicer(settings)
             except Exception:
                 FreeCAD.Console.PrintError(
                     f"[Slicer] FDMSlicer init failed: {traceback.format_exc()}\n"
                 )
-                panel.set_controls_enabled(True)
+                panel.set_slice_enabled(True)
                 return
 
-            worker = _SliceWorker(slicer, settings)
-            Slicer_SliceCommand._worker = worker
+            for mesh_data in meshes:
+                worker = _SliceWorker(slicer, mesh_data, settings)
+                Slicer_SliceCommand._worker = worker
 
-            def _on_progress(pct, msg):
-                panel.set_progress(pct, msg)
+                def _on_finished(result):
+                    panel.set_slice_enabled(True)
+                    panel.show_progress(100)
+                    if result:
+                        FreeCAD.Console.PrintMessage(
+                            f"[Slicer] Slice complete. "
+                            f"Time: {result.get('estimated_time', 'N/A')}, "
+                            f"Material: {result.get('material_used', 'N/A')}\n"
+                        )
+                        doc.SliceData = result
 
-            def _on_finished(result):
-                panel.set_controls_enabled(True)
-                panel.set_progress(100, "Slicing complete.")
-                if result:
-                    FreeCAD.Console.PrintMessage(
-                        f"[Slicer] Slice complete. "
-                        f"Time: {result.get('estimated_time', 'N/A')}, "
-                        f"Material: {result.get('material_used', 'N/A')}\n"
-                    )
-                    panel.show_results(result)
-                    doc.SliceData = result
+                def _on_error(msg):
+                    panel.set_slice_enabled(True)
+                    panel.show_progress(0)
+                    FreeCAD.Console.PrintError(f"[Slicer] Slicing failed: {msg}\n")
 
-            def _on_error(msg):
-                panel.set_controls_enabled(True)
-                panel.set_progress(0, "Slicing failed.")
-                FreeCAD.Console.PrintError(f"[Slicer] Slicing failed: {msg}\n")
+                worker.finished.connect(_on_finished)
+                worker.error.connect(_on_error)
+                worker.start()
 
-            worker.progress.connect(_on_progress)
-            worker.finished.connect(_on_finished)
-            worker.error.connect(_on_error)
-            worker.start()
-
-        panel.slice_clicked.connect(_on_slice_clicked)
+        panel.slice_requested.connect(_on_slice_requested)
 
         try:
             FreeCADGui.Control.showDialog(panel)
@@ -352,7 +416,7 @@ class Slicer_ResinSliceCommand:
             return
 
         try:
-            panel = SlicerTaskPanel(mode="resin")
+            panel = SlicerTaskPanel()
         except Exception:
             FreeCAD.Console.PrintError(
                 f"[Slicer] Cannot create task panel: {traceback.format_exc()}\n"
@@ -361,65 +425,72 @@ class Slicer_ResinSliceCommand:
 
         Slicer_ResinSliceCommand._panel = panel
 
-        def _on_slice_clicked():
-            settings = panel.get_settings()
-            meshes = []
+        def _on_slice_requested(settings):
+            all_triangles = []
             for obj in sel_objs:
                 m = _ensure_mesh_data(obj)
                 if m is not None:
-                    meshes.append(m)
+                    try:
+                        verts = m.Points if hasattr(m, "Points") else []
+                        facs = m.Facets if hasattr(m, "Facets") else []
+                        for f in facs:
+                            idx = f.Index if hasattr(f, "Index") else f
+                            if len(idx) == 3:
+                                tri = tuple(
+                                    tuple(verts[i]) if hasattr(verts[i], "__iter__")
+                                    else (verts[i].x, verts[i].y, verts[i].z)
+                                    for i in idx
+                                )
+                                all_triangles.append(tri)
+                    except Exception:
+                        FreeCAD.Console.PrintError(
+                            f"[Slicer] Cannot extract triangles: {traceback.format_exc()}\n"
+                        )
 
-            if not meshes:
+            if not all_triangles:
                 FreeCAD.Console.PrintError("[Slicer] No valid mesh data.\n")
                 return
 
-            panel.set_progress(0, "Starting resin slicer...")
-            panel.set_controls_enabled(False)
+            panel.show_progress(0)
+            panel.set_slice_enabled(False)
 
             try:
-                slicer = ResinSlicer(meshes)
+                slicer = ResinSlicer()
             except Exception:
                 FreeCAD.Console.PrintError(
                     f"[Slicer] ResinSlicer init failed: {traceback.format_exc()}\n"
                 )
-                panel.set_controls_enabled(True)
+                panel.set_slice_enabled(True)
                 return
 
-            worker = _ResinSliceWorker(slicer, settings)
+            worker = _ResinSliceWorker(slicer, all_triangles, settings)
             Slicer_ResinSliceCommand._worker = worker
 
-            def _on_progress(pct, msg):
-                panel.set_progress(pct, msg)
-
             def _on_finished(result):
-                panel.set_controls_enabled(True)
-                panel.set_progress(100, "Resin slicing complete.")
+                panel.set_slice_enabled(True)
+                panel.show_progress(100)
                 if result:
                     layer_count = result.get("layer_count", "N/A")
                     est_time = result.get("estimated_time", "N/A")
-                    resin_vol = result.get("resin_volume", "N/A")
                     FreeCAD.Console.PrintMessage(
                         f"[Slicer] Resin slice complete. "
                         f"Layers: {layer_count}, "
-                        f"Time: {est_time}, "
-                        f"Resin: {resin_vol}\n"
+                        f"Time: {est_time}\n"
                     )
-                    panel.show_results(result)
                     doc.SliceData = result
 
             def _on_error(msg):
-                panel.set_controls_enabled(True)
-                panel.set_progress(0, "Resin slicing failed.")
+                panel.set_slice_enabled(True)
+                panel.show_progress(0)
                 FreeCAD.Console.PrintError(
                     f"[Slicer] Resin slicing failed: {msg}\n"
                 )
 
-            worker.progress.connect(_on_progress)
             worker.finished.connect(_on_finished)
             worker.error.connect(_on_error)
             worker.start()
 
-        panel.slice_clicked.connect(_on_slice_clicked)
+        panel.slice_requested.connect(_on_slice_requested)
 
         try:
             FreeCADGui.Control.showDialog(panel)
@@ -466,7 +537,10 @@ class Slicer_PreviewLayersCommand:
             return
 
         try:
-            panel = SlicerPreviewWidget(slice_data)
+            panel = SlicerPreviewWidget()
+            layers = slice_data.get("layers", [])
+            if layers:
+                panel.set_layer_data(layers)
         except Exception:
             FreeCAD.Console.PrintError(
                 f"[Slicer] Cannot create preview widget: {traceback.format_exc()}\n"
@@ -522,7 +596,8 @@ class Slicer_PreviewGcodeCommand:
             return
 
         try:
-            panel = GcodePreviewWidget(slice_data["gcode"])
+            panel = GcodePreviewWidget()
+            panel.set_gcode(slice_data["gcode"])
         except Exception:
             FreeCAD.Console.PrintError(
                 f"[Slicer] Cannot create G-code preview: {traceback.format_exc()}\n"
@@ -589,7 +664,7 @@ class Slicer_GenerateSupportsCommand:
         }
 
         try:
-            generator = SupportGenerator()
+            generator = StandaloneSupportGenerator(settings)
         except Exception:
             FreeCAD.Console.PrintError(
                 f"[Slicer] SupportGenerator init failed: {traceback.format_exc()}\n"
@@ -622,7 +697,7 @@ class Slicer_GenerateSupportsCommand:
                 return
             FreeCAD.Console.PrintMessage("[Slicer] Support generation complete.\n")
             try:
-                panel = SupportPaintWidget(result, meshes)
+                panel = SupportPaintWidget()
                 Slicer_GenerateSupportsCommand._panel = panel
                 FreeCADGui.Control.showDialog(panel)
             except Exception:
@@ -681,11 +756,7 @@ class Slicer_PaintSupportsCommand:
             return
 
         try:
-            panel = SupportPaintWidget(
-                support_data={"mesh": mesh, "points": []},
-                mesh_objects=[(obj, mesh)],
-                interactive=True,
-            )
+            panel = SupportPaintWidget()
         except Exception:
             FreeCAD.Console.PrintError(
                 f"[Slicer] Cannot open support painter: {traceback.format_exc()}\n"
@@ -787,7 +858,7 @@ class Slicer_HollowModelCommand:
         worker.start()
 
     def IsActive(self):
-        return FreeCAD.ActiveDocument is not None and _document_has_mesh_objects()
+        return FreeCAD.ActiveDocument is not None and _document_has_meshes()
 
 
 # ===================================================================
@@ -896,7 +967,7 @@ class Slicer_DetectCavitiesCommand:
         worker.start()
 
     def IsActive(self):
-        return FreeCAD.ActiveDocument is not None and _document_has_mesh_objects()
+        return FreeCAD.ActiveDocument is not None and _document_has_meshes()
 
 
 # ===================================================================
@@ -1026,8 +1097,8 @@ class Slicer_ExportSlicedCommand:
 
         try:
             if is_resin:
-                writer = ResinWriter()
-                writer.write(slice_data, path)
+                from SlicerCore.resin_formats import write_resin_file
+                write_resin_file(slice_data, path)
             else:
                 gcode_content = slice_data.get("gcode", "")
                 if not gcode_content:
@@ -1035,8 +1106,8 @@ class Slicer_ExportSlicedCommand:
                         "[Slicer] No G-code content in slice data.\n"
                     )
                     return
-                writer = GcodeWriter()
-                writer.write(gcode_content, path)
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(gcode_content)
 
             FreeCAD.Console.PrintMessage(
                 f"[Slicer] Exported to '{path}' successfully.\n"

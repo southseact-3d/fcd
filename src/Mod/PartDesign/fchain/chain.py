@@ -70,12 +70,20 @@ def createSingleLink(link_length, link_width, wire_diameter):
     """
     path_wire = _makeOblongWire(link_length, link_width, wire_diameter)
 
-    # Create circular cross-section profile
+    # Create circular cross-section profile perpendicular to the path.
+    # Path lies in XY plane with tangent along X at start, so profile
+    # must be in YZ plane (normal along X).
     profile_radius = wire_diameter / 2.0
-    profile_circle = Part.makeCircle(profile_radius)
+    profile_circle = Part.makeCircle(
+        profile_radius,
+        Base.Vector(0, 0, 0),
+        Base.Vector(1, 0, 0),
+    )
     profile_wire = Part.Wire([profile_circle])
 
-    # Sweep the profile along the path
+    # Sweep the profile along the path.
+    # WithContact=True moves the profile to the path start.
+    # WithCorrection=True orients the profile perpendicular to the path tangent.
     section = Part.Wire([profile_wire])
     link = Part.Wire(path_wire).makePipeShell([section], True, True)
     return link

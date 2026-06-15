@@ -259,8 +259,8 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
 
     try {
         BRep_Builder builder;
-        TopoDS_Compound compound;
-        builder.MakeCompound(compound);
+        TopoDS_Compound allShapes;
+        builder.MakeCompound(allShapes);
 
         for (auto& faceShape : faces) {
             TopoDS_Face face = TopoDS::Face(faceShape.getShape());
@@ -316,141 +316,131 @@ App::DocumentObjectExecReturn* BrickTexture::execute()
             // Row offset vector for running bond pattern
             gp_Vec rowOffVec = uAxis * (rowOff * brickW);
 
-            for (int row = 0; row < rows; row++) {
-                gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
+            // -----------------------------------------------------------
+            //  Batch 1: Build all brick 2D faces into a compound, then
+            //  clip and extrude the entire batch in one operation.
+            // -----------------------------------------------------------
+            {
+                BRep_Builder brickBuilder;
+                TopoDS_Compound brickCompound;
+                brickBuilder.MakeCompound(brickCompound);
 
-                for (int col = -1; col <= cols; col++) {
-                    gp_Pnt brickOrigin(p00.XYZ()
-                        + uStep.XYZ() * col
-                        + vStep.XYZ() * row
-                        + rowOffset.XYZ());
-                    TopoDS_Shape brick2D = makeBrickFace(brickOrigin, uBrick, vBrick);
+                for (int row = 0; row < rows; row++) {
+                    gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
 
-                    try {
-                        BRepAlgoAPI_Common common(face, brick2D);
-                        if (!common.IsDone()) {
-                            continue;
-                        }
-                        TopoDS_Shape clipped = common.Shape();
+                    for (int col = -1; col <= cols; col++) {
+                        gp_Pnt brickOrigin(p00.XYZ()
+                            + uStep.XYZ() * col
+                            + vStep.XYZ() * row
+                            + rowOffset.XYZ());
+                        TopoDS_Shape brick2D = makeBrickFace(brickOrigin, uBrick, vBrick);
+                        brickBuilder.Add(brickCompound, brick2D);
+                    }
+                }
 
-                        if (clipped.IsNull()) {
-                            continue;
-                        }
-                        {
-                            TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
-                            if (!anExplorer.More()) {
-                                continue;
-                            }
-                        }
-
+                // Clip all brick faces against the face in one operation
+                BRepAlgoAPI_Common common(face, brickCompound);
+                if (common.IsDone()) {
+                    TopoDS_Shape clipped = common.Shape();
+                    if (!clipped.IsNull()) {
                         gp_Vec extrudeVec(normal);
                         extrudeVec.Multiply(brickD);
-                        TopoDS_Shape brick3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
-
-                        builder.Add(compound, brick3D);
-                    }
-                    catch (Standard_Failure&) {
-                        continue;
+                        TopoDS_Shape brick3D =
+                            BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+                        builder.Add(allShapes, brick3D);
                     }
                 }
             }
 
+            // -----------------------------------------------------------
+            //  Batch 2: Horizontal mortar strips
+            // -----------------------------------------------------------
             if (mortarD > 0) {
-                // Horizontal mortar strips
-                for (int row = 0; row <= rows; row++) {
-                    double mortarOffsetFrac = 0.0;
-                    if (row == 0) {
-                        mortarOffsetFrac = -1.0;
-                    }
-                    else if (row == rows) {
-                        mortarOffsetFrac = 1.0;
-                    }
+                {
+                    BRep_Builder mortarBuilder;
+                    TopoDS_Compound mortarCompound;
+                    mortarBuilder.MakeCompound(mortarCompound);
 
-                    gp_Pnt mortarOrigin(p00.XYZ()
-                        + vStep.XYZ() * row
-                        - vAxis.XYZ() * (mortarT / 2.0)
-                        + mortarOffsetFrac * vAxis.XYZ() * (mortarT / 2.0)
-                        - uAxis.XYZ() * brickD);
-
-                    gp_Vec mortarWidth = uAxis * (faceW + 2 * brickD);
-                    gp_Vec mortarHeight = vAxis * mortarT;
-                    TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, mortarWidth, mortarHeight);
-
-                    try {
-                        BRepAlgoAPI_Common common(face, mortar2D);
-                        if (!common.IsDone()) {
-                            continue;
+                    for (int row = 0; row <= rows; row++) {
+                        double mortarOffsetFrac = 0.0;
+                        if (row == 0) {
+                            mortarOffsetFrac = -1.0;
                         }
+                        else if (row == rows) {
+                            mortarOffsetFrac = 1.0;
+                        }
+
+                        gp_Pnt mortarOrigin(p00.XYZ()
+                            + vStep.XYZ() * row
+                            - vAxis.XYZ() * (mortarT / 2.0)
+                            + mortarOffsetFrac * vAxis.XYZ() * (mortarT / 2.0)
+                            - uAxis.XYZ() * brickD);
+
+                        gp_Vec mortarWidth = uAxis * (faceW + 2 * brickD);
+                        gp_Vec mortarHeight = vAxis * mortarT;
+                        TopoDS_Shape mortar2D =
+                            makeBrickFace(mortarOrigin, mortarWidth, mortarHeight);
+                        mortarBuilder.Add(mortarCompound, mortar2D);
+                    }
+
+                    BRepAlgoAPI_Common common(face, mortarCompound);
+                    if (common.IsDone()) {
                         TopoDS_Shape clipped = common.Shape();
-
-                        if (clipped.IsNull()) {
-                            continue;
+                        if (!clipped.IsNull()) {
+                            gp_Vec extrudeVec(normal);
+                            extrudeVec.Multiply(-mortarD);
+                            TopoDS_Shape mortar3D =
+                                BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+                            builder.Add(allShapes, mortar3D);
                         }
-                        {
-                            TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
-                            if (!anExplorer.More()) {
-                                continue;
-                            }
-                        }
-
-                        gp_Vec extrudeVec(normal);
-                        extrudeVec.Multiply(-mortarD);
-                        TopoDS_Shape mortar3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
-
-                        builder.Add(compound, mortar3D);
-                    }
-                    catch (Standard_Failure&) {
-                        continue;
                     }
                 }
 
-                // Vertical mortar strips
-                for (int row = 0; row < rows; row++) {
-                    gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
+                // -----------------------------------------------------------
+                //  Batch 3: Vertical mortar strips
+                // -----------------------------------------------------------
+                {
+                    BRep_Builder mortarBuilder;
+                    TopoDS_Compound mortarCompound;
+                    mortarBuilder.MakeCompound(mortarCompound);
 
-                    for (int col = 0; col <= cols; col++) {
-                        gp_Pnt mortarOrigin(p00.XYZ()
-                            + uStep.XYZ() * col
-                            + vStep.XYZ() * row
-                            + rowOffset.XYZ()
-                            - uAxis.XYZ() * (mortarT / 2.0));
+                    for (int row = 0; row < rows; row++) {
+                        gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
 
-                        gp_Vec mortarWidth = uAxis * mortarT;
-                        gp_Vec mortarHeight = vAxis * (brickH + mortarT);
-                        TopoDS_Shape mortar2D = makeBrickFace(mortarOrigin, mortarWidth, mortarHeight);
+                        for (int col = 0; col <= cols; col++) {
+                            gp_Pnt mortarOrigin(p00.XYZ()
+                                + uStep.XYZ() * col
+                                + vStep.XYZ() * row
+                                + rowOffset.XYZ()
+                                - uAxis.XYZ() * (mortarT / 2.0));
 
-                        try {
-                            BRepAlgoAPI_Common common(face, mortar2D);
-                            if (!common.IsDone()) {
-                                continue;
-                            }
-                            TopoDS_Shape clipped = common.Shape();
+                            gp_Vec mortarWidth = uAxis * mortarT;
+                            gp_Vec mortarHeight = vAxis * (brickH + mortarT);
+                            TopoDS_Shape mortar2D =
+                                makeBrickFace(mortarOrigin, mortarWidth, mortarHeight);
+                            mortarBuilder.Add(mortarCompound, mortar2D);
+                        }
+                    }
 
-                            if (clipped.IsNull()) {
-                                continue;
-                            }
-                            {
-                                TopExp_Explorer anExplorer(clipped, TopAbs_FACE);
-                                if (!anExplorer.More()) {
-                                    continue;
-                                }
-                            }
-
+                    BRepAlgoAPI_Common common(face, mortarCompound);
+                    if (common.IsDone()) {
+                        TopoDS_Shape clipped = common.Shape();
+                        if (!clipped.IsNull()) {
                             gp_Vec extrudeVec(normal);
                             extrudeVec.Multiply(-mortarD);
-                            TopoDS_Shape mortar3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
-
-                            builder.Add(compound, mortar3D);
-                        }
-                        catch (Standard_Failure&) {
-                            continue;
+                            TopoDS_Shape mortar3D =
+                                BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+                            builder.Add(allShapes, mortar3D);
                         }
                     }
                 }
             }
         }
 
-        BRepAlgoAPI_Fuse fuse(TopShape.getShape(), compound);
+        // Fuse the base shape with the batched result compound.
+        // The compound contains only a few shapes (one per face per batch),
+        // so this fuse is fast regardless of brick count.
+        BRepAlgoAPI_Fuse fuse(TopShape.getShape(), allShapes);
         if (!fuse.IsDone()) {
             return new App::DocumentObjectExecReturn(
                 QT_TRANSLATE_NOOP("Exception", "Failed to fuse bricks with base shape")

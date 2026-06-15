@@ -273,8 +273,13 @@ void TaskBooleanParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
         // If the selected object is not a body then get the body it is part of
         if (!pcBody->isDerivedFrom<PartDesign::Body>()) {
             pcBody = PartDesign::Body::findBodyOf(pcBody);
+            // Standalone Part::Feature objects (e.g. Part::Box, Part::Cylinder)
+            // are not inside any Body. Accept them directly as the tool object.
             if (!pcBody) {
-                return;
+                pcBody = pcBoolean->getDocument()->getObject(body.c_str());
+                if (!pcBody || !pcBody->isDerivedFrom<Part::Feature>()) {
+                    return;
+                }
             }
         }
 
