@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/captureFragment">
+
+    <fragment
+        android:id="@+id/captureFragment"
+        android:name="com.tungsten.photogrammetry.ui.CaptureFragment"
+        android:label="@string/nav_capture" />
+
+    <fragment
+        android:id="@+id/previewFragment"
+        android:name="com.tungsten.photogrammetry.ui.PreviewFragment"
+        android:label="@string/nav_preview" />
+
+    <fragment
+        android:id="@+id/exportFragment"
+        android:name="com.tungsten.photogrammetry.ui.ExportFragment"
+        android:label="@string/nav_export" />
+
+</navigation>

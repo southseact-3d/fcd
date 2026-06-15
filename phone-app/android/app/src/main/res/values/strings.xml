@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Photogrammetry Scanner</string>
+    <string name="capture_button">Capture</string>
+    <string name="export_button">Export Project</string>
+    <string name="share_button">Share</string>
+    <string name="rotation_guide">Rotate your device %.1f\u00b0 around the object</string>
+    <string name="ready_to_capture">Ready to capture</string>
+    <string name="calibrating">Calibrating camera\u2026</string>
+    <string name="nav_capture">Capture</string>
+    <string name="nav_preview">Preview</string>
+    <string name="nav_export">Export</string>
+</resources>
