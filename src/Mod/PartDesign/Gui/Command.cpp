@@ -4259,6 +4259,9 @@ void CmdPartDesignBoolean::activated(int iMsg)
     FCMD_OBJ_CMD(pcActiveBody, "newObject('PartDesign::Boolean','" << FeatName << "')");
     auto Feat = pcActiveBody->getDocument()->getObject(FeatName.c_str());
 
+    // Set the active body as the base feature for the boolean operation
+    FCMD_OBJ_CMD(Feat, "BaseFeature = " << Gui::Command::getObjectCmd(pcActiveBody));
+
     // If we don't add an object to the boolean group then don't update the body
     // as otherwise this will fail and it will be marked as invalid
     bool updateDocument = false;

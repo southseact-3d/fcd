@@ -36,6 +36,7 @@
 #include <Gui/BitmapFactory.h>
 #include <Gui/Command.h>
 #include <Gui/Selection/Selection.h>
+#include <Gui/Selection/SelectionFilter.h>
 #include <Gui/Tools.h>
 #include <Gui/ViewProvider.h>
 #include <Mod/PartDesign/App/Body.h>
@@ -121,7 +122,16 @@ TaskBooleanParameters::TaskBooleanParameters(ViewProviderBoolean* BooleanView, Q
     enterSelectionMode();
 }
 
-TaskBooleanParameters::~TaskBooleanParameters() = default;
+TaskBooleanParameters::~TaskBooleanParameters()
+{
+    try {
+        Gui::Selection().clearSelection();
+        Gui::Selection().rmvSelectionGate();
+    }
+    catch (const Base::Exception& e) {
+        e.reportException();
+    }
+}
 
 void TaskBooleanParameters::enterSelectionMode()
 {
@@ -130,12 +140,15 @@ void TaskBooleanParameters::enterSelectionMode()
     }
     selectionMode = toolSelect;
     Gui::Selection().clearSelection();
+    Gui::Selection().rmvSelectionGate();
+    Gui::Selection().addSelectionGate(new SelectionFilterGate("SELECT PartDesign::Body COUNT 1.."));
     ui->labelHint->setText(tr("Click bodies in 3D view to add as tools."));
 }
 
 void TaskBooleanParameters::exitSelectionMode()
 {
     selectionMode = none;
+    Gui::Selection().rmvSelectionGate();
     ui->labelHint->setText(tr("Click bodies in 3D view to add as tools."));
 }
 
@@ -301,6 +314,8 @@ void TaskBooleanParameters::onButtonChangeTarget()
 {
     selectionMode = targetSelect;
     Gui::Selection().clearSelection();
+    Gui::Selection().rmvSelectionGate();
+    Gui::Selection().addSelectionGate(new SelectionFilterGate("SELECT PartDesign::Body COUNT 1"));
     ui->labelHint->setText(tr("Click a body in 3D view to set as target."));
 }
 
@@ -432,6 +447,13 @@ bool TaskDlgBooleanParameters::accept()
     try {
         // Set the target body (BaseFeature)
         std::string target = parameter->getTargetBody();
+        if (target.empty()) {
+            // Fallback: use the active body as target
+            PartDesign::Body* activeBody = PartDesignGui::getBody(false);
+            if (activeBody) {
+                target = activeBody->getNameInDocument();
+            }
+        }
         if (!target.empty()) {
             std::stringstream str;
             str << Gui::Command::getObjectCmd(obj) << ".BaseFeature = App.getDocument('"

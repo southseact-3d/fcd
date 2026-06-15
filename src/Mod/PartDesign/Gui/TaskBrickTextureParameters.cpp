@@ -234,12 +234,80 @@ void TaskBrickTextureParameters::onRowOffsetChanged(int val)
     }
 }
 
+double TaskBrickTextureParameters::getScaleFactor(int scaleIndex)
+{
+    switch (scaleIndex) {
+        case 0: return 1.0;       // 1:1
+        case 1: return 0.5;       // 1:2
+        case 2: return 0.2;       // 1:5
+        case 3: return 0.1;       // 1:10
+        case 4: return 0.05;      // 1:20
+        case 5: return 0.02;      // 1:50
+        case 6: return 1.0 / 76.0;// 1:76
+        case 7: return 0.01;      // 1:100
+        case 8: return 0.005;     // 1:200
+        case 9: return 0.002;     // 1:500
+        default: return 1.0;      // Custom or invalid
+    }
+}
+
 void TaskBrickTextureParameters::onScaleChanged(int val)
 {
     if (auto brick = getObject<PartDesign::BrickTexture>()) {
-        setSelectionMode(none);
-        setupTransaction();
-        brick->Scale.setValue(val);
+        int oldIndex = brick->Scale.getValue();
+        double oldFactor = getScaleFactor(oldIndex);
+        double newFactor = getScaleFactor(val);
+
+        if (oldIndex != val && oldFactor > 0.0 && newFactor > 0.0) {
+            double ratio = newFactor / oldFactor;
+
+            setSelectionMode(none);
+            setupTransaction();
+
+            // Block signals to avoid per-field recomputes
+            ui->brickWidth->blockSignals(true);
+            ui->brickHeight->blockSignals(true);
+            ui->brickDepth->blockSignals(true);
+            ui->mortarThickness->blockSignals(true);
+            ui->mortarDepth->blockSignals(true);
+
+            // Scale all dimensional parameters
+            double newWidth = brick->BrickWidth.getValue() * ratio;
+            double newHeight = brick->BrickHeight.getValue() * ratio;
+            double newDepth = brick->BrickDepth.getValue() * ratio;
+            double newMortarT = brick->MortarThickness.getValue() * ratio;
+            double newMortarD = brick->MortarDepth.getValue() * ratio;
+
+            brick->BrickWidth.setValue(newWidth);
+            brick->BrickHeight.setValue(newHeight);
+            brick->BrickDepth.setValue(newDepth);
+            brick->MortarThickness.setValue(newMortarT);
+            brick->MortarDepth.setValue(newMortarD);
+
+            // Update UI spin boxes to reflect new values
+            ui->brickWidth->setValue(newWidth);
+            ui->brickHeight->setValue(newHeight);
+            ui->brickDepth->setValue(newDepth);
+            ui->mortarThickness->setValue(newMortarT);
+            ui->mortarDepth->setValue(newMortarD);
+
+            ui->brickWidth->blockSignals(false);
+            ui->brickHeight->blockSignals(false);
+            ui->brickDepth->blockSignals(false);
+            ui->mortarThickness->blockSignals(false);
+            ui->mortarDepth->blockSignals(false);
+
+            // Reset scale to 1:1 since parameters now incorporate the scale
+            brick->Scale.setValue(0);
+            ui->scale->blockSignals(true);
+            ui->scale->setCurrentIndex(0);
+            ui->scale->blockSignals(false);
+        }
+        else {
+            // Custom or same selection — just apply the scale factor directly
+            brick->Scale.setValue(val);
+        }
+
         brick->recomputeFeature();
         hideOnError();
     }

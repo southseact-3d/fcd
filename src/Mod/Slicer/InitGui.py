@@ -1,6 +1,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import Slicer_Gui
+import traceback
+
+try:
+    import Slicer_Gui
+except Exception:
+    FreeCAD.Console.PrintError(
+        f"[Slicer] Failed to load Slicer_Gui module:\n{traceback.format_exc()}\n"
+    )
 
 
 class SlicerWorkbench(Workbench):

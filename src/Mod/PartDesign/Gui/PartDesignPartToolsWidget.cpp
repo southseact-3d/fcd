@@ -230,6 +230,9 @@ PartDesignGroupWidget* PartDesignPartToolsWidget::createCreateGroup()
         "PartDesign_Groove",
         "PartDesign_PartBox",
         "PartDesign_PartCylinder",
+        "PartDesign_InvoluteGear",
+        "PartDesign_Sprocket",
+        "PartDesign_Chain",
         "PartDesign_Boolean",
     };
 
@@ -399,6 +402,14 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addSectionHeader(QObject::tr("BOOLEAN"));
     addMenuItem("PartDesign_Boolean");
     addMenuItem("PartDesign_PartBuilder");
+
+    addSeparator();
+
+    // Gear/Chain section
+    addSectionHeader(QObject::tr("GEAR/CHAIN"));
+    addMenuItem("PartDesign_InvoluteGear");
+    addMenuItem("PartDesign_Sprocket");
+    addMenuItem("PartDesign_Chain");
 
     addSeparator();
 

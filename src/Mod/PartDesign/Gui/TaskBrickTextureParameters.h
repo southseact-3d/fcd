@@ -58,6 +58,7 @@ protected:
     void onSelectionChanged(const Gui::SelectionChanges& msg) override;
 
 private:
+    static double getScaleFactor(int scaleIndex);
     std::unique_ptr<Ui_TaskBrickTextureParameters> ui;
 };
 
