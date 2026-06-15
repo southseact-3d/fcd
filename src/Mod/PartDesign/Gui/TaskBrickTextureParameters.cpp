@@ -298,7 +298,7 @@ void TaskBrickTextureParameters::onScaleChanged(int val)
             ui->mortarDepth->blockSignals(false);
 
             // Reset scale to 1:1 since parameters now incorporate the scale
-            brick->Scale.setValue(0);
+            brick->Scale.setValue(static_cast<long>(0));
             ui->scale->blockSignals(true);
             ui->scale->setCurrentIndex(0);
             ui->scale->blockSignals(false);
