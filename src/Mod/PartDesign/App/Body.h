@@ -46,6 +46,9 @@ class PartDesignExport Body: public Part::BodyBase
 public:
     App::PropertyBool AllowCompound;
 
+    /// Version of the body paradigm: 1 = legacy feature-history chain, 2 = single-geometry
+    App::PropertyInteger BodyParadigmVersion;
+
     /// True if this body feature is active or was active when the document was last closed
     // App::PropertyBool IsActive;
 

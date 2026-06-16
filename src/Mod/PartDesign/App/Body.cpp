@@ -44,6 +44,8 @@ PROPERTY_SOURCE(PartDesign::Body, Part::BodyBase)
 Body::Body()
 {
     ADD_PROPERTY_TYPE(AllowCompound, (true), "Base", App::Prop_None, "Allow multiple solids in Body");
+    ADD_PROPERTY_TYPE(BodyParadigmVersion, (2), "Base", (App::PropertyType)(App::Prop_None),
+                      "Body paradigm version: 1 = legacy feature-history chain, 2 = single-geometry");
 
     _GroupTouched.setStatus(App::Property::Output, true);
 }
@@ -322,6 +324,12 @@ void Body::insertObject(App::DocumentObject* feature, App::DocumentObject* targe
 
 void Body::setBaseProperty(App::DocumentObject* feature)
 {
+    // In single-geometry paradigm (v2), BaseFeature chain is not used.
+    // Each body contains a single additive feature; combine via PartDesign::Boolean.
+    if (BodyParadigmVersion.getValue() >= 2) {
+        return;
+    }
+
     if (Body::isSolidFeature(feature)) {
         // Set BaseFeature property to previous feature (this might be the Tip feature)
         App::DocumentObject* prevSolidFeature = getPrevSolidFeature(feature);
@@ -344,13 +352,17 @@ std::vector<App::DocumentObject*> Body::removeObject(App::DocumentObject* featur
     App::DocumentObject* nextSolidFeature = getNextSolidFeature(feature);
     App::DocumentObject* prevSolidFeature = getPrevSolidFeature(feature);
 
-    // It's ok to remove the first solid feature, that just mean the next feature become the base one
-
-    if (nextSolidFeature && nextSolidFeature->isDerivedFrom(PartDesign::Feature::getClassTypeId())) {
-        auto* nextPD = static_cast<PartDesign::Feature*>(nextSolidFeature);
-        // Check if the next feature is pointing to the one being deleted
-        if (nextPD->BaseFeature.getValue() == feature) {
-            nextPD->BaseFeature.setValue(prevSolidFeature);
+    // In single-geometry paradigm (v2), skip BaseFeature chain maintenance
+    if (BodyParadigmVersion.getValue() < 2) {
+        // It's ok to remove the first solid feature, that just mean the next feature become the base
+        // one
+        if (nextSolidFeature
+            && nextSolidFeature->isDerivedFrom(PartDesign::Feature::getClassTypeId())) {
+            auto* nextPD = static_cast<PartDesign::Feature*>(nextSolidFeature);
+            // Check if the next feature is pointing to the one being deleted
+            if (nextPD->BaseFeature.getValue() == feature) {
+                nextPD->BaseFeature.setValue(prevSolidFeature);
+            }
         }
     }
 
@@ -595,6 +607,13 @@ App::DocumentObject* Body::getSubObject(
 
 void Body::onDocumentRestored()
 {
+    // Detect legacy bodies (files saved before single-geometry paradigm)
+    // If BodyParadigmVersion was not serialized (old file), it defaults to 0 from the
+    // property system. Old files used feature-history chaining (v1).
+    if (BodyParadigmVersion.getValue() == 0) {
+        BodyParadigmVersion.setValue(1);
+    }
+
     for (auto obj : Group.getValues()) {
         if (obj->isDerivedFrom<PartDesign::Feature>()) {
             static_cast<PartDesign::Feature*>(obj)->_Body.setValue(this);

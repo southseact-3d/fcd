@@ -37,7 +37,6 @@
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeaturePrimitive.h>
 
-#include "DlgActiveBody.h"
 #include "Utils.h"
 #include "WorkflowManager.h"
 
@@ -85,26 +84,8 @@ void CmdPrimtiveCompAdditive::activated(int iMsg)
 {
     App::Document* doc = getDocument();
 
-    // We need either an active Body, or for there to be no Body objects
-    // (in which case, just make one) to make a new additive shape.
-
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(/* messageIfNot = */ false);
-
-    auto shouldMakeBody(false);
-    if (!pcActiveBody) {
-        if (doc->getObjectsOfType(PartDesign::Body::getClassTypeId()).empty()) {
-            shouldMakeBody = true;
-        }
-        else {
-            PartDesignGui::DlgActiveBody dia(Gui::getMainWindow(), doc);
-            if (dia.exec() == QDialog::DialogCode::Accepted) {
-                pcActiveBody = dia.getActiveBody();
-            }
-            if (!pcActiveBody) {
-                return;
-            }
-        }
-    }
+    // Additive features always create a new body (single-geometry paradigm)
+    PartDesign::Body* pcActiveBody = PartDesignGui::makeBody(doc);
 
     Gui::ActionGroup* pcAction = qobject_cast<Gui::ActionGroup*>(_pcAction);
     pcAction->setIcon(pcAction->actions().at(iMsg)->icon());
@@ -112,9 +93,6 @@ void CmdPrimtiveCompAdditive::activated(int iMsg)
     auto shapeType(primitiveIntToName(iMsg));
 
     Gui::Command::openCommand((std::string("Make additive ") + shapeType).c_str());
-    if (shouldMakeBody) {
-        pcActiveBody = PartDesignGui::makeBody(doc);
-    }
 
     if (!pcActiveBody) {
         return;
