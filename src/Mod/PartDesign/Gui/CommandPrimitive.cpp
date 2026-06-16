@@ -85,11 +85,14 @@ void CmdPrimtiveCompAdditive::activated(int iMsg)
 {
     App::Document* doc = getDocument();
 
-    // Auto-create a body if none exists (Fusion 360-like workflow)
-    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(/* messageIfNot = */ false);
-
-    if (!pcActiveBody) {
+    PartDesign::Body* pcActiveBody;
+    if (PartDesignGui::isAutoCreateBodyEnabled()) {
+        // AutoBody mode: always create a new body for each additive primitive
         pcActiveBody = PartDesignGui::makeBody(doc);
+    }
+    else {
+        // Standard mode: use or activate a body
+        pcActiveBody = PartDesignGui::getOrActivateBody(doc);
     }
 
     Gui::ActionGroup* pcAction = qobject_cast<Gui::ActionGroup*>(_pcAction);

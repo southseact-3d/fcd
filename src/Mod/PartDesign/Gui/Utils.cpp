@@ -245,6 +245,38 @@ PartDesign::Body* makeBody(App::Document* doc)
     return body;
 }
 
+bool isAutoCreateBodyEnabled()
+{
+    Base::Reference<ParameterGrp> hGrp = App::GetApplication().GetUserParameter().GetGroup(
+        "BaseApp/Preferences/Mod/PartDesign"
+    );
+    return hGrp->GetBool("AutoCreateBody", false);
+}
+
+PartDesign::Body* getOrActivateBody(App::Document* doc)
+{
+    PartDesign::Body* activeBody = PartDesignGui::getBody(false);
+
+    if (activeBody) {
+        return activeBody;
+    }
+
+    // No active body. Check if other bodies exist.
+    auto bodies = doc->getObjectsOfType(PartDesign::Body::getClassTypeId());
+
+    if (!bodies.empty()) {
+        // Bodies exist but none is active - show the selection dialog
+        DlgActiveBody dia(Gui::getMainWindow(), doc);
+        if (dia.exec() == QDialog::DialogCode::Accepted) {
+            return dia.getActiveBody();
+        }
+        return nullptr;  // user cancelled
+    }
+
+    // No bodies exist at all - create a new one
+    return PartDesignGui::makeBody(doc);
+}
+
 PartDesign::Body* getBodyFor(
     const App::DocumentObject* obj,
     bool messageIfNot,

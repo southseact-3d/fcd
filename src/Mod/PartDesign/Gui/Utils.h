@@ -86,6 +86,22 @@ void needActiveBodyError();
 PartDesign::Body* makeBody(App::Document* doc);
 
 /**
+ * Get or activate a body using the auto-body workflow:
+ * 1. If an active body exists, return it
+ * 2. If other bodies exist but none is active, show DlgActiveBody for user selection
+ * 3. If no bodies exist at all, create a new one
+ *
+ * Returns nullptr only if the user cancels the dialog.
+ */
+PartDesign::Body* getOrActivateBody(App::Document* doc);
+
+/**
+ * Check if the PartDesign AutoCreateBody preference is enabled.
+ * When enabled, additive features create new bodies instead of adding to the active body.
+ */
+bool isAutoCreateBodyEnabled();
+
+/**
  * Finds a body for the given feature. And shows a message if not found
  * Also unlike Body::findBodyFor it checks if the active body has the feature first.
  */
