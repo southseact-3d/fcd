@@ -510,7 +510,9 @@ def load_mesh_file(filepath: str, doc=None) -> Optional[MeshData]:
     try:
         doc.openTransaction("Import mesh")
         try:
-            imported = MeshPart.importMesh(str(path), document=doc)
+            import Mesh
+            Mesh.insert(str(path), document=doc.Name)
+            imported = True  # Mesh.insert returns None; object created in document
         except Exception:
             doc.abortTransaction()
             return None

@@ -82,7 +82,7 @@ SETTING_MAP: Dict[str, str] = {
     "fuzzy_skin_thickness": "fuzzy_skin_thickness",
     "fuzzy_skin_noise": "fuzzy_skin_noise_distance",
     "seam_position": "seam_position",
-    "vase_mode": " spiral_vase",
+    "vase_mode": "spiral_vase",
     "thin_walls": "thin_walls",
     "detect_thin_walls": "detect_thin_walls",
     "xy_size_compensation": "xy_size_compensation",

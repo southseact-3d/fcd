@@ -15,14 +15,6 @@ import zlib
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
-try:
-    import numpy as np
-
-    HAS_NUMPY = True
-except ImportError:
-    np = None  # type: ignore
-    HAS_NUMPY = False
-
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -1112,9 +1104,10 @@ if __name__ == "__main__":
     ]
     s = ResinSlicer()
     r = s.slice(sample_triangles)
-    print(f"Sliced {r.total_layers} layers, height {r.total_height:.2f} mm")
-    print(
-        f"Estimated time: {r.estimated_time:.1f}s, volume: {r.estimated_resin_volume:.2f} ml"
+    import FreeCAD
+    FreeCAD.Console.PrintMessage(f"Sliced {r.total_layers} layers, height {r.total_height:.2f} mm\n")
+    FreeCAD.Console.PrintMessage(
+        f"Estimated time: {r.estimated_time:.1f}s, volume: {r.estimated_resin_volume:.2f} ml\n"
     )
     island_layers = [i for i in r.island_data if i.new_islands > 0]
-    print(f"Islands detected on {len(island_layers)} layers")
+    FreeCAD.Console.PrintMessage(f"Islands detected on {len(island_layers)} layers\n")

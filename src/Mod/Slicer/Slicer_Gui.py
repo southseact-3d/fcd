@@ -61,10 +61,12 @@ def _import_mesh_file(path, doc=None):
     if doc is None:
         return None
     try:
-        import MeshPart
-        obj = MeshPart.importMesh(path, document=doc.Name)
+        import Mesh
+        Mesh.insert(path, doc.Name)
         doc.recompute()
-        return obj
+        # Mesh.insert returns None; find the created object by filename stem
+        obj_name = os.path.splitext(os.path.basename(path))[0]
+        return doc.getObject(obj_name)
     except Exception:
         FreeCAD.Console.PrintError(
             f"[Slicer] Failed to import mesh: {traceback.format_exc()}\n"
@@ -78,8 +80,8 @@ def _apply_mesh_to_object(obj, mesh_data):
         return
     try:
         import Mesh as MeshModule
-        if hasattr(mesh_data, 'vertices') and hasattr(mesh_data, 'facets'):
-            mesh = MeshModule.Mesh(mesh_data.vertices, mesh_data.facets)
+        if hasattr(mesh_data, 'vertices') and hasattr(mesh_data, 'triangles'):
+            mesh = MeshModule.Mesh(mesh_data.vertices, mesh_data.triangles)
             obj.Mesh = mesh
         elif hasattr(mesh_data, 'Mesh'):
             obj.Mesh = mesh_data.Mesh
