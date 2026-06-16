@@ -245,6 +245,7 @@ PartDesign::Body* makeBody(App::Document* doc)
     return body;
 }
 
+
 PartDesign::Body* getBodyFor(
     const App::DocumentObject* obj,
     bool messageIfNot,

@@ -61,8 +61,8 @@ PartDesign::Body* getBody(
     std::string* subname = nullptr
 );
 
-/// Display a dialog to select or create a Body object when none is active
-PartDesign::Body* needActiveBodyMessage(App::Document* doc, const QString& infoText = QString());
+/// Display error when there are existing Body objects, but none are active
+void needActiveBodyError();
 
 /**
  * Set given body active, and return pointer to it.
@@ -78,9 +78,6 @@ PartDesign::Body* makeBodyActive(
     App::DocumentObject** topParent = nullptr,
     std::string* subname = nullptr
 );
-
-/// Display error when there are existing Body objects, but none are active
-void needActiveBodyError();
 
 /// Create a Body object in doc, set it active, and return pointer to it
 PartDesign::Body* makeBody(App::Document* doc);
