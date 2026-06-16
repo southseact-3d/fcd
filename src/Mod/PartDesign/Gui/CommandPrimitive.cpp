@@ -37,7 +37,6 @@
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeaturePrimitive.h>
 
-#include "DlgActiveBody.h"
 #include "Utils.h"
 #include "WorkflowManager.h"
 
@@ -85,15 +84,8 @@ void CmdPrimtiveCompAdditive::activated(int iMsg)
 {
     App::Document* doc = getDocument();
 
-    PartDesign::Body* pcActiveBody;
-    if (PartDesignGui::isAutoCreateBodyEnabled()) {
-        // AutoBody mode: always create a new body for each additive primitive
-        pcActiveBody = PartDesignGui::makeBody(doc);
-    }
-    else {
-        // Standard mode: use or activate a body
-        pcActiveBody = PartDesignGui::getOrActivateBody(doc);
-    }
+    // Additive features always create a new body (single-geometry paradigm)
+    PartDesign::Body* pcActiveBody = PartDesignGui::makeBody(doc);
 
     Gui::ActionGroup* pcAction = qobject_cast<Gui::ActionGroup*>(_pcAction);
     pcAction->setIcon(pcAction->actions().at(iMsg)->icon());

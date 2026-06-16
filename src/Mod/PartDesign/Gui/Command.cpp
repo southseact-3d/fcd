@@ -57,7 +57,6 @@
 #include <Mod/PartDesign/App/FeatureDressUp.h>
 #include <Mod/PartDesign/App/ShapeBinder.h>
 
-#include "DlgActiveBody.h"
 #include "ReferenceSelection.h"
 #include "SketchWorkflow.h"
 #include "TaskFeaturePick.h"
@@ -2727,22 +2726,18 @@ void prepareProfileBased(Gui::Command* cmd, const std::string& which, double len
 {
     // Subtractive features require an existing body with a solid
     bool isSubtractive = (which.find("Subtractive") != std::string::npos)
-                      || (which.compare("Groove") == 0)
-                      || (which.compare("Pocket") == 0)
-                      || (which.compare("Hole") == 0);
+                       || (which.compare("Groove") == 0)
+                       || (which.compare("Pocket") == 0)
+                       || (which.compare("Hole") == 0);
 
     PartDesign::Body* pcActiveBody;
     if (isSubtractive) {
         // Subtractive features need an existing active body
         pcActiveBody = PartDesignGui::getBody(true);
     }
-    else if (PartDesignGui::isAutoCreateBodyEnabled()) {
-        // AutoBody mode: always create a new body for additive features
-        pcActiveBody = PartDesignGui::makeBody(cmd->getDocument());
-    }
     else {
-        // Standard mode: get or activate a body, creating one if none exists
-        pcActiveBody = PartDesignGui::getOrActivateBody(cmd->getDocument());
+        // Additive features always create a new body (single-geometry paradigm)
+        pcActiveBody = PartDesignGui::makeBody(cmd->getDocument());
     }
 
     if (!pcActiveBody) {
@@ -2903,13 +2898,8 @@ void CmdPartDesignRevolution::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody;
-    if (PartDesignGui::isAutoCreateBodyEnabled()) {
-        pcActiveBody = PartDesignGui::makeBody(getDocument());
-    }
-    else {
-        pcActiveBody = PartDesignGui::getOrActivateBody(getDocument());
-    }
+    // Additive features always create a new body (single-geometry paradigm)
+    PartDesign::Body* pcActiveBody = PartDesignGui::makeBody(getDocument());
 
     if (!pcActiveBody) {
         return;
@@ -3042,13 +3032,8 @@ void CmdPartDesignAdditivePipe::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody;
-    if (PartDesignGui::isAutoCreateBodyEnabled()) {
-        pcActiveBody = PartDesignGui::makeBody(getDocument());
-    }
-    else {
-        pcActiveBody = PartDesignGui::getOrActivateBody(getDocument());
-    }
+    // Additive features always create a new body (single-geometry paradigm)
+    PartDesign::Body* pcActiveBody = PartDesignGui::makeBody(getDocument());
 
     if (!pcActiveBody) {
         return;
@@ -3148,13 +3133,8 @@ void CmdPartDesignAdditiveLoft::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody;
-    if (PartDesignGui::isAutoCreateBodyEnabled()) {
-        pcActiveBody = PartDesignGui::makeBody(getDocument());
-    }
-    else {
-        pcActiveBody = PartDesignGui::getOrActivateBody(getDocument());
-    }
+    // Additive features always create a new body (single-geometry paradigm)
+    PartDesign::Body* pcActiveBody = PartDesignGui::makeBody(getDocument());
 
     if (!pcActiveBody) {
         return;
@@ -3253,13 +3233,8 @@ void CmdPartDesignAdditiveHelix::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    PartDesign::Body* pcActiveBody;
-    if (PartDesignGui::isAutoCreateBodyEnabled()) {
-        pcActiveBody = PartDesignGui::makeBody(getDocument());
-    }
-    else {
-        pcActiveBody = PartDesignGui::getOrActivateBody(getDocument());
-    }
+    // Additive features always create a new body (single-geometry paradigm)
+    PartDesign::Body* pcActiveBody = PartDesignGui::makeBody(getDocument());
 
     if (!pcActiveBody) {
         return;
