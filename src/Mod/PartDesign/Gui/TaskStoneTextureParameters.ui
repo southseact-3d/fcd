@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PartDesignGui::TaskStoneTextureParameters</class>
+ <widget class="QWidget" name="PartDesignGui::TaskStoneTextureParameters">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>260</width>
+    <height>620</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QToolButton" name="buttonRefSel">
+     <property name="toolTip">
+      <string>Toggles between selection and preview mode</string>
+     </property>
+     <property name="text">
+      <string>Select Faces</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listWidgetReferences">
+     <property name="toolTip">
+      <string>- select an item to highlight it
+- double-click on an item to see the stones</string>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupScale">
+     <property name="title">
+      <string>Scale</string>
+     </property>
+     <layout class="QHBoxLayout" name="scaleLayout">
+      <item>
+       <widget class="QComboBox" name="scale"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupPattern">
+     <property name="title">
+      <string>Pattern</string>
+     </property>
+     <layout class="QGridLayout" name="patternGrid">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelStonePattern">
+        <property name="text">
+         <string>Pattern</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="stonePattern">
+        <property name="toolTip">
+         <string>Ashlar: regular rectangular stones
+Rubble: moderately irregular stones
+Fieldstone: very irregular, organic shapes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelStoneScale">
+        <property name="text">
+         <string>Size Preset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="stoneScale"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupStone">
+     <property name="title">
+      <string>Stone Dimensions</string>
+     </property>
+     <layout class="QGridLayout" name="stoneGrid">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelStoneSize">
+        <property name="text">
+         <string>Size</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="Gui::QuantitySpinBox" name="stoneSize">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelStoneDepth">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="Gui::QuantitySpinBox" name="stoneDepth">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelDepthVariation">
+        <property name="text">
+         <string>Depth Variation (%)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="Gui::IntSpinBox" name="depthVariation">
+        <property name="toolTip">
+         <string>Random variation in depth per stone</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelRoughness">
+        <property name="text">
+         <string>Roughness (%)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="Gui::IntSpinBox" name="roughness">
+        <property name="toolTip">
+         <string>Shape irregularity (0% = rectangular, 100% = very irregular)</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupMortar">
+     <property name="title">
+      <string>Mortar</string>
+     </property>
+     <layout class="QGridLayout" name="mortarGrid">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelMortarThickness">
+        <property name="text">
+         <string>Thickness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="Gui::QuantitySpinBox" name="mortarThickness">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelMortarDepth">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="Gui::QuantitySpinBox" name="mortarDepth">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupSeed">
+     <property name="title">
+      <string>Random Seed</string>
+     </property>
+     <layout class="QHBoxLayout" name="seedLayout">
+      <item>
+       <widget class="Gui::IntSpinBox" name="seed">
+        <property name="toolTip">
+         <string>Random seed (0 = random each time, non-zero = reproducible)</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Gui::QuantitySpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Gui::IntSpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>buttonRefSel</tabstop>
+  <tabstop>listWidgetReferences</tabstop>
+  <tabstop>scale</tabstop>
+  <tabstop>stonePattern</tabstop>
+  <tabstop>stoneScale</tabstop>
+  <tabstop>stoneSize</tabstop>
+  <tabstop>stoneDepth</tabstop>
+  <tabstop>depthVariation</tabstop>
+  <tabstop>roughness</tabstop>
+  <tabstop>mortarThickness</tabstop>
+  <tabstop>mortarDepth</tabstop>
+  <tabstop>seed</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

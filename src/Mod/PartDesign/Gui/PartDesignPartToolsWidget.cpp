@@ -254,6 +254,8 @@ PartDesignGroupWidget* PartDesignPartToolsWidget::createModifyGroup()
         "PartDesign_Draft",
         "PartDesign_Thickness",
         "PartDesign_BrickTexture",
+        "PartDesign_WoodPlankTexture",
+        "PartDesign_StoneTexture",
         "PartDesign_Mirrored",
         "PartDesign_LinearPattern",
         "PartDesign_PolarPattern",
@@ -531,6 +533,8 @@ QMenu* PartDesignPartToolsWidget::buildModifyMenu()
     addMenuItem("PartDesign_Draft");
     addMenuItem("PartDesign_Thickness");
     addMenuItem("PartDesign_BrickTexture");
+    addMenuItem("PartDesign_WoodPlankTexture");
+    addMenuItem("PartDesign_StoneTexture");
 
     addSeparator();
 

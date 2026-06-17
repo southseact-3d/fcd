@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PartDesignGui::TaskWoodPlankTextureParameters</class>
+ <widget class="QWidget" name="PartDesignGui::TaskWoodPlankTextureParameters">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>260</width>
+    <height>560</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QToolButton" name="buttonRefSel">
+     <property name="toolTip">
+      <string>Toggles between selection and preview mode</string>
+     </property>
+     <property name="text">
+      <string>Select Faces</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listWidgetReferences">
+     <property name="toolTip">
+      <string>- select an item to highlight it
+- double-click on an item to see the planks</string>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupScale">
+     <property name="title">
+      <string>Scale</string>
+     </property>
+     <layout class="QHBoxLayout" name="scaleLayout">
+      <item>
+       <widget class="QComboBox" name="scale"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupPlank">
+     <property name="title">
+      <string>Plank Dimensions</string>
+     </property>
+     <layout class="QGridLayout" name="plankGrid">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelLength">
+        <property name="text">
+         <string>Length</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="Gui::QuantitySpinBox" name="plankLength">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelHeight">
+        <property name="text">
+         <string>Height</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="Gui::QuantitySpinBox" name="plankHeight">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelDepth">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="Gui::QuantitySpinBox" name="plankDepth">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupGap">
+     <property name="title">
+      <string>Gap (optional)</string>
+     </property>
+     <layout class="QGridLayout" name="gapGrid">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelGapWidth">
+        <property name="text">
+         <string>Width</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="Gui::QuantitySpinBox" name="gapWidth">
+        <property name="toolTip">
+         <string>Set to 0 for tight-fitting planks</string>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelGapDepth">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="Gui::QuantitySpinBox" name="gapDepth">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupPattern">
+     <property name="title">
+      <string>Pattern</string>
+     </property>
+     <layout class="QGridLayout" name="patternGrid">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelOrientation">
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="orientation"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelEndOffset">
+        <property name="text">
+         <string>End Offset (%)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="Gui::IntSpinBox" name="endOffset">
+        <property name="toolTip">
+         <string>Vertical offset of end joints between rows as percentage of plank height</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Gui::QuantitySpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Gui::IntSpinBox</class>
+   <extends>QWidget</extends>
+   <header>Gui/QuantitySpinBox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>buttonRefSel</tabstop>
+  <tabstop>listWidgetReferences</tabstop>
+  <tabstop>scale</tabstop>
+  <tabstop>plankLength</tabstop>
+  <tabstop>plankHeight</tabstop>
+  <tabstop>plankDepth</tabstop>
+  <tabstop>gapWidth</tabstop>
+  <tabstop>gapDepth</tabstop>
+  <tabstop>orientation</tabstop>
+  <tabstop>endOffset</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

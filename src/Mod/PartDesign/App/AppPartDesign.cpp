@@ -160,6 +160,8 @@ PyMOD_INIT_FUNC(_PartDesign)
     PartDesign::SubtractiveWedge            ::init();
     PartDesign::FeatureBase                 ::init();
     PartDesign::BrickTexture                ::init();
+    PartDesign::WoodPlankTexture            ::init();
+    PartDesign::StoneTexture                ::init();
 
     PartDesign::Measure ::initialize();
     // clang-format on
