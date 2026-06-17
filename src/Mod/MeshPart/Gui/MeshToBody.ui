@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MeshToBody</class>
+ <widget class="QDialog" name="MeshToBody">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>280</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mesh to Body</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBoxMethod">
+     <property name="title">
+      <string>Conversion Method</string>
+     </property>
+     <layout class="QVBoxLayout" name="methodLayout">
+      <item>
+       <widget class="QRadioButton" name="radioSmart">
+        <property name="text">
+         <string>Smart (merge coplanar facets)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="toolTip">
+         <string>Merges coplanar triangles into single planar faces.
+Produces cleaner geometry with fewer faces.
+Recommended for most use cases.</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioFast">
+        <property name="text">
+         <string>Fast (one face per triangle)</string>
+        </property>
+        <property name="toolTip">
+         <string>Creates one triangular face per mesh triangle.
+Faster but produces geometry with many tiny faces.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxOptions">
+     <property name="title">
+      <string>Options</string>
+     </property>
+     <layout class="QFormLayout" name="optionsLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelTolerance">
+        <property name="text">
+         <string>Tolerance:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="spinTolerance">
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="minimum">
+         <double>0.000001000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="toolTip">
+         <string>Tolerance for edge merging and sewing.
+Larger values merge more aggressively.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelSew">
+        <property name="text">
+         <string>Sew shape:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="checkSew">
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="toolTip">
+         <string>Attempt to sew the resulting faces into a proper shell.
+Usually should be enabled.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

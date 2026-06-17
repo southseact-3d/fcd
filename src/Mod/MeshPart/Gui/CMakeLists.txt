@@ -20,6 +20,8 @@ set(MeshPartGui_LIBS
 
 set(MeshPartGui_UIC_SRCS
     CrossSections.ui
+    MeshToBody.ui
+    PrismaticBody.ui
     TaskCurveOnMesh.ui
     Tessellation.ui
 )
@@ -40,6 +42,12 @@ SET(MeshPartGui_SRCS
     CrossSections.h
     CurveOnMesh.cpp
     CurveOnMesh.h
+    MeshToBody.ui
+    MeshToBody.cpp
+    MeshToBody.h
+    PrismaticBody.ui
+    PrismaticBody.cpp
+    PrismaticBody.h
     Resources/MeshPart.qrc
     PreCompiled.h
     TaskCurveOnMesh.ui

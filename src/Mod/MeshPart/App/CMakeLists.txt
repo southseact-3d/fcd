@@ -64,6 +64,8 @@ SET(MeshPart_SRCS
     Mesher.cpp
     Mesher.h
     PreCompiled.h
+    PrismaticReconstruction.cpp
+    PrismaticReconstruction.h
 )
 
 set(MeshPart_Scripts

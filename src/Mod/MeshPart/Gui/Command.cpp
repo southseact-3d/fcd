@@ -40,6 +40,8 @@
 #include <Mod/Mesh/App/MeshFeature.h>
 
 #include "CrossSections.h"
+#include "MeshToBody.h"
+#include "PrismaticBody.h"
 #include "TaskCurveOnMesh.h"
 #include "Tessellation.h"
 
@@ -342,6 +344,72 @@ bool CmdMeshPartCurveOnMesh::isActive()
 }
 
 
+//===========================================================================
+// MeshPart_MeshToBody
+//===========================================================================
+DEF_STD_CMD_A(CmdMeshPartMeshToBody)
+
+CmdMeshPartMeshToBody::CmdMeshPartMeshToBody()
+    : Command("MeshPart_MeshToBody")
+{
+    sAppModule = "MeshPart";
+    sGroup = QT_TR_NOOP("Mesh");
+    sMenuText = QT_TR_NOOP("Mesh to Body");
+    sToolTipText = QT_TR_NOOP("Converts a mesh to a PartDesign Body in one step");
+    sWhatsThis = "MeshPart_MeshToBody";
+    sStatusTip = sToolTipText;
+    sPixmap = "MeshPart_MeshToBody";
+}
+
+void CmdMeshPartMeshToBody::activated(int)
+{
+    Gui::Control().showDialog(new MeshPartGui::TaskMeshToBody());
+}
+
+bool CmdMeshPartMeshToBody::isActive()
+{
+    return (
+        getSelection().countObjectsOfType<Mesh::Feature>() > 0
+        && !Gui::Control().activeDialog()
+    );
+}
+
+//--------------------------------------------------------------------------------------
+
+//===========================================================================
+// MeshPart_PrismaticBody
+//===========================================================================
+DEF_STD_CMD_A(CmdMeshPartPrismaticBody)
+
+CmdMeshPartPrismaticBody::CmdMeshPartPrismaticBody()
+    : Command("MeshPart_PrismaticBody")
+{
+    sAppModule = "MeshPart";
+    sGroup = QT_TR_NOOP("Mesh");
+    sMenuText = QT_TR_NOOP("Prismatic Body from Mesh");
+    sToolTipText = QT_TR_NOOP(
+        "Creates a smooth solid body from a mesh using cross-section lofting"
+    );
+    sWhatsThis = "MeshPart_PrismaticBody";
+    sStatusTip = sToolTipText;
+    sPixmap = "MeshPart_PrismaticBody";
+}
+
+void CmdMeshPartPrismaticBody::activated(int)
+{
+    Gui::Control().showDialog(new MeshPartGui::TaskPrismaticBody());
+}
+
+bool CmdMeshPartPrismaticBody::isActive()
+{
+    return (
+        getSelection().countObjectsOfType<Mesh::Feature>() > 0
+        && !Gui::Control().activeDialog()
+    );
+}
+
+//--------------------------------------------------------------------------------------
+
 void CreateMeshPartCommands()
 {
     Gui::CommandManager& rcCmdMgr = Gui::Application::Instance->commandManager();
@@ -350,4 +418,6 @@ void CreateMeshPartCommands()
     rcCmdMgr.addCommand(new CmdMeshPartSection());
     rcCmdMgr.addCommand(new CmdMeshPartCrossSections());
     rcCmdMgr.addCommand(new CmdMeshPartCurveOnMesh());
+    rcCmdMgr.addCommand(new CmdMeshPartMeshToBody());
+    rcCmdMgr.addCommand(new CmdMeshPartPrismaticBody());
 }
