@@ -29,10 +29,16 @@
 #include <Base/Tools.h>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_CompCurve.hxx>
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
+#include <gp_Pln.hxx>
 #include <gp_Circ.hxx>
+#include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
 #include <TopoDS_Wire.hxx>
 
 #include "MeasureDistance.h"
@@ -160,12 +166,16 @@ void MeasureDistance::parseSelection(const App::MeasureSelection& selection)
     App::DocumentObject* ob1 = objT1.getObject();
     const std::vector<std::string> elems1 = {objT1.getSubName()};
     Element1.setValue(ob1, elems1);
+    mClickedPosition1 = element1.pickedPoint;
+    mHasClickedPosition1 = true;
 
     auto element2 = selection.at(1);
     auto objT2 = element2.object;
     App::DocumentObject* ob2 = objT2.getObject();
     const std::vector<std::string> elems2 = {objT2.getSubName()};
     Element2.setValue(ob2, elems2);
+    mClickedPosition2 = element2.pickedPoint;
+    mHasClickedPosition2 = true;
 }
 
 
@@ -205,6 +215,46 @@ bool MeasureDistance::distanceCircleCircle(const TopoDS_Shape& shape1, const Top
     }
 
     return false;
+}
+
+bool MeasureDistance::distanceFaceFace(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
+{
+    if (shape1.ShapeType() != TopAbs_FACE || shape2.ShapeType() != TopAbs_FACE) {
+        return false;
+    }
+
+    TopoDS_Face face1 = TopoDS::Face(shape1);
+    TopoDS_Face face2 = TopoDS::Face(shape2);
+
+    BRepAdaptor_Surface surf1(face1);
+    BRepAdaptor_Surface surf2(face2);
+
+    if (surf1.GetType() != GeomAbs_Plane || surf2.GetType() != GeomAbs_Plane) {
+        return false;
+    }
+
+    gp_Pln plane1 = surf1.Plane();
+    gp_Pln plane2 = surf2.Plane();
+
+    gp_Dir normal1 = plane1.Axis().Direction();
+    gp_Dir normal2 = plane2.Axis().Direction();
+
+    double dot = std::abs(normal1.Dot(normal2));
+    const double parallelThreshold = 0.999;
+    if (dot < parallelThreshold) {
+        return false;
+    }
+
+    gp_Pnt origin1 = plane1.Axis().Location();
+    gp_Pnt origin2 = plane2.Axis().Location();
+
+    gp_Vec connectingVec(origin1, origin2);
+
+    gp_Pnt p2OnPlane1 = origin2.XYZ() - normal2.XYZ() * connectingVec.Dot(gp_Vec(normal2));
+    gp_Pnt p1Proj = origin1.XYZ() + normal1.XYZ() * connectingVec.Dot(gp_Vec(normal1));
+
+    setValues(p1Proj, p2OnPlane1);
+    return true;
 }
 
 void MeasureDistance::distanceGeneric(const TopoDS_Shape& shape1, const TopoDS_Shape& shape2)
@@ -261,6 +311,18 @@ App::DocumentObjectExecReturn* MeasureDistance::execute()
     }
 
     if (distanceCircleCircle(shape1, shape2)) {
+        return DocumentObject::StdReturn;
+    }
+
+    if (distanceFaceFace(shape1, shape2)) {
+        return DocumentObject::StdReturn;
+    }
+
+    if (mHasClickedPosition1 && mHasClickedPosition2) {
+        setValues(
+            gp_Pnt(mClickedPosition1.x, mClickedPosition1.y, mClickedPosition1.z),
+            gp_Pnt(mClickedPosition2.x, mClickedPosition2.y, mClickedPosition2.z)
+        );
         return DocumentObject::StdReturn;
     }
 
