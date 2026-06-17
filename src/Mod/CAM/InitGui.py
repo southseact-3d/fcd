@@ -63,7 +63,9 @@ class CAMWorkbench(Workbench):
     "CAM workbench"
 
     def __init__(self):
-        self.__class__.Icon = FreeCAD.getResourceDir() + "Mod/CAM/Resources/icons/CAMWorkbench.svg"
+        self.__class__.Icon = (
+            FreeCAD.getResourceDir() + "Mod/CAM/Resources/icons/CAMWorkbench.svg"
+        )
         self.__class__.MenuText = "CAM"
         self.__class__.ToolTip = "CAM workbench"
 
@@ -124,7 +126,7 @@ class CAMWorkbench(Workbench):
         Path.GuiInit.Startup()
 
         # build commands list
-        projcmdlist = ["CAM_Job", "CAM_Sanity"]
+        projcmdlist = ["CAM_Job", "CAM_Sanity", "CAM_Walkthrough"]
         postcmdlist = ["CAM_Post", "CAM_PostSelected"]
         toolcmdlist = ["CAM_Inspect", "CAM_SelectLoop", "CAM_OpActiveToggle"]
 
@@ -275,10 +277,13 @@ class CAMWorkbench(Workbench):
             twodopcmdlist + drillingcmdgroup + engravecmdgroup + threedcmdgroup,
         )
         self.appendToolbar(
-            QT_TRANSLATE_NOOP("Workbench", "Path Modification"), modcmdlist + dressupcmdgroup
+            QT_TRANSLATE_NOOP("Workbench", "Path Modification"),
+            modcmdlist + dressupcmdgroup,
         )
         if extracmdlist:
-            self.appendToolbar(QT_TRANSLATE_NOOP("Workbench", "Helpful Tools"), extracmdlist)
+            self.appendToolbar(
+                QT_TRANSLATE_NOOP("Workbench", "Helpful Tools"), extracmdlist
+            )
 
         self.appendMenu(
             [QT_TRANSLATE_NOOP("Workbench", "&CAM")],
