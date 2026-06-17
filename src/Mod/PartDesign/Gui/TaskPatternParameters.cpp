@@ -41,6 +41,7 @@
 #include <Mod/PartDesign/App/DatumPlane.h>
 #include <Mod/PartDesign/App/FeatureLinearPattern.h>
 #include <Mod/PartDesign/App/FeaturePolarPattern.h>
+#include <Mod/PartDesign/App/FeaturePatternOnPath.h>
 #include <Mod/Part/Gui/PatternParametersWidget.h>
 
 #include "ui_TaskPatternParameters.h"
@@ -81,9 +82,19 @@ void TaskPatternParameters::setupParameterUI(QWidget* widget)
     if (!pattern) {
         return;
     }
-    PartGui::PatternType type = pattern->isDerivedFrom<PartDesign::LinearPattern>()
-        ? PartGui::PatternType::Linear
-        : PartGui::PatternType::Polar;
+    PartGui::PatternType type;
+    if (pattern->isDerivedFrom<PartDesign::LinearPattern>()) {
+        type = PartGui::PatternType::Linear;
+    }
+    else if (pattern->isDerivedFrom<PartDesign::PolarPattern>()) {
+        type = PartGui::PatternType::Polar;
+    }
+    else if (pattern->isDerivedFrom<PartDesign::PatternOnPath>()) {
+        type = PartGui::PatternType::Path;
+    }
+    else {
+        type = PartGui::PatternType::Linear;
+    }
 
     // Set first direction widget
     parametersWidget = new PartGui::PatternParametersWidget(type, widget);
@@ -163,6 +174,8 @@ void TaskPatternParameters::bindProperties()
             &linear->Occurrences,
             linear
         );
+        parametersWidget->bindSymmetricProperty(&linear->Symmetric);
+        parametersWidget->bindObjectTypeProperty(&linear->ObjectType);
         parametersWidget2->bindProperties(
             &linear->Direction2,
             &linear->Reversed2,
@@ -173,6 +186,8 @@ void TaskPatternParameters::bindProperties()
             &linear->Occurrences2,
             linear
         );
+        parametersWidget2->bindSymmetricProperty(&linear->Symmetric2);
+        parametersWidget2->bindObjectTypeProperty(&linear->ObjectType);
     }
     else if (pattern->isDerivedFrom<PartDesign::PolarPattern>()) {
         auto* polar = static_cast<PartDesign::PolarPattern*>(pattern);
@@ -186,6 +201,21 @@ void TaskPatternParameters::bindProperties()
             &polar->Occurrences,
             polar
         );
+        parametersWidget->bindObjectTypeProperty(&polar->ObjectType);
+    }
+    else if (pattern->isDerivedFrom<PartDesign::PatternOnPath>()) {
+        auto* pathPattern = static_cast<PartDesign::PatternOnPath*>(pattern);
+        parametersWidget->bindProperties(
+            &pathPattern->Path,
+            &pathPattern->Reversed,
+            &pathPattern->Mode,
+            &pathPattern->Length,
+            &pathPattern->Offset,
+            &pathPattern->SpacingPattern,
+            &pathPattern->Occurrences,
+            pathPattern
+        );
+        parametersWidget->bindObjectTypeProperty(&pathPattern->ObjectType);
     }
     else {
         Base::Console().warning(
@@ -353,6 +383,10 @@ void TaskPatternParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
             auto* polarPattern = static_cast<PartDesign::PolarPattern*>(patternObj);
             polarPattern->Axis.setValue(selObj, directions);
         }
+        else if (patternObj->isDerivedFrom<PartDesign::PatternOnPath>()) {
+            auto* pathPattern = static_cast<PartDesign::PatternOnPath*>(patternObj);
+            pathPattern->Path.setValue(selObj, directions);
+        }
         recomputeFeature();
         updateUI();
     }
@@ -380,7 +414,8 @@ void TaskPatternParameters::apply()
     std::string direction = buildLinkSingleSubPythonStr(obj, dirs);
 
     bool isLinear = pattern->isDerivedFrom<PartDesign::LinearPattern>();
-    const char* propName = isLinear ? "Direction = " : "Axis = ";
+    bool isPath = pattern->isDerivedFrom<PartDesign::PatternOnPath>();
+    const char* propName = isPath ? "Path = " : (isLinear ? "Direction = " : "Axis = ");
 
     FCMD_OBJ_CMD(pattern, propName << direction.c_str());
     FCMD_OBJ_CMD(pattern, "Reversed = " << parametersWidget->getReverse());
@@ -388,6 +423,15 @@ void TaskPatternParameters::apply()
     parametersWidget->applyQuantitySpinboxes();
 
     FCMD_OBJ_CMD(pattern, "SpacingPattern = " << parametersWidget->getSpacingPatternsAsString());
+
+    if (isLinear) {
+        auto* linear = static_cast<PartDesign::LinearPattern*>(pattern);
+        FCMD_OBJ_CMD(pattern, "Symmetric = " << linear->Symmetric.getValue());
+        FCMD_OBJ_CMD(pattern, "ObjectType = " << linear->ObjectType.getValue());
+    }
+    else {
+        FCMD_OBJ_CMD(pattern, "ObjectType = " << pattern->ObjectType.getValue());
+    }
 
     if (parametersWidget2) {
         parametersWidget2->getAxis(obj, dirs);
@@ -399,6 +443,8 @@ void TaskPatternParameters::apply()
         parametersWidget2->applyQuantitySpinboxes();
 
         FCMD_OBJ_CMD(pattern, "SpacingPattern2 = " << parametersWidget2->getSpacingPatternsAsString());
+
+        FCMD_OBJ_CMD(pattern, "Symmetric2 = " << linear->Symmetric2.getValue());
     }
 
     // The user may have changed a value and immediately hit 'OK' or Enter.

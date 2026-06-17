@@ -56,6 +56,11 @@ const App::PropertyIntegerConstraint::Constraints LinearPattern::intOccurrences
 
 const char* LinearPattern::ModeEnums[] = {"Extent", "Spacing", nullptr};
 
+namespace
+{
+const char* SymmetricEnums[] = {"One Direction", "Symmetric", nullptr};
+}
+
 LinearPattern::LinearPattern()
 {
     auto initialMode = LinearPatternMode::Extent;
@@ -83,6 +88,16 @@ LinearPattern::LinearPattern()
         "Selects how the pattern is dimensioned.\n'Extent': Uses the total length from the first "
         "to the last instance.\n'Spacing': Uses the distance between consecutive instances."
     );
+    ADD_PROPERTY_TYPE(
+        Symmetric,
+        (0L),
+        "Direction 1",
+        App::Prop_None,
+        "Controls the distribution direction.\n'One Direction': Distributes instances from the "
+        "origin in one direction.\n'Symmetric': Distributes instances symmetrically on both "
+        "sides of the origin."
+    );
+    Symmetric.setEnums(SymmetricEnums);
     ADD_PROPERTY_TYPE(
         Length,
         (100.0),
@@ -153,6 +168,16 @@ LinearPattern::LinearPattern()
         "Uses the total length.\n'Spacing': Uses the distance between instances."
     );
     ADD_PROPERTY_TYPE(
+        Symmetric2,
+        (0L),
+        "Direction 2",
+        App::Prop_None,
+        "Controls the distribution direction in the second direction.\n'One Direction': "
+        "Distributes instances from the origin in one direction.\n'Symmetric': Distributes "
+        "instances symmetrically on both sides of the origin."
+    );
+    Symmetric2.setEnums(SymmetricEnums);
+    ADD_PROPERTY_TYPE(
         Length2,
         (100.0),
         "Direction 2",
@@ -200,12 +225,14 @@ LinearPattern::LinearPattern()
 
 short LinearPattern::mustExecute() const
 {
-    if (Direction.isTouched() || Reversed.isTouched() || Mode.isTouched() ||
-        // Length and Offset are mutually exclusive, only one could be updated at once
+    if (Direction.isTouched() || Reversed.isTouched() || Mode.isTouched() || Symmetric.isTouched()
+        || // Length and Offset are mutually exclusive, only one could be updated at once
         Length.isTouched() || Offset.isTouched() || Spacings.isTouched()
         || SpacingPattern.isTouched() || Occurrences.isTouched() || Direction2.isTouched()
-        || Reversed2.isTouched() || Mode2.isTouched() || Length2.isTouched() || Offset2.isTouched()
-        || Spacings2.isTouched() || SpacingPattern2.isTouched() || Occurrences2.isTouched()) {
+        || Reversed2.isTouched() || Mode2.isTouched() || Symmetric2.isTouched()
+        || Length2.isTouched() || Offset2.isTouched() || Spacings2.isTouched()
+        || SpacingPattern2.isTouched() || Occurrences2.isTouched()
+        || SuppressedInstances.isTouched()) {
         return 1;
     }
     return Transformed::mustExecute();
@@ -304,13 +331,16 @@ std::vector<gp_Vec> LinearPattern::calculateSteps(
 {
     const auto& occurrencesProp = (dir == LinearPatternDirection::First) ? Occurrences : Occurrences2;
     const auto& modeProp = (dir == LinearPatternDirection::First) ? Mode : Mode2;
+    const auto& symmetricProp = (dir == LinearPatternDirection::First) ? Symmetric : Symmetric2;
     const auto& offsetValueProp = (dir == LinearPatternDirection::First) ? Offset : Offset2;
     const auto& spacingsProp = (dir == LinearPatternDirection::First) ? Spacings : Spacings2;
     const auto& spacingPatternProp = (dir == LinearPatternDirection::First) ? SpacingPattern
-                                                                            : SpacingPattern2;
+                                                                             : SpacingPattern2;
 
     int occurrences = occurrencesProp.getValue();
-    std::vector<gp_Vec> steps {gp_Vec()};  // First step is always zero
+    bool isSymmetric = (symmetricProp.getValue() == 1);
+
+    std::vector<gp_Vec> steps {gp_Vec()};  // First step is always zero (the original)
     steps.reserve(occurrences);
 
     if (occurrences <= 1) {
@@ -336,14 +366,70 @@ std::vector<gp_Vec> LinearPattern::calculateSteps(
             return offsetValueProp.getValue();
         };
 
-        for (int i = 1; i < occurrences; ++i) {
-            cumulativeDistance += spacingAt(i);
-            steps.push_back(offsetVector * cumulativeDistance);
+        if (isSymmetric) {
+            // For symmetric spacing, distribute instances alternately on both sides.
+            // Instance order: 0 (original), +1, -1, +2, -2, ...
+            // Total instances including original = occurrences.
+            // We generate (occurrences - 1) transformed copies.
+            int halfCount = (occurrences - 1) / 2;
+            int extraCount = (occurrences - 1) - halfCount * 2;  // 0 or 1 extra on positive side
+
+            // Positive side steps
+            std::vector<gp_Vec> positiveSteps;
+            cumulativeDistance = 0.0;
+            for (int i = 1; i <= halfCount + extraCount; ++i) {
+                cumulativeDistance += spacingAt(i);
+                positiveSteps.push_back(offsetVector * cumulativeDistance);
+            }
+
+            // Negative side steps
+            std::vector<gp_Vec> negativeSteps;
+            cumulativeDistance = 0.0;
+            for (int i = 1; i <= halfCount; ++i) {
+                cumulativeDistance += spacingAt(i);
+                negativeSteps.push_back(offsetVector * (-cumulativeDistance));
+            }
+
+            // Interleave: positive, negative, positive, negative, ...
+            size_t posIdx = 0, negIdx = 0;
+            while (posIdx < positiveSteps.size() || negIdx < negativeSteps.size()) {
+                if (posIdx < positiveSteps.size()) {
+                    steps.push_back(positiveSteps[posIdx++]);
+                }
+                if (negIdx < negativeSteps.size()) {
+                    steps.push_back(negativeSteps[negIdx++]);
+                }
+            }
+        }
+        else {
+            // One direction (original behavior)
+            for (int i = 1; i < occurrences; ++i) {
+                cumulativeDistance += spacingAt(i);
+                steps.push_back(offsetVector * cumulativeDistance);
+            }
         }
     }
     else {  // Extent Mode
-        for (int i = 1; i < occurrences; ++i) {
-            steps.push_back(offsetVector * i);
+        if (isSymmetric) {
+            // For symmetric extent, the total length is distributed on both sides.
+            // Half the length goes positive, half goes negative.
+            int halfCount = (occurrences - 1) / 2;
+            int extraCount = (occurrences - 1) - halfCount * 2;
+
+            // Positive side
+            for (int i = 1; i <= halfCount + extraCount; ++i) {
+                steps.push_back(offsetVector * static_cast<double>(i));
+            }
+            // Negative side
+            for (int i = 1; i <= halfCount; ++i) {
+                steps.push_back(offsetVector * static_cast<double>(-i));
+            }
+        }
+        else {
+            // One direction (original behavior)
+            for (int i = 1; i < occurrences; ++i) {
+                steps.push_back(offsetVector * i);
+            }
         }
     }
 

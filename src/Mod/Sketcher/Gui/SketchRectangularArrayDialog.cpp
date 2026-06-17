@@ -44,6 +44,17 @@ SketchRectangularArrayDialog::SketchRectangularArrayDialog()
     ui->ConstraintSeparationCheckBox->onRestore();
     ui->EqualVerticalHorizontalSpacingCheckBox->onRestore();
     ui->CloneCheckBox->onRestore();
+    ui->IndependentXYCheckBox->onRestore();
+    ui->SpacingYSpinBox->onRestore();
+    ui->SymmetricXCheckBox->onRestore();
+    ui->SymmetricYCheckBox->onRestore();
+
+    connect(
+        ui->IndependentXYCheckBox,
+        &QCheckBox::toggled,
+        this,
+        &SketchRectangularArrayDialog::onIndependentXYToggled
+    );
 
     updateValues();
 }
@@ -58,6 +69,10 @@ void SketchRectangularArrayDialog::accept()
     ui->ConstraintSeparationCheckBox->onSave();
     ui->EqualVerticalHorizontalSpacingCheckBox->onSave();
     ui->CloneCheckBox->onSave();
+    ui->IndependentXYCheckBox->onSave();
+    ui->SpacingYSpinBox->onSave();
+    ui->SymmetricXCheckBox->onSave();
+    ui->SymmetricYCheckBox->onSave();
 
     updateValues();
 
@@ -71,6 +86,17 @@ void SketchRectangularArrayDialog::updateValues()
     ConstraintSeparation = ui->ConstraintSeparationCheckBox->isChecked();
     EqualVerticalHorizontalSpacing = ui->EqualVerticalHorizontalSpacingCheckBox->isChecked();
     Clone = ui->CloneCheckBox->isChecked();
+    IndependentXYSpacing = ui->IndependentXYCheckBox->isChecked();
+    SpacingX = 10.0;  // Will be set from drag distance
+    SpacingY = ui->SpacingYSpinBox->value();
+    SymmetricX = ui->SymmetricXCheckBox->isChecked();
+    SymmetricY = ui->SymmetricYCheckBox->isChecked();
+}
+
+void SketchRectangularArrayDialog::onIndependentXYToggled(bool checked)
+{
+    ui->SpacingYSpinBox->setEnabled(checked);
+    ui->spacingYLabel->setEnabled(checked);
 }
 
 #include "moc_SketchRectangularArrayDialog.cpp"

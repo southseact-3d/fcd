@@ -58,6 +58,18 @@ public:
     App::PropertyEnumeration TransformMode;
     App::PropertyBool Refine;
 
+    /** Per-instance suppression: when true at index i, the i-th transformation is skipped.
+     *  Index 0 corresponds to the first transformed copy (the original is never suppressed).
+     */
+    App::PropertyBoolList SuppressedInstances;
+
+    /** Object type selector: controls what is patterned.
+     *  Features: Pattern individual additive/subtractive features (default, current behavior).
+     *  Bodies: Pattern entire body shapes.
+     *  ConstructionGeometry: Pattern datum planes, axes, and points.
+     */
+    App::PropertyEnumeration ObjectType;
+
     /**
      * Returns the BaseFeature property's object(if any) otherwise return first original,
      *         which serves as "Support" for old style workflows

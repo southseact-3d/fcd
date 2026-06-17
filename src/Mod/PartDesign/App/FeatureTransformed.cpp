@@ -72,6 +72,27 @@ Transformed::Transformed()
 
     ADD_PROPERTY(TransformMode, (static_cast<long>(Mode::Features)));
     TransformMode.setEnums(transformModeEnums.data());
+
+    ADD_PROPERTY_TYPE(
+        SuppressedInstances,
+        ({}),
+        "Pattern",
+        App::Prop_None,
+        "Per-instance suppression list. Each entry corresponds to a transformed copy "
+        "(not the original). When true, that instance is omitted from the pattern result."
+    );
+
+    ADD_PROPERTY_TYPE(
+        ObjectType,
+        (0L),
+        "Pattern",
+        App::Prop_None,
+        "Controls what is patterned.\n'Features': Pattern individual additive/subtractive "
+        "features (default).\n'Bodies': Pattern entire body shapes.\n'Construction Geometry': "
+        "Pattern datum planes, axes, and points."
+    );
+    static const char* ObjectTypeEnums[] = {"Features", "Bodies", "Construction Geometry", nullptr};
+    ObjectType.setEnums(ObjectTypeEnums);
 }
 
 void Transformed::positionBySupport()
@@ -227,7 +248,8 @@ void Transformed::handleChangedPropertyType(
 
 short Transformed::mustExecute() const
 {
-    if (Originals.isTouched() || TransformMode.isTouched()) {
+    if (Originals.isTouched() || TransformMode.isTouched() || SuppressedInstances.isTouched()
+        || ObjectType.isTouched()) {
         return 1;
     }
     return PartDesign::Feature::mustExecute();
@@ -338,6 +360,26 @@ App::DocumentObjectExecReturn* Transformed::execute()
 
     if (transformations.empty()) {
         return App::DocumentObject::StdReturn;  // No transformations defined, exit silently
+    }
+
+    // Filter out suppressed instances.
+    // The first transformation is always the identity (the original copy within the support).
+    // SuppressedInstances[0] corresponds to the first non-identity transformation (index 1
+    // in the original list). If SuppressedInstances is empty, no filtering is done.
+    const auto suppressed = SuppressedInstances.getValues();
+    if (!suppressed.empty() && transformations.size() > 1) {
+        std::vector<gp_Trsf> filtered;
+        filtered.reserve(transformations.size());
+        // Always keep the first (identity) transformation
+        filtered.push_back(transformations.front());
+        for (size_t i = 1; i < transformations.size(); ++i) {
+            size_t suppIdx = i - 1;
+            if (suppIdx < suppressed.size() && suppressed[suppIdx]) {
+                continue;  // This instance is suppressed
+            }
+            filtered.push_back(transformations[i]);
+        }
+        transformations = std::move(filtered);
     }
 
     // Get the support

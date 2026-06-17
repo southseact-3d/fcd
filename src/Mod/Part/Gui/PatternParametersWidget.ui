@@ -10,21 +10,51 @@
     <height>200</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="generalLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
-   <item>
-    <widget class="QCheckBox" name="enableCheckbox">
+   <layout class="QVBoxLayout" name="generalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <layout class="QHBoxLayout" name="objectTypeLayout">
+      <item>
+       <widget class="QLabel" name="labelObjectType">
+        <property name="text">
+         <string>Object Type</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboObjectType">
+        <item>
+         <property name="text">
+          <string>Features</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Bodies</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Construction Geometry</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="enableCheckbox">
      <property name="text">
       <string>Direction 2</string>
      </property>
@@ -84,27 +114,48 @@
          </widget>
         </item>
         <item row="1" column="0">
+         <widget class="QLabel" name="labelSymmetric">
+          <property name="text">
+           <string>Distribution</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="comboSymmetric">
+          <item>
+           <property name="text">
+            <string>One Direction</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Symmetric</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QLabel" name="labelLength">
           <property name="text">
            <string>Length</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
+        <item row="2" column="1">
          <widget class="Gui::QuantitySpinBox" name="spinExtent" native="true">
           <property name="keyboardTracking" stdset="0">
            <bool>false</bool>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
+        <item row="3" column="0">
          <widget class="QLabel" name="labelOffset">
           <property name="text">
            <string>Spacing</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
+        <item row="3" column="1">
          <widget class="QWidget" name="spacingControlsWidget" native="true">
           <layout class="QHBoxLayout" name="spacingControlsLayout">
            <property name="spacing">
@@ -152,15 +203,15 @@
            </layout>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="labelOccurrences">
-           <property name="text">
-            <string>Occurrences</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="Gui::UIntSpinBox" name="spinOccurrences"/>
+          <item row="4" column="0">
+           <widget class="QLabel" name="labelOccurrences">
+            <property name="text">
+             <string>Occurrences</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="Gui::UIntSpinBox" name="spinOccurrences"/>
          </item>
        </layout>
       </item>

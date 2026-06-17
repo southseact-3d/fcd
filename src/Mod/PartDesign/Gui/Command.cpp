@@ -4175,6 +4175,53 @@ bool CmdPartDesignPolarPattern::isActive()
 }
 
 //===========================================================================
+// PartDesign_PatternOnPath
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignPatternOnPath)
+
+CmdPartDesignPatternOnPath::CmdPartDesignPatternOnPath()
+    : Command("PartDesign_PatternOnPath")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Pattern\non Path");
+    sToolTipText = QT_TR_NOOP(
+        "Duplicates the selected features or the active body along an arbitrary path"
+    );
+    sWhatsThis = "PartDesign_PatternOnPath";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_PatternOnPath";
+}
+
+void CmdPartDesignPatternOnPath::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+
+    if (!pcActiveBody) {
+        return;
+    }
+
+    Gui::Command* cmd = this;
+    auto worker =
+        [cmd, pcActiveBody](App::DocumentObject* Feat, std::vector<App::DocumentObject*> /*features*/) {
+            FCMD_OBJ_CMD(Feat, "Occurrences = 2");
+            FCMD_OBJ_CMD(Feat, "Mode = 0");
+            FCMD_OBJ_CMD(Feat, "Length = 100");
+
+            finishTransformed(cmd, Feat);
+        };
+
+    prepareTransformed(pcActiveBody, this, "PatternOnPath", worker);
+}
+
+bool CmdPartDesignPatternOnPath::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // PartDesign_Scaled
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignScaled)
@@ -4690,6 +4737,7 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignPolarPattern());
     // rcCmdMgr.addCommand(new CmdPartDesignScaled());
     rcCmdMgr.addCommand(new CmdPartDesignMultiTransform());
+    rcCmdMgr.addCommand(new CmdPartDesignPatternOnPath());
 
     rcCmdMgr.addCommand(new CmdPartDesignBoolean());
     rcCmdMgr.addCommand(new CmdPartDesignCompDatums());
