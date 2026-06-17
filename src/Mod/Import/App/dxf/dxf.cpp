@@ -21,6 +21,7 @@
 #include <Base/Exception.h>
 #include <Base/FileInfo.h>
 #include <Base/Interpreter.h>
+#include <Base/Sequencer.h>
 #include <Base/Stream.h>
 #include <Base/Tools.h>
 #include <Base/Vector3D.h>
@@ -2742,6 +2743,7 @@ void CDxfRead::DoRead(const bool ignore_errors /* = false */)
         return;
     }
 
+    Base::SequencerLauncher seq("Reading DXF file...", 0);
     try {
         StartImport();
         // Loop reading the sections.

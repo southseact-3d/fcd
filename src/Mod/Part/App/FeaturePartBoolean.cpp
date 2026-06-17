@@ -33,6 +33,7 @@
 #include <App/Application.h>
 #include <Base/Exception.h>
 #include <Base/Parameter.h>
+#include <Base/Sequencer.h>
 
 #include "FeaturePartBoolean.h"
 #include "TopoShapeOpCode.h"
@@ -146,6 +147,7 @@ App::DocumentObjectExecReturn* Boolean::execute()
             throw NullShapeException("Tool shape is null");
         }
 
+        Base::SequencerLauncher seq("Performing boolean operation...", 1);
         std::unique_ptr<BRepAlgoAPI_BooleanOperation> mkBool(makeOperation(BaseShape, ToolShape));
         if (!mkBool->IsDone()) {
             std::stringstream error;
@@ -162,6 +164,7 @@ App::DocumentObjectExecReturn* Boolean::execute()
         if (resShape.IsNull()) {
             return new App::DocumentObjectExecReturn("Resulting shape is null");
         }
+        seq.next();
 
         throwIfInvalidIfCheckModel(resShape);
 

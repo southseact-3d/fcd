@@ -31,6 +31,7 @@
 
 #include "WriterIges.h"
 #include <Base/Exception.h>
+#include <Base/Sequencer.h>
 #include <App/Application.h>
 #include <Mod/Part/App/encodeFilename.h>
 #include <Mod/Part/App/Interface.h>
@@ -53,9 +54,14 @@ void WriterIges::write(Handle(TDocStd_Document) hDoc) const  // NOLINT
     header.SetCompanyName(new TCollection_HAsciiString(Part::Interface::writeIgesHeaderCompany()));
     header.SetSendName(new TCollection_HAsciiString(Part::Interface::writeIgesHeaderProduct()));
     writer.Model()->SetGlobalSection(header);
+
+    Base::SequencerLauncher seq("Writing IGES file...", 2);
     writer.Transfer(hDoc);
+    seq.next();
+
     Standard_Boolean ret = writer.Write(name8bit.c_str());
     if (!ret) {
         throw Base::FileException("Cannot open file: ", file);
     }
+    seq.next();
 }

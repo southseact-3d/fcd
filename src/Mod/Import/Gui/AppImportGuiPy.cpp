@@ -28,6 +28,7 @@
 
 #include <iostream>
 
+#include <QApplication>
 #include <QString>
 
 #if defined(__clang__)
@@ -343,6 +344,7 @@ private:
             }
 
             FC_DURATION_PLUS(d1, t);
+            qApp->processEvents();
             if (merge != Py_None) {
                 ocaf.setMerge(Base::asBoolean(merge));
             }
@@ -356,6 +358,7 @@ private:
                 ocaf.setMode(mode);
             }
             auto ret = ocaf.loadShapes();
+            qApp->processEvents();
             hApp->Close(hDoc);
             FC_DURATION_PLUS(d2, t);
             FC_DURATION_LOG(d1, "file read");
@@ -571,6 +574,7 @@ private:
                 ExportOCAFGui ocaf(hDoc, keepExplicitPlacement);
                 ocaf.exportObjects(objs);
             }
+            qApp->processEvents();
 
             Base::FileInfo file(Utf8Name.c_str());
             if (file.hasExtension({"stp", "step"})) {

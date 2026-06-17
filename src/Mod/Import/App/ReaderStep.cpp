@@ -31,6 +31,7 @@
 
 #include "ReaderStep.h"
 #include <Base/Exception.h>
+#include <Base/Sequencer.h>
 #include <Mod/Part/App/encodeFilename.h>
 
 using namespace Import;
@@ -52,6 +53,8 @@ void ReaderStep::read(Handle(TDocStd_Document) hDoc)  // NOLINT
     aReader.SetNameMode(true);
     aReader.SetLayerMode(true);
     aReader.SetSHUOMode(true);
+
+    Base::SequencerLauncher seq("Reading STEP file...", 2);
 #if OCC_VERSION_HEX < 0x070800
     if (aReader.ReadFile(name8bit.c_str()) != IFSelect_RetDone) {
 #else
@@ -62,6 +65,8 @@ void ReaderStep::read(Handle(TDocStd_Document) hDoc)  // NOLINT
 #endif
         throw Base::FileException("Cannot read STEP file", file);
     }
+    seq.next();
 
     aReader.Transfer(hDoc);
+    seq.next();
 }

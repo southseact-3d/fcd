@@ -30,6 +30,7 @@
 
 #include "WriterGltf.h"
 #include <Base/Exception.h>
+#include <Base/Sequencer.h>
 #include <Mod/Part/App/encodeFilename.h>
 
 using namespace Import;
@@ -52,8 +53,11 @@ void WriterGltf::write(Handle(TDocStd_Document) hDoc) const  // NOLINT
 #if OCC_VERSION_HEX >= 0x070700
     aWriter.SetParallel(true);
 #endif
+
+    Base::SequencerLauncher seq("Writing glTF file...", 1);
     Standard_Boolean ret = aWriter.Perform(hDoc, aMetadata, Message_ProgressRange());
     if (!ret) {
         throw Base::FileException("Cannot save to file: ", file);
     }
+    seq.next();
 }

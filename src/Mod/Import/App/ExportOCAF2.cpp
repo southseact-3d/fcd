@@ -49,6 +49,7 @@
 #include <App/Link.h>
 #include <Base/Console.h>
 #include <Base/Parameter.h>
+#include <Base/Sequencer.h>
 #include <Mod/Part/App/PartFeature.h>
 #include <Mod/Part/App/Interface.h>
 #include <Mod/Part/App/OCAF/ImportExportSettings.h>
@@ -350,6 +351,8 @@ void ExportOCAF2::exportObjects(std::vector<App::DocumentObject*>& objs, const c
     myObjects.clear();
     myNames.clear();
     mySetups.clear();
+
+    Base::SequencerLauncher seq("Exporting objects...", objs.size() + 1);
     if (objs.size() == 1) {
         exportObject(objs.front(), nullptr, TDF_Label());
     }
@@ -365,6 +368,7 @@ void ExportOCAF2::exportObjects(std::vector<App::DocumentObject*>& objs, const c
                 doc = obj->getDocument();
             }
             exportObject(obj, nullptr, label);
+            seq.next();
         }
 
         if (!name && doc && sameDoc) {
@@ -380,6 +384,7 @@ void ExportOCAF2::exportObjects(std::vector<App::DocumentObject*>& objs, const c
     // Update is not performed automatically anymore:
     // https://tracker.dev.opencascade.org/view.php?id=28055
     aShapeTool->UpdateAssemblies();
+    seq.next();
 }
 
 TDF_Label ExportOCAF2::exportObject(
