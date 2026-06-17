@@ -42,6 +42,8 @@ SET(ReenGui_SRCS
     Command.cpp
     Resources/ReverseEngineering.qrc
     PreCompiled.h
+    ReverseEngineeringPartToolsWidget.cpp
+    ReverseEngineeringPartToolsWidget.h
     Workbench.cpp
     Workbench.h
 )

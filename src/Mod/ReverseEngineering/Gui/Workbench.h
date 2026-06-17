@@ -41,6 +41,7 @@ class Workbench: public Gui::StdWorkbench
 public:
     Workbench();
     ~Workbench() override;
+    void activated() override;
 
 protected:
     Gui::MenuItem* setupMenuBar() const override;

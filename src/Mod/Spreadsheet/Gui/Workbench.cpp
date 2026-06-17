@@ -37,6 +37,7 @@
 #include <Gui/MenuManager.h>
 #include <Gui/ToolBarManager.h>
 
+#include "SpreadsheetPartToolsWidget.h"
 #include "Workbench.h"
 #include "qtcolorpicker.h"
 
@@ -124,6 +125,18 @@ void Workbench::activated()
             bar->addWidget(backgroundColor);
 
             initialized = false;
+        }
+    }
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Spreadsheet Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new SpreadsheetPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
         }
     }
 }

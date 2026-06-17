@@ -25,10 +25,13 @@
 #include <qobject.h>
 
 
+#include "TechDrawPartToolsWidget.h"
 #include "Workbench.h"
 #include <App/Application.h>
+#include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
 #include <Gui/ToolBarManager.h>
+#include <QToolBar>
 
 
 using namespace TechDrawGui;
@@ -497,4 +500,21 @@ Gui::ToolBarItem* Workbench::setupCommandBars() const
     *anno << "TechDraw_HoleShaftFit";
 
     return root;
+}
+
+void Workbench::activated()
+{
+    Gui::Workbench::activated();
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("TechDraw Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new TechDrawPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
 }

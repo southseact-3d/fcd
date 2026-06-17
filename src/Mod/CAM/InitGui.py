@@ -364,7 +364,23 @@ class CAMWorkbench(Workbench):
     def Activated(self):
         # update the translation engine
         FreeCADGui.updateLocale()
-        # Msg("CAM workbench activated\n")
+
+        # Install the CAM Part Tools widget into a dedicated toolbar
+        from PySide import QtWidgets
+
+        try:
+            from CAM.CAMPartToolsWidget import CAMPartToolsWidget
+        except ImportError:
+            pass
+        else:
+            mainWin = FreeCADGui.getMainWindow()
+            if mainWin:
+                toolbar = mainWin.findChild(QtWidgets.QToolBar, "CAM Part Tools")
+                if not toolbar:
+                    toolbar = mainWin.addToolBar("CAM Part Tools")
+                    toolbar.setObjectName("CAM Part Tools")
+                toolbar.clear()
+                toolbar.addWidget(CAMPartToolsWidget())
 
     def Deactivated(self):
         # Msg("CAM workbench deactivated\n")

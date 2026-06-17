@@ -604,6 +604,23 @@ class BIMWorkbench(Workbench):
         from nativeifc import ifc_observer
         from draftutils import grid_observer
 
+        # Install the BIM Part Tools widget into a dedicated toolbar
+        from PySide import QtWidgets
+
+        try:
+            from BIM.BIMPartToolsWidget import BIMPartToolsWidget
+        except ImportError:
+            pass
+        else:
+            mainWin = FreeCADGui.getMainWindow()
+            if mainWin:
+                toolbar = mainWin.findChild(QtWidgets.QToolBar, "BIM Part Tools")
+                if not toolbar:
+                    toolbar = mainWin.addToolBar("BIM Part Tools")
+                    toolbar.setObjectName("BIM Part Tools")
+                toolbar.clear()
+                toolbar.addWidget(BIMPartToolsWidget())
+
         PARAMS = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/BIM")
 
         if hasattr(FreeCADGui, "draftToolBar"):

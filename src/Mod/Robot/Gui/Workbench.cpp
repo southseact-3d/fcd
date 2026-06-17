@@ -25,6 +25,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QToolBar>
 #include <qobject.h>
 
 
@@ -37,6 +38,7 @@
 #include <Gui/ToolBarManager.h>
 #include <Gui/WaitCursor.h>
 
+#include "RobotPartToolsWidget.h"
 #include "TaskWatcher.h"
 #include "Workbench.h"
 
@@ -107,6 +109,18 @@ void Workbench::activated()
 
     addTaskWatcher(Watcher);
     Gui::Control().showTaskView();
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Robot Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new RobotPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
 }
 
 

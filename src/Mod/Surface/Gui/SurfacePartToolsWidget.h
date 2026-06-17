@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
 /***************************************************************************
- *   Copyright (c) 2008 Werner Mayer <werner.wm.mayer@gmx.de>              *
+ *   Copyright (c) 2024 liamh <liamh[at]users.sourceforge.net>            *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -21,35 +23,50 @@
  ***************************************************************************/
 
 
-#ifndef FEM_WORKBENCH_H
-#define FEM_WORKBENCH_H
+#ifndef SURFACE_PARTTOOLSWIDGET_H
+#define SURFACE_PARTTOOLSWIDGET_H
 
-#include <Gui/Workbench.h>
-#include <Mod/Fem/FemGlobal.h>
+#include <QWidget>
+#include <QVector>
 
-namespace FemGui
+class QToolButton;
+class QMenu;
+
+namespace SurfaceGui
 {
 
-/**
- * @author Werner Mayer
- */
-class FemGuiExport Workbench: public Gui::StdWorkbench
+class SurfaceGroupWidget;
+
+class SurfacePartToolsWidget : public QWidget
 {
-    TYPESYSTEM_HEADER_WITH_OVERRIDE();
+    Q_OBJECT
 
 public:
-    Workbench();
-    ~Workbench() override;
-    void activated() override;
-    void deactivated() override;
-    void setupContextMenu(const char* recipient, Gui::MenuItem*) const override;
+    explicit SurfacePartToolsWidget(QWidget* parent = nullptr);
 
 protected:
-    Gui::ToolBarItem* setupToolBars() const override;
-    Gui::MenuItem* setupMenuBar() const override;
+    void resizeEvent(QResizeEvent* event) override;
+
+private:
+    SurfaceGroupWidget* createCreateGroup();
+    SurfaceGroupWidget* createModifyGroup();
+
+    QToolButton* createToolButton(const char* cmdName);
+
+    QMenu* buildCreateMenu();
+    QMenu* buildModifyMenu();
+
+    static QIcon commandIcon(const char* cmdName);
+
+    SurfaceGroupWidget* createGroup(
+        const QString& label,
+        const QVector<const char*>& visibleCommands,
+        QMenu* menu);
+
+    SurfaceGroupWidget* _createGroup = nullptr;
+    SurfaceGroupWidget* _modifyGroup = nullptr;
 };
 
-}  // namespace FemGui
+}  // namespace SurfaceGui
 
-
-#endif  // FEM_WORKBENCH_H
+#endif  // SURFACE_PARTTOOLSWIDGET_H

@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
 /***************************************************************************
- *   Copyright (c) 2008 Werner Mayer <werner.wm.mayer@gmx.de>              *
+ *   Copyright (c) 2024 liamh <liamh[at]users.sourceforge.net>            *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -21,35 +23,50 @@
  ***************************************************************************/
 
 
-#ifndef FEM_WORKBENCH_H
-#define FEM_WORKBENCH_H
+#ifndef REVERSEENGINEERING_PARTTOOLSWIDGET_H
+#define REVERSEENGINEERING_PARTTOOLSWIDGET_H
 
-#include <Gui/Workbench.h>
-#include <Mod/Fem/FemGlobal.h>
+#include <QWidget>
+#include <QVector>
 
-namespace FemGui
+class QToolButton;
+class QMenu;
+
+namespace ReverseEngineeringGui
 {
 
-/**
- * @author Werner Mayer
- */
-class FemGuiExport Workbench: public Gui::StdWorkbench
+class ReverseEngineeringGroupWidget;
+
+class ReverseEngineeringPartToolsWidget : public QWidget
 {
-    TYPESYSTEM_HEADER_WITH_OVERRIDE();
+    Q_OBJECT
 
 public:
-    Workbench();
-    ~Workbench() override;
-    void activated() override;
-    void deactivated() override;
-    void setupContextMenu(const char* recipient, Gui::MenuItem*) const override;
+    explicit ReverseEngineeringPartToolsWidget(QWidget* parent = nullptr);
 
 protected:
-    Gui::ToolBarItem* setupToolBars() const override;
-    Gui::MenuItem* setupMenuBar() const override;
+    void resizeEvent(QResizeEvent* event) override;
+
+private:
+    ReverseEngineeringGroupWidget* createReconstructGroup();
+    ReverseEngineeringGroupWidget* createApproximateGroup();
+
+    QToolButton* createToolButton(const char* cmdName);
+
+    QMenu* buildReconstructMenu();
+    QMenu* buildApproximateMenu();
+
+    static QIcon commandIcon(const char* cmdName);
+
+    ReverseEngineeringGroupWidget* createGroup(
+        const QString& label,
+        const QVector<const char*>& visibleCommands,
+        QMenu* menu);
+
+    ReverseEngineeringGroupWidget* _reconstructGroup = nullptr;
+    ReverseEngineeringGroupWidget* _approximateGroup = nullptr;
 };
 
-}  // namespace FemGui
+}  // namespace ReverseEngineeringGui
 
-
-#endif  // FEM_WORKBENCH_H
+#endif  // REVERSEENGINEERING_PARTTOOLSWIDGET_H

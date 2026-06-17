@@ -26,10 +26,13 @@
 
 
 #include <App/Application.h>
+#include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
 #include <Gui/ToolBarManager.h>
 #include <Mod/Fem/App/FemTools.h>
+#include <QToolBar>
 
+#include "FemPartToolsWidget.h"
 #include "Workbench.h"
 
 
@@ -83,6 +86,28 @@ TYPESYSTEM_SOURCE(FemGui::Workbench, Gui::StdWorkbench)
 Workbench::Workbench() = default;
 
 Workbench::~Workbench() = default;
+
+void Workbench::activated()
+{
+    Gui::Workbench::activated();
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("FEM Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new FemPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
+}
+
+void Workbench::deactivated()
+{
+    Gui::Workbench::deactivated();
+}
 
 void Workbench::setupContextMenu(const char* recipient, Gui::MenuItem* item) const
 {

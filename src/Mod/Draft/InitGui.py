@@ -165,6 +165,24 @@ class DraftWorkbench(FreeCADGui.Workbench):
 
     def Activated(self):
         """When entering the workbench."""
+
+        # Install the Draft Part Tools widget into a dedicated toolbar
+        from PySide import QtWidgets
+
+        try:
+            from Draft.DraftPartToolsWidget import DraftPartToolsWidget
+        except ImportError:
+            pass
+        else:
+            mainWin = FreeCADGui.getMainWindow()
+            if mainWin:
+                toolbar = mainWin.findChild(QtWidgets.QToolBar, "Draft Part Tools")
+                if not toolbar:
+                    toolbar = mainWin.addToolBar("Draft Part Tools")
+                    toolbar.setObjectName("Draft Part Tools")
+                toolbar.clear()
+                toolbar.addWidget(DraftPartToolsWidget())
+
         if hasattr(FreeCADGui, "draftToolBar"):
             FreeCADGui.draftToolBar.Activated()
         if hasattr(FreeCADGui, "Snapper"):

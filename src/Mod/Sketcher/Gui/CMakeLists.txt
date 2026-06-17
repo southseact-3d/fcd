@@ -150,6 +150,8 @@ SET(SketcherGui_SRCS
     SketcherRegularPolygonDialog.cpp
     SnapManager.cpp
     SnapManager.h
+    SketcherPartToolsWidget.cpp
+    SketcherPartToolsWidget.h
     StyleParameters.h
     TaskDlgEditSketch.cpp
     TaskDlgEditSketch.h

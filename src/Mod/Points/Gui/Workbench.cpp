@@ -23,9 +23,12 @@
  ***************************************************************************/
 
 
+#include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
 #include <Gui/ToolBarManager.h>
+#include <QToolBar>
 
+#include "PointsPartToolsWidget.h"
 #include "Workbench.h"
 
 
@@ -89,4 +92,21 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "Points_PolyCut"
           << "Points_Merge";
     return root;
+}
+
+void Workbench::activated()
+{
+    Gui::Workbench::activated();
+
+    auto* mainWin = Gui::getMainWindow();
+    if (mainWin) {
+        auto* toolbar = mainWin->findChild<QToolBar*>(
+            QStringLiteral("Points Part Tools"));
+        if (toolbar) {
+            toolbar->clear();
+            toolbar->setVisible(true);
+            auto* widget = new PointsPartToolsWidget(toolbar);
+            toolbar->addWidget(widget);
+        }
+    }
 }
