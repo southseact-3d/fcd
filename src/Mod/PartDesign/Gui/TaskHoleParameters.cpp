@@ -195,6 +195,11 @@ TaskHoleParameters::TaskHoleParameters(ViewProviderHole* HoleView, QWidget* pare
         PartDesign::Hole::baseProfileOption_bitmaskToIdx(pcHole->BaseProfileType.getValue())
     );
 
+    ui->Placement->setCurrentIndex(pcHole->Placement.getValue());
+    bool isAtPoint = (pcHole->Placement.getValue() == PartDesign::Hole::AtPoint);
+    ui->BaseProfileType->setVisible(!isAtPoint);
+    ui->labelProfileType->setVisible(!isAtPoint);
+
     setCutDiagram();
 
     // clang-format off
@@ -252,6 +257,8 @@ TaskHoleParameters::TaskHoleParameters(ViewProviderHole* HoleView, QWidget* pare
             this, &TaskHoleParameters::threadDepthChanged);
     connect(ui->BaseProfileType, qOverload<int>(&QComboBox::currentIndexChanged),
             this, &TaskHoleParameters::baseProfileTypeChanged);
+    connect(ui->Placement, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &TaskHoleParameters::placementChanged);
     // clang-format on
 
     ui->Diameter->bind(pcHole->Diameter);
@@ -417,6 +424,17 @@ void TaskHoleParameters::baseProfileTypeChanged(int index)
         recomputeFeature();
 
         setGizmoPositions();
+    }
+}
+
+void TaskHoleParameters::placementChanged(int index)
+{
+    if (auto hole = getObject<PartDesign::Hole>()) {
+        hole->Placement.setValue(index);
+        bool isAtPoint = (index == PartDesign::Hole::AtPoint);
+        ui->BaseProfileType->setVisible(!isAtPoint);
+        ui->labelProfileType->setVisible(!isAtPoint);
+        recomputeFeature();
     }
 }
 
@@ -1130,6 +1148,12 @@ int TaskHoleParameters::getBaseProfileType() const
 {
     return PartDesign::Hole::baseProfileOption_idxToBitmask(ui->BaseProfileType->currentIndex());
 }
+
+int TaskHoleParameters::getPlacement() const
+{
+    return ui->Placement->currentIndex();
+}
+
 void TaskHoleParameters::apply()
 {
     auto hole = getObject<PartDesign::Hole>();

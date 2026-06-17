@@ -49,6 +49,7 @@
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeatureBoolean.h>
 #include <Mod/PartDesign/App/FeatureGroove.h>
+#include <Mod/PartDesign/App/FeatureHole.h>
 #include <Mod/PartDesign/App/FeatureMultiTransform.h>
 #include <Mod/PartDesign/App/FeatureRevolution.h>
 #include <Mod/PartDesign/App/FeatureTransformed.h>
@@ -2886,8 +2887,10 @@ CmdPartDesignHole::CmdPartDesignHole()
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
     sMenuText = QT_TR_NOOP("Hole");
-    sToolTipText
-        = QT_TR_NOOP("Creates holes in the active body at the center points of circles or arcs of the selected sketch or profile");
+    sToolTipText = QT_TR_NOOP(
+        "Creates holes in the active body. Select a face for single-hole placement, "
+        "or a sketch for multiple holes at circle/arc centers"
+    );
     sWhatsThis = "PartDesign_Hole";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Hole";
@@ -2904,6 +2907,116 @@ void CmdPartDesignHole::activated(int iMsg)
         return;
     }
 
+    // Check if there is something to subtract from
+    if (!pcActiveBody->isSolid()) {
+        QMessageBox msgBox(Gui::getMainWindow());
+        msgBox.setText(
+            QObject::tr("Cannot use this command as there is no solid to subtract from.")
+        );
+        msgBox.setInformativeText(
+            QObject::tr("Ensure that the body contains a feature before attempting a subtractive command.")
+        );
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.exec();
+        return;
+    }
+
+    // Check current selection for faces or sketches
+    std::vector<Gui::SelectionObject> selection = getSelection().getSelectionEx();
+
+    // Path 1: User selected a face → AtPoint mode
+    for (const auto& sel : selection) {
+        const auto& subs = sel.getSubNames();
+        if (!subs.empty()) {
+            for (const auto& sub : subs) {
+                if (sub.compare(0, 4, "Face") == 0) {
+                    // Found a face selection — create hole in AtPoint mode
+                    App::DocumentObject* obj = sel.getObject();
+                    if (!obj) {
+                        continue;
+                    }
+
+                    // Verify the face belongs to the active body
+                    if (PartDesign::Body::findBodyOf(obj) != pcActiveBody) {
+                        QMessageBox msgBox(Gui::getMainWindow());
+                        msgBox.setText(QObject::tr("Selected face must belong to the active body"));
+                        msgBox.setStandardButtons(QMessageBox::Ok);
+                        msgBox.exec();
+                        return;
+                    }
+
+                    // Get the face center as initial placement point
+                    TopoShape faceShape = Part::Feature::getTopoShape(
+                        obj,
+                        Part::ShapeOption::NeedSubElement | Part::ShapeOption::ResolveLink
+                            | Part::ShapeOption::Transform,
+                        sub.c_str()
+                    );
+
+                    if (faceShape.isNull()) {
+                        continue;
+                    }
+
+                    TopoDS_Face face = TopoDS::Face(faceShape.getShape());
+                    BRepAdaptor_Surface sf(face);
+                    gp_Pnt center;
+
+                    if (sf.GetType() == GeomAbs_Plane) {
+                        center = sf.Plane().Location();
+                    }
+                    else if (sf.GetType() == GeomAbs_Cylinder) {
+                        center = sf.Cylinder().Axis().Location();
+                    }
+                    else {
+                        // For other surface types, use the face's center of mass
+                        GProp_GProps props;
+                        BRepGProp::VolumeProperties(face, props);
+                        center = props.CentreOfMass();
+                    }
+
+                    // Create the Hole feature in AtPoint mode
+                    openCommand(QT_TRANSLATE_NOOP("Command", "Make Hole"));
+
+                    std::string FeatName = getUniqueObjectName("Hole", pcActiveBody);
+                    FCMD_OBJ_CMD(
+                        pcActiveBody,
+                        "newObject('PartDesign::Hole','" << FeatName << "')"
+                    );
+
+                    auto Feat = pcActiveBody->getDocument()->getObject(FeatName.c_str());
+                    if (!Feat) {
+                        return;
+                    }
+
+                    // Set AtPoint mode
+                    FCMD_OBJ_CMD(Feat, "Placement = 'AtPoint'");
+
+                    // Set the face reference
+                    std::string objCmd = getObjectCmd(obj);
+                    FCMD_OBJ_CMD(
+                        Feat,
+                        "PlacementFace = (" << objCmd << ", ['" << sub << "'])"
+                    );
+
+                    // Set the initial placement point
+                    FCMD_OBJ_CMD(
+                        Feat,
+                        "PlacementPoint = FreeCAD.Vector("
+                            << center.X() << ", " << center.Y() << ", " << center.Z() << ")"
+                    );
+
+                    updateActive();
+                    setEdit(Feat, pcActiveBody);
+                    doCommand(Gui, "Gui.Selection.clearSelection()");
+                    return;
+                }
+            }
+        }
+    }
+
+    // Path 2: User selected a sketch → FromSketch mode (existing flow)
+    // Path 3: Nothing selected → check for sketches, fall back to existing flow
     Gui::Command* cmd = this;
     auto worker = [cmd](Part::Feature* sketch, App::DocumentObject* Feat) {
         if (!Feat) {

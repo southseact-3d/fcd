@@ -33,6 +33,7 @@
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Sewing.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -533,6 +534,8 @@ const char* Hole::ThreadClass_BSF_Enums[] = {"Medium", "Normal", nullptr};
 
 const char* Hole::ThreadDirectionEnums[] = {"Right", "Left", nullptr};
 
+const char* Hole::PlacementEnums[] = {"FromSketch", "AtPoint", nullptr};
+
 PROPERTY_SOURCE(PartDesign::Hole, PartDesign::ProfileBased)
 
 const App::PropertyAngle::Constraints Hole::floatAngle = {
@@ -646,6 +649,14 @@ Hole::Hole()
         App::Prop_None,
         "Which profile feature to base the holes on"
     );
+
+    ADD_PROPERTY_TYPE(Placement, (0L), "Hole", App::Prop_None, "Hole placement mode");
+    Placement.setEnums(PlacementEnums);
+
+    ADD_PROPERTY_TYPE(PlacementFace, (nullptr), "Hole", App::Prop_None, "Face to place hole on");
+    ADD_PROPERTY_TYPE(PlacementPoint, (Base::Vector3d(0, 0, 0)), "Hole", App::Prop_None, "Position on the face");
+    ADD_PROPERTY_TYPE(PlacementReferences, (nullptr), "Hole", App::Prop_None, "Edge references for positioning");
+    ADD_PROPERTY_TYPE(PlacementOffsets, (std::vector<double>()), "Hole", App::Prop_None, "Offset distances from edge references");
 }
 
 void Hole::updateHoleCutParams()
@@ -1580,6 +1591,15 @@ void Hole::onChanged(const App::Property* prop)
     else if (prop == &CustomThreadClearance) {
         updateDiameterParam();
     }
+    else if (prop == &Placement) {
+        bool isAtPoint = (Placement.getValue() == AtPoint);
+        BaseProfileType.setReadOnly(isAtPoint);
+        Profile.setReadOnly(isAtPoint);
+        PlacementFace.setReadOnly(!isAtPoint);
+        PlacementPoint.setReadOnly(!isAtPoint);
+        PlacementReferences.setReadOnly(!isAtPoint);
+        PlacementOffsets.setReadOnly(!isAtPoint);
+    }
 
     ProfileBased::onChanged(prop);
 }
@@ -1661,7 +1681,9 @@ short Hole::mustExecute() const
         || Depth.isTouched() || DrillPoint.isTouched() || DrillPointAngle.isTouched()
         || Tapered.isTouched() || TaperedAngle.isTouched() || ModelThread.isTouched()
         || UseCustomThreadClearance.isTouched() || CustomThreadClearance.isTouched()
-        || ThreadDepthType.isTouched() || ThreadDepth.isTouched() || BaseProfileType.isTouched()) {
+        || ThreadDepthType.isTouched() || ThreadDepth.isTouched() || BaseProfileType.isTouched()
+        || Placement.isTouched() || PlacementFace.isTouched() || PlacementPoint.isTouched()
+        || PlacementReferences.isTouched() || PlacementOffsets.isTouched()) {
         return 1;
     }
     return ProfileBased::mustExecute();
@@ -1692,6 +1714,7 @@ void Hole::updateProps()
     onChanged(&DrillPointAngle);
     onChanged(&Tapered);
     onChanged(&TaperedAngle);
+    onChanged(&Placement);
     onChanged(&ModelThread);
     onChanged(&UseCustomThreadClearance);
     onChanged(&CustomThreadClearance);
@@ -1718,13 +1741,25 @@ App::DocumentObjectExecReturn* Hole::execute()
         base = getBaseTopoShape();
     }
     catch (const Base::Exception&) {
-        std::string text(QT_TRANSLATE_NOOP(
-            "Exception",
-            "The requested feature cannot be created. The reason may be that:\n"
-            "  - the active Body does not contain a base shape, so there is no\n"
-            "  material to be removed;\n"
-            "  - the selected sketch does not belong to the active Body."
-        ));
+        std::string text;
+        if (Placement.getValue() == AtPoint) {
+            text = QT_TRANSLATE_NOOP(
+                "Exception",
+                "The requested feature cannot be created. The reason may be that:\n"
+                "  - the active Body does not contain a base shape, so there is no\n"
+                "  material to be removed;\n"
+                "  - the selected face does not belong to the active Body."
+            );
+        }
+        else {
+            text = QT_TRANSLATE_NOOP(
+                "Exception",
+                "The requested feature cannot be created. The reason may be that:\n"
+                "  - the active Body does not contain a base shape, so there is no\n"
+                "  material to be removed;\n"
+                "  - the selected sketch does not belong to the active Body."
+            );
+        }
         return new App::DocumentObjectExecReturn(text);
     }
 
@@ -1741,10 +1776,16 @@ App::DocumentObjectExecReturn* Hole::execute()
         /* Build the prototype hole */
 
         // Get vector normal to profile
-        Base::Vector3d SketchVector = guessNormalDirection(profileshape);
+        Base::Vector3d SketchVector;
+        if (Placement.getValue() == AtPoint) {
+            SketchVector = getAtPointNormal();
+        }
+        else {
+            SketchVector = guessNormalDirection(profileshape);
 
-        if (Reversed.getValue()) {
-            SketchVector *= -1.0;
+            if (Reversed.getValue()) {
+                SketchVector *= -1.0;
+            }
         }
 
         // Define this as zDir
@@ -2237,6 +2278,94 @@ TopoShape Hole::findHoles(
         }
     }
     return TopoShape().makeElementCompound(holes);
+}
+
+void Hole::positionByPrevious()
+{
+    if (Placement.getValue() == AtPoint) {
+        Part::Feature* feat = getBaseObject(/* silent = */ true);
+        if (feat) {
+            Part::Feature::Placement.setValue(feat->Placement.getValue());
+        }
+        return;
+    }
+    ProfileBased::positionByPrevious();
+}
+
+TopoShape Hole::getProfileShape(Part::ShapeOptions subShapeOptions) const
+{
+    if (Placement.getValue() == AtPoint) {
+        return buildAtPointProfile();
+    }
+    return ProfileBased::getProfileShape(subShapeOptions);
+}
+
+Base::Vector3d Hole::getAtPointNormal() const
+{
+    App::DocumentObject* faceObj = PlacementFace.getValue();
+    if (!faceObj) {
+        return Base::Vector3d(0, 0, 1);
+    }
+
+    const std::vector<std::string>& faceSubs = PlacementFace.getSubValues();
+    if (faceSubs.empty()) {
+        return Base::Vector3d(0, 0, 1);
+    }
+
+    TopoShape faceShape = Part::Feature::getTopoShape(
+        faceObj,
+        Part::ShapeOption::NeedSubElement | Part::ShapeOption::ResolveLink | Part::ShapeOption::Transform,
+        faceSubs.front().c_str()
+    );
+
+    if (faceShape.isNull()) {
+        return Base::Vector3d(0, 0, 1);
+    }
+
+    TopoDS_Face face = TopoDS::Face(faceShape.getShape());
+    BRepAdaptor_Surface sf(face);
+
+    Base::Vector3d normal;
+
+    if (sf.GetType() == GeomAbs_Plane) {
+        gp_Dir dir = sf.Plane().Axis().Direction();
+        normal = Base::Vector3d(dir.X(), dir.Y(), dir.Z());
+    }
+    else if (sf.GetType() == GeomAbs_Cylinder) {
+        gp_Pnt center = sf.Cylinder().Axis().Location();
+        Base::Vector3d pt = PlacementPoint.getValue();
+        gp_Pnt target(pt.x, pt.y, pt.z);
+        gp_Vec radial(center, target);
+        if (radial.Magnitude() > Precision::Confusion()) {
+            radial.Normalize();
+            normal = Base::Vector3d(radial.X(), radial.Y(), radial.Z());
+        }
+        else {
+            gp_Dir dir = sf.Cylinder().Axis().Direction();
+            normal = Base::Vector3d(dir.X(), dir.Y(), dir.Z());
+        }
+    }
+    else {
+        return Base::Vector3d(0, 0, 1);
+    }
+
+    if (Reversed.getValue()) {
+        normal *= -1.0;
+    }
+
+    return normal;
+}
+
+TopoShape Hole::buildAtPointProfile() const
+{
+    Base::Vector3d pt = PlacementPoint.getValue();
+    gp_Pnt point(pt.x, pt.y, pt.z);
+    BRepBuilderAPI_MakeVertex mkVertex(point);
+    TopoDS_Vertex vertex = mkVertex.Vertex();
+
+    TopoShape result;
+    result.makeShapeWithElementMap(vertex, Part::ShapeMapper(), {});
+    return result;
 }
 
 TopoDS_Shape Hole::makeThread(const gp_Vec& xDir, const gp_Vec& zDir, double length)

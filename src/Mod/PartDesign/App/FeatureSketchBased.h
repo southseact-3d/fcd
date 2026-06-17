@@ -75,7 +75,7 @@ public:
      * this one is made from: either from Base, if there is one, or from sketch,
      * if there is no base.
      */
-    void positionByPrevious();
+    virtual void positionByPrevious();
 
     /** applies a transform on the Placement of the Sketch or its
      *  support if it has one
@@ -139,7 +139,7 @@ public:
     virtual Base::Vector3d getProfileNormal() const;
 
     // Use Part::ShapeOptions enum to pass flags
-    TopoShape getProfileShape(
+    virtual TopoShape getProfileShape(
         Part::ShapeOptions subShapeOptions = Part::ShapeOption::NeedSubElement
             | Part::ShapeOption::ResolveLink | Part::ShapeOption::Transform
     ) const;

@@ -79,6 +79,18 @@ public:
     App::PropertyLength CustomThreadClearance;
     App::PropertyInteger BaseProfileType;
 
+    App::PropertyEnumeration Placement;
+    App::PropertyLinkSub PlacementFace;
+    App::PropertyVector PlacementPoint;
+    App::PropertyLinkSubList PlacementReferences;
+    App::PropertyFloatList PlacementOffsets;
+
+    enum PlacementMode
+    {
+        FromSketch = 0,
+        AtPoint = 1
+    };
+
     enum BaseProfileTypeOptions
     {
         OnPoints = 1 << 0,
@@ -104,6 +116,12 @@ public:
     }
     //@}
     short mustExecute() const override;
+
+    void positionByPrevious() override;
+    TopoShape getProfileShape(
+        Part::ShapeOptions subShapeOptions = Part::ShapeOption::NeedSubElement
+            | Part::ShapeOption::ResolveLink | Part::ShapeOption::Transform
+    ) const override;
 
     using ThreadDescription = struct
     {
@@ -137,6 +155,8 @@ public:
         const TopoShape& profileshape,
         const TopoDS_Shape& protohole
     ) const;
+    Base::Vector3d getAtPointNormal() const;
+    TopoShape buildAtPointProfile() const;
 
 protected:
     void onChanged(const App::Property* prop) override;
@@ -154,6 +174,7 @@ private:
     static const char* ClearanceOtherEnums[];
     static const char* DrillPointEnums[];
     static const char* ThreadDirectionEnums[];
+    static const char* PlacementEnums[];
 
     /* "None" thread profile */
     static const char* HoleCutType_None_Enums[];
