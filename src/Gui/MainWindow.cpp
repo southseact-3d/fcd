@@ -1310,6 +1310,16 @@ void MainWindow::addWindow(MDIView* view)
         QAction* action = menu->addAction(tr("Close All"));
         connect(action, &QAction::triggered, d->mdiArea, &QMdiArea::closeAllSubWindows);
         d->mdiArea->addSubWindow(child);
+
+        // Remove close button for Start tab
+        if (view->metaObject()->className() == QByteArray("StartGui::StartView")) {
+            auto* tabBar = d->mdiArea->findChild<QTabBar*>();
+            if (tabBar) {
+                int index = tabBar->count() - 1;
+                tabBar->setTabButton(index, QTabBar::RightSide, nullptr);
+                tabBar->setTabButton(index, QTabBar::LeftSide, nullptr);
+            }
+        }
     }
 
     connect(view, &MDIView::message, this, &MainWindow::showMessage);

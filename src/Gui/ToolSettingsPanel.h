@@ -30,6 +30,7 @@
 #include <QWidget>
 #include <QScrollArea>
 
+class QAbstractButton;
 class QFrame;
 class QGridLayout;
 class QVBoxLayout;

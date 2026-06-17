@@ -35,6 +35,7 @@
 #include <QTimer>
 #include <QWidget>
 #include <QStackedWidget>
+#include <QCloseEvent>
 #include <QShowEvent>
 
 #include "StartView.h"
@@ -70,9 +71,9 @@ StartView::StartView(QWidget* parent)
     , _examplesLabel {nullptr}
     , _recentFilesLabel {nullptr}
     , _customFolderLabel {nullptr}
-    , _showOnStartupCheckBox {nullptr}
 {
     setObjectName(QLatin1String("StartView"));
+    setWindowIcon(QIcon(QLatin1String(":/icons/home.svg")));
     auto hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/Mod/Start"
     );
@@ -181,16 +182,8 @@ StartView::StartView(QWidget* parent)
     _openFirstStart->setIcon(QIcon(QLatin1String(":/icons/preferences-general.svg")));
     connect(_openFirstStart, &QPushButton::clicked, this, &StartView::openFirstStartClicked);
 
-    _showOnStartupCheckBox = gsl::owner<QCheckBox*>(new QCheckBox());
-    bool showOnStartup = hGrp->GetBool("ShowOnStartup", true);
-    _showOnStartupCheckBox->setCheckState(
-        showOnStartup ? Qt::CheckState::Unchecked : Qt::CheckState::Checked
-    );
-    connect(_showOnStartupCheckBox, &QCheckBox::toggled, this, &StartView::showOnStartupChanged);
-
     footerLayout->addWidget(_openFirstStart);
     footerLayout->addStretch();
-    footerLayout->addWidget(_showOnStartupCheckBox);
 
     setCentralWidget(_contents);
 
@@ -399,14 +392,6 @@ void StartView::postStart(PostStartBehavior behavior)
             Gui::Application::Instance->activateWorkbench(wb.c_str());
         }
     }
-    if (auto closeStart = hGrp->GetBool("closeStart", false)) {
-        for (QWidget* w = this; w != nullptr; w = w->parentWidget()) {
-            if (auto mdiSub = qobject_cast<QMdiSubWindow*>(w)) {
-                mdiSub->close();
-                return;
-            }
-        }
-    }
 }
 
 
@@ -425,19 +410,6 @@ void StartView::fileCardSelected(const QModelIndex& index)
     catch (...) {
         Base::Console().error("An unknown error occurred");
     }
-}
-
-void StartView::showOnStartupChanged(bool checked)
-{
-    auto hGrp = App::GetApplication().GetParameterGroupByPath(
-        "User parameter:BaseApp/Preferences/Mod/Start"
-    );
-    hGrp->SetBool(
-        "ShowOnStartup",
-        !checked
-    );  // The sense of this option has been reversed: the checkbox actually says
-        // "*Don't* show on startup" now, but the option is preserved in its
-        // original sense, so is stored inverted.
 }
 
 void StartView::openFirstStartClicked()
@@ -494,6 +466,11 @@ void StartView::showEvent(QShowEvent* event)
     Gui::MDIView::showEvent(event);
 }
 
+void StartView::closeEvent(QCloseEvent* e)
+{
+    e->ignore();
+}
+
 void StartView::onMdiSubWindowActivated(QMdiSubWindow* subWindow)
 {
     // check if start view is activated subwindow if yes, then enable updates
@@ -544,5 +521,4 @@ void StartView::retranslateUi()
 
     QString application = QString::fromUtf8(App::Application::Config()["ExeName"].c_str());
     _openFirstStart->setText(tr("Open First Start Setup"));
-    _showOnStartupCheckBox->setText(tr("Do not show this Start page again (start with blank screen)"));
 }
