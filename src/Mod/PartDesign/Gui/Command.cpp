@@ -57,6 +57,7 @@
 #include <Mod/PartDesign/App/DatumPlane.h>
 #include <Mod/PartDesign/App/DatumPoint.h>
 #include <Mod/PartDesign/App/FeatureDressUp.h>
+#include <Mod/PartDesign/App/FeatureCoil.h>
 #include <Mod/PartDesign/App/ShapeBinder.h>
 
 #include "ReferenceSelection.h"
@@ -3493,6 +3494,140 @@ bool CmdPartDesignSubtractiveHelix::isActive()
 }
 
 //===========================================================================
+// PartDesign_AdditiveCoil
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignAdditiveCoil)
+
+CmdPartDesignAdditiveCoil::CmdPartDesignAdditiveCoil()
+    : Command("PartDesign_AdditiveCoil")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Additive\nCoil");
+    sToolTipText = QT_TR_NOOP(
+        "Creates a coil with built-in cross-section and adds it to the body"
+    );
+    sWhatsThis = "PartDesign_AdditiveCoil";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_AdditiveCoil";
+}
+
+void CmdPartDesignAdditiveCoil::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+
+    if (!pcActiveBody) {
+        return;
+    }
+
+    std::string FeatName = getUniqueObjectName("Coil");
+
+    openCommand(QT_TRANSLATE_NOOP("Command", "Additive Coil"));
+    doCommand(
+        Doc,
+        "App.ActiveDocument.addObject('PartDesign::AdditiveCoil','%s')",
+        FeatName.c_str()
+    );
+    doCommand(
+        Doc,
+        "App.ActiveDocument.%s.ReferenceAxis = (App.activeDocument().%s,['V_Axis'])",
+        FeatName.c_str(),
+        pcActiveBody->getOrigin()->getY()->getNameInDocument()
+    );
+    doCommand(
+        Doc,
+        "App.activeDocument().%s.addObject(App.activeDocument().%s)",
+        pcActiveBody->getNameInDocument(),
+        FeatName.c_str()
+    );
+
+    updateActive();
+    commitCommand();
+
+    // show the newly created feature
+    Gui::Selection().clearSelection();
+    Gui::Selection().addSelection(
+        Doc->getName(),
+        pcActiveBody->getNameInDocument(),
+        FeatName.c_str()
+    );
+}
+
+bool CmdPartDesignAdditiveCoil::isActive()
+{
+    return hasActiveDocument();
+}
+
+
+//===========================================================================
+// PartDesign_SubtractiveCoil
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignSubtractiveCoil)
+
+CmdPartDesignSubtractiveCoil::CmdPartDesignSubtractiveCoil()
+    : Command("PartDesign_SubtractiveCoil")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Subtractive\nCoil");
+    sToolTipText = QT_TR_NOOP(
+        "Creates a coil with built-in cross-section and removes it from the body"
+    );
+    sWhatsThis = "PartDesign_SubtractiveCoil";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_SubtractiveCoil";
+}
+
+void CmdPartDesignSubtractiveCoil::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+
+    if (!pcActiveBody) {
+        return;
+    }
+
+    std::string FeatName = getUniqueObjectName("Coil");
+
+    openCommand(QT_TRANSLATE_NOOP("Command", "Subtractive Coil"));
+    doCommand(
+        Doc,
+        "App.ActiveDocument.addObject('PartDesign::SubtractiveCoil','%s')",
+        FeatName.c_str()
+    );
+    doCommand(
+        Doc,
+        "App.ActiveDocument.%s.ReferenceAxis = (App.activeDocument().%s,['V_Axis'])",
+        FeatName.c_str(),
+        pcActiveBody->getOrigin()->getY()->getNameInDocument()
+    );
+    doCommand(
+        Doc,
+        "App.activeDocument().%s.addObject(App.activeDocument().%s)",
+        pcActiveBody->getNameInDocument(),
+        FeatName.c_str()
+    );
+
+    updateActive();
+    commitCommand();
+
+    Gui::Selection().clearSelection();
+    Gui::Selection().addSelection(
+        Doc->getName(),
+        pcActiveBody->getNameInDocument(),
+        FeatName.c_str()
+    );
+}
+
+bool CmdPartDesignSubtractiveCoil::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // Common utility functions for Dressup features
 //===========================================================================
 
@@ -4848,6 +4983,8 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignSubtractiveLoft());
     rcCmdMgr.addCommand(new CmdPartDesignAdditiveHelix());
     rcCmdMgr.addCommand(new CmdPartDesignSubtractiveHelix());
+    rcCmdMgr.addCommand(new CmdPartDesignAdditiveCoil());
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveCoil());
 
     rcCmdMgr.addCommand(new CmdPartDesignFillet());
     rcCmdMgr.addCommand(new CmdPartDesignDraft());

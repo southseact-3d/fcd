@@ -376,6 +376,7 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addMenuItem("PartDesign_AdditiveLoft");
     addMenuItem("PartDesign_AdditivePipe");
     addMenuItem("PartDesign_AdditiveHelix");
+    addMenuItem("PartDesign_AdditiveCoil");
     addMenuItem("PartDesign_CompPrimitiveAdditive");
 
     addSeparator();
@@ -388,6 +389,7 @@ QMenu* PartDesignPartToolsWidget::buildCreateMenu()
     addMenuItem("PartDesign_SubtractiveLoft");
     addMenuItem("PartDesign_SubtractivePipe");
     addMenuItem("PartDesign_SubtractiveHelix");
+    addMenuItem("PartDesign_SubtractiveCoil");
     addMenuItem("PartDesign_CompPrimitiveSubtractive");
 
     addSeparator();

@@ -109,6 +109,8 @@ SET(FeaturesSketchBased_SRCS
     FeatureLoft.cpp
     FeatureHelix.h
     FeatureHelix.cpp
+    FeatureCoil.h
+    FeatureCoil.cpp
 )
 
 SOURCE_GROUP("SketchBasedFeatures" FILES ${FeaturesSketchBased_SRCS})

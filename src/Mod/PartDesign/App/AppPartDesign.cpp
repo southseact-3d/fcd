@@ -42,6 +42,7 @@
 #include "FeatureFillet.h"
 #include "FeatureGroove.h"
 #include "FeatureHelix.h"
+#include "FeatureCoil.h"
 #include "FeatureHole.h"
 #include "FeatureLinearPattern.h"
 #include "FeatureLoft.h"
@@ -125,6 +126,9 @@ PyMOD_INIT_FUNC(_PartDesign)
     PartDesign::Helix                       ::init();
     PartDesign::AdditiveHelix               ::init();
     PartDesign::SubtractiveHelix            ::init();
+    PartDesign::Coil                        ::init();
+    PartDesign::AdditiveCoil                ::init();
+    PartDesign::SubtractiveCoil             ::init();
     PartDesign::ShapeBinder                 ::init();
     PartDesign::SubShapeBinder              ::init();
     PartDesign::SubShapeBinderPython        ::init();

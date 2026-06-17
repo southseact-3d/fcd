@@ -48,6 +48,7 @@ set(PartDesignGui_UIC_SRCS
     DlgReference.ui
     DlgActiveBody.ui
     TaskHelixParameters.ui
+    TaskCoilParameters.ui
     TaskBrickTextureParameters.ui
     TaskWoodPlankTextureParameters.ui
     TaskStoneTextureParameters.ui
@@ -124,6 +125,8 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderLoft.cpp
     ViewProviderHelix.h
     ViewProviderHelix.cpp
+    ViewProviderCoil.h
+    ViewProviderCoil.cpp
     ViewProviderBase.h
     ViewProviderBase.cpp
 )
@@ -204,6 +207,9 @@ SET(PartDesignGuiTaskDlgs_SRCS
     TaskHelixParameters.ui
     TaskHelixParameters.h
     TaskHelixParameters.cpp
+    TaskCoilParameters.ui
+    TaskCoilParameters.h
+    TaskCoilParameters.cpp
     TaskBrickTextureParameters.ui
     TaskBrickTextureParameters.cpp
     TaskBrickTextureParameters.h
