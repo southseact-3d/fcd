@@ -202,6 +202,8 @@ SET(Features_SRCS
     FeatureScale.h
     FeatureFace.cpp
     FeatureFace.h
+    FeatureFaceOffset.cpp
+    FeatureFaceOffset.h
     FeatureFillet.cpp
     FeatureFillet.h
     FeatureMirroring.cpp

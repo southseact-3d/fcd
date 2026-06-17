@@ -247,6 +247,9 @@ SET(PartGui_SRCS
     TaskOffset.cpp
     TaskOffset.h
     TaskOffset.ui
+    TaskFaceOffset.cpp
+    TaskFaceOffset.h
+    TaskFaceOffset.ui
     TaskSweep.cpp
     TaskSweep.h
     TaskSweep.ui

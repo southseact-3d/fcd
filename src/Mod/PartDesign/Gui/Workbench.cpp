@@ -328,6 +328,7 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "PartDesign_PartScale"
           << "PartDesign_PartOffset"
           << "PartDesign_PartOffset2D"
+          << "PartDesign_PartFaceOffset"
           << "PartDesign_PartShapeFromMesh"
           << "PartDesign_PartDefeaturing"
           << "PartDesign_PartCrossSections"
