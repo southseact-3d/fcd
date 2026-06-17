@@ -75,6 +75,8 @@ void SnapManager::ParameterObserver::initParameters()
         {"SnapToObjects", [this](const std::string& param) { updateSnapToObjectParameter(param); }},
         {"SnapToGrid", [this](const std::string& param) { updateSnapToGridParameter(param); }},
         {"SnapAngle", [this](const std::string& param) { updateSnapAngleParameter(param); }},
+        {"SnapToObjectTolerance",
+         [this](const std::string& param) { updateSnapToObjectToleranceParameter(param); }},
     };
 
     for (auto& val : str2updatefunction) {
@@ -103,7 +105,7 @@ void SnapManager::ParameterObserver::updateSnapToGridParameter(const std::string
 {
     ParameterGrp::handle hGrp = getParameterGrpHandle();
 
-    client.snapToGridRequested = hGrp->GetBool(parametername.c_str(), false);
+    client.snapToGridRequested = hGrp->GetBool(parametername.c_str(), true);
 }
 
 void SnapManager::ParameterObserver::updateSnapAngleParameter(const std::string& parametername)
@@ -112,6 +114,14 @@ void SnapManager::ParameterObserver::updateSnapAngleParameter(const std::string&
 
     client.snapAngle
         = fmod(Base::toRadians(hGrp->GetFloat(parametername.c_str(), 5.)), 2 * std::numbers::pi);
+}
+
+void SnapManager::ParameterObserver::updateSnapToObjectToleranceParameter(
+    const std::string& parametername)
+{
+    ParameterGrp::handle hGrp = getParameterGrpHandle();
+
+    client.snapToObjectTolerance = hGrp->GetFloat(parametername.c_str(), 20.);
 }
 
 void SnapManager::ParameterObserver::subscribeToParameters()
@@ -166,6 +176,7 @@ SnapManager::SnapManager(ViewProviderSketch& vp)
     , angleSnapRequested(false)
     , referencePoint(Base::Vector2d(0., 0.))
     , lastMouseAngle(0.0)
+    , snapToObjectTolerance(20.0)
 {
     // Create parameter observer and initialise watched parameters
     pObserver = std::make_unique<SnapManager::ParameterObserver>(*this);
@@ -248,6 +259,7 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
     int CrsId = ViewProviderSketchSnapAttorney::getPreselectCross(viewProvider);
     int CrvId = ViewProviderSketchSnapAttorney::getPreselectCurve(viewProvider);
 
+    // Priority 1: Snap to preselected vertex or origin
     if ((static_cast<int>(mask) & static_cast<int>(SnapType::Point)) && (CrsId == 0 || VtId >= 0)) {
         if (CrsId == 0) {
             geoId = Sketcher::GeoEnum::RtPnt;
@@ -261,7 +273,46 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
         snapPos.y = Obj->getPoint(geoId, posId).y;
         return true;
     }
-    else if (static_cast<int>(mask) & static_cast<int>(SnapType::Edge)) {
+
+    // Priority 2: Manual proximity snap to nearest vertex (fallback when Coin3D
+    // preselection doesn't pick up a vertex within its small pick radius)
+    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Point)) && VtId < 0
+        && CrsId != 0) {
+        float scale = viewProvider.getScaleFactor();
+        if (scale > 0.f) {
+            double worldTolerance = static_cast<double>(snapToObjectTolerance) / scale;
+            double bestDist = worldTolerance;
+            int bestGeoId = GeoEnum::GeoUndef;
+            Sketcher::PointPos bestPosId = Sketcher::PointPos::none;
+
+            int nVerts = Obj->getHighestVertexIndex();
+            for (int i = 0; i <= nVerts; ++i) {
+                int vGeoId = GeoEnum::GeoUndef;
+                Sketcher::PointPos vPosId = Sketcher::PointPos::none;
+                Obj->getGeoVertexIndex(i, vGeoId, vPosId);
+                if (vGeoId == GeoEnum::GeoUndef || vPosId == Sketcher::PointPos::none) {
+                    continue;
+                }
+
+                Base::Vector3d pt = Obj->getPoint(vGeoId, vPosId);
+                double dist = std::hypot(pt.x - inputPos.x, pt.y - inputPos.y);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestGeoId = vGeoId;
+                    bestPosId = vPosId;
+                }
+            }
+
+            if (bestGeoId != GeoEnum::GeoUndef) {
+                snapPos.x = Obj->getPoint(bestGeoId, bestPosId).x;
+                snapPos.y = Obj->getPoint(bestGeoId, bestPosId).y;
+                return true;
+            }
+        }
+    }
+
+    // Priority 3: Snap to preselected curve or axis
+    if (static_cast<int>(mask) & static_cast<int>(SnapType::Edge)) {
         if (CrsId == 1) {  // H_Axis
             snapPos.y = 0;
             // dont return true, allow grid snap to handle X coordinate
@@ -292,13 +343,15 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
 
                 // If it is a line, then we check if we need to snap to the middle.
                 if (geo->is<Part::GeomLineSegment>()) {
-                    const Part::GeomLineSegment* line = static_cast<const Part::GeomLineSegment*>(geo);
+                    const Part::GeomLineSegment* line =
+                        static_cast<const Part::GeomLineSegment*>(geo);
                     snapToLineMiddle(pointToOverride, line);
                 }
 
                 // If it is an arc, then we check if we need to snap to the middle (not the center).
                 if (geo->is<Part::GeomArcOfCircle>()) {
-                    const Part::GeomArcOfCircle* arc = static_cast<const Part::GeomArcOfCircle*>(geo);
+                    const Part::GeomArcOfCircle* arc =
+                        static_cast<const Part::GeomArcOfCircle*>(geo);
                     snapToArcMiddle(pointToOverride, arc);
                 }
 
@@ -314,8 +367,8 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
 
 bool SnapManager::snapToGrid(Base::Vector2d inputPos, Base::Vector2d& snapPos)
 {
-    // Snap Tolerance in pixels
-    const double snapTol = viewProvider.getGridSize() / 5;
+    // Snap Tolerance: 25% of grid spacing
+    const double snapTol = viewProvider.getGridSize() / 4;
 
     snapPos = inputPos;
 

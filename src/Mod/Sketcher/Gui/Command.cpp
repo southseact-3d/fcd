@@ -31,6 +31,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QSignalBlocker>
+#include <QSpinBox>
 #include <QWidgetAction>
 
 
@@ -1547,9 +1548,17 @@ void SnapSpaceAction::updateWidget(bool snapenabled)
 
     updateSpinBox(snapAngle, hGrp->GetFloat("SnapAngle", 5.0));
 
+    int tolerance = static_cast<int>(hGrp->GetFloat("SnapToObjectTolerance", 20.));
+    if (snapDistance->value() != tolerance) {
+        const QSignalBlocker blocker(snapDistance);
+        snapDistance->setValue(tolerance);
+    }
+
     snapToObjects->setEnabled(snapenabled);
     angleLabel->setEnabled(snapenabled);
     snapAngle->setEnabled(snapenabled);
+    snapDistanceLabel->setEnabled(snapenabled);
+    snapDistance->setEnabled(snapenabled);
 }
 
 void SnapSpaceAction::languageChange()
@@ -1563,6 +1572,11 @@ void SnapSpaceAction::languageChange()
     snapAngle->setToolTip(
         tr("Angular step for tools that use 'Snap at angle'. Hold Ctrl to "
             "enable 'Snap at angle'. The angle starts from the positive X axis of the sketch."));
+
+    snapDistanceLabel->setText(tr("Snap distance"));
+    snapDistance->setToolTip(
+        tr("Distance in pixels within which the cursor will snap to nearby vertices. "
+            "Increase this value for a more forgiving snap range."));
 }
 
 QWidget* SnapSpaceAction::createWidget(QWidget* parent)
@@ -1577,11 +1591,21 @@ QWidget* SnapSpaceAction::createWidget(QWidget* parent)
     snapAngle->setMaximum(99999999.0);
     snapAngle->setMinimum(0);
 
+    snapDistanceLabel = new QLabel();
+
+    snapDistance = new QSpinBox();
+    snapDistance->setObjectName(QStringLiteral("snapDistance"));
+    snapDistance->setMinimum(1);
+    snapDistance->setMaximum(200);
+    snapDistance->setSuffix(QStringLiteral(" px"));
+
     QWidget* snapW = new QWidget(parent);
     auto* layout = new QGridLayout(snapW);
     layout->addWidget(snapToObjects, 0, 0, 1, 2);
     layout->addWidget(angleLabel, 1, 0);
     layout->addWidget(snapAngle, 1, 1);
+    layout->addWidget(snapDistanceLabel, 2, 0);
+    layout->addWidget(snapDistance, 2, 1);
 
     languageChange();
 
@@ -1599,6 +1623,11 @@ QWidget* SnapSpaceAction::createWidget(QWidget* parent)
             ParameterGrp::handle hGrp = this->getParameterPath();
             hGrp->SetFloat("SnapAngle", val);
         });
+
+    QObject::connect(snapDistance, qOverload<int>(&QSpinBox::valueChanged), [this](int val) {
+        ParameterGrp::handle hGrp = this->getParameterPath();
+        hGrp->SetFloat("SnapToObjectTolerance", static_cast<double>(val));
+    });
 
     return snapW;
 }

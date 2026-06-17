@@ -33,6 +33,7 @@
 
 class QCheckBox;
 class QLabel;
+class QSpinBox;
 class QWidget;
 class QObject;
 class QListWidget;
@@ -95,6 +96,8 @@ private:
     QCheckBox* snapToObjects;
     QLabel* angleLabel;
     Gui::QuantitySpinBox* snapAngle;
+    QLabel* snapDistanceLabel;
+    QSpinBox* snapDistance;
 };
 
 
