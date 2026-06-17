@@ -324,12 +324,6 @@ void Body::insertObject(App::DocumentObject* feature, App::DocumentObject* targe
 
 void Body::setBaseProperty(App::DocumentObject* feature)
 {
-    // In single-geometry paradigm (v2), BaseFeature chain is not used.
-    // Each body contains a single additive feature; combine via PartDesign::Boolean.
-    if (BodyParadigmVersion.getValue() >= 2) {
-        return;
-    }
-
     if (Body::isSolidFeature(feature)) {
         // Set BaseFeature property to previous feature (this might be the Tip feature)
         App::DocumentObject* prevSolidFeature = getPrevSolidFeature(feature);
@@ -352,17 +346,14 @@ std::vector<App::DocumentObject*> Body::removeObject(App::DocumentObject* featur
     App::DocumentObject* nextSolidFeature = getNextSolidFeature(feature);
     App::DocumentObject* prevSolidFeature = getPrevSolidFeature(feature);
 
-    // In single-geometry paradigm (v2), skip BaseFeature chain maintenance
-    if (BodyParadigmVersion.getValue() < 2) {
-        // It's ok to remove the first solid feature, that just mean the next feature become the base
-        // one
-        if (nextSolidFeature
-            && nextSolidFeature->isDerivedFrom(PartDesign::Feature::getClassTypeId())) {
-            auto* nextPD = static_cast<PartDesign::Feature*>(nextSolidFeature);
-            // Check if the next feature is pointing to the one being deleted
-            if (nextPD->BaseFeature.getValue() == feature) {
-                nextPD->BaseFeature.setValue(prevSolidFeature);
-            }
+    // It's ok to remove the first solid feature, that just mean the next feature become the base
+    // one
+    if (nextSolidFeature
+        && nextSolidFeature->isDerivedFrom(PartDesign::Feature::getClassTypeId())) {
+        auto* nextPD = static_cast<PartDesign::Feature*>(nextSolidFeature);
+        // Check if the next feature is pointing to the one being deleted
+        if (nextPD->BaseFeature.getValue() == feature) {
+            nextPD->BaseFeature.setValue(prevSolidFeature);
         }
     }
 
