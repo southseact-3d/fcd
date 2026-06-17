@@ -35,6 +35,7 @@ class QComboBox;
 class QLineEdit;
 class QListWidget;
 class QToolButton;
+class QRadioButton;
 
 class Ui_TaskPadPocketParameters;
 
@@ -112,7 +113,8 @@ public:
         SelectFace,
         SelectShape,
         SelectShapeFaces,
-        SelectReferenceAxis
+        SelectReferenceAxis,
+        SelectProfileFace
     };
 
     TaskExtrudeParameters(
@@ -294,7 +296,48 @@ public:
     bool reject() override;
 
 protected:
-    virtual TaskExtrudeParameters* getTaskParameters() = 0;
+    TaskExtrudeParameters* getTaskParameters();
+
+private:
+    TaskExtrudeParameters* parameters = nullptr;
+};
+
+class TaskUnifiedExtrudeParameters: public TaskExtrudeParameters
+{
+    Q_OBJECT
+
+public:
+    TaskUnifiedExtrudeParameters(
+        ViewProviderExtrude* vp,
+        QWidget* parent = nullptr,
+        bool newObj = true
+    );
+    ~TaskUnifiedExtrudeParameters() override = default;
+
+protected:
+    void onModeChanged(int index, Side side) override;
+    void translateModeList(QComboBox* box, int index) override;
+    void updateUI(Side side) override;
+    void apply() override;
+
+private Q_SLOTS:
+    void onTypeToggled(bool checked);
+    void onSelectProfileFaceToggled(bool checked);
+    void onProfileFaceItemChanged(QListWidgetItem* item);
+
+private:
+    QRadioButton* radioJoin = nullptr;
+    QRadioButton* radioCut = nullptr;
+    QToolButton* buttonSelectProfileFace = nullptr;
+    QListWidget* listWidgetProfileFaces = nullptr;
+    QToolButton* buttonSelectAllProfileFaces = nullptr;
+    QToolButton* buttonClearProfileFaces = nullptr;
+    std::vector<std::string> profileFaces;
+    void setupTypeToggle();
+    void setupProfileFaceSelection();
+    void computeProfileFaces();
+    void updateProfileFaceList();
+    void updateProfileSubValues();
 };
 
 }  // namespace PartDesignGui

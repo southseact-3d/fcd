@@ -2773,8 +2773,8 @@ CmdPartDesignPad::CmdPartDesignPad()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Pad");
-    sToolTipText = QT_TR_NOOP("Extrudes the selected sketch or profile and adds it to the body");
+    sMenuText = QT_TR_NOOP("Join");
+    sToolTipText = QT_TR_NOOP("Extrudes the selected sketch or profile and adds material to the body");
     sWhatsThis = "PartDesign_Pad";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Pad";
@@ -2803,8 +2803,8 @@ CmdPartDesignPocket::CmdPartDesignPocket()
 {
     sAppModule = "PartDesign";
     sGroup = QT_TR_NOOP("PartDesign");
-    sMenuText = QT_TR_NOOP("Pocket");
-    sToolTipText = QT_TR_NOOP("Extrudes the selected sketch or profile and removes it from the body");
+    sMenuText = QT_TR_NOOP("Cut");
+    sToolTipText = QT_TR_NOOP("Extrudes the selected sketch or profile and removes material from the body");
     sWhatsThis = "PartDesign_Pocket";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Pocket";
@@ -2835,7 +2835,7 @@ CmdPartDesignExtrude::CmdPartDesignExtrude()
     sGroup = QT_TR_NOOP("PartDesign");
     sMenuText = QT_TR_NOOP("Extrude");
     sToolTipText
-        = QT_TR_NOOP("Extrudes the selected sketch or profile (choose additive or subtractive)");
+        = QT_TR_NOOP("Extrudes the selected sketch or profile. Use Join/Cut toggle in the sidebar to switch between additive and subtractive.");
     sWhatsThis = "PartDesign_Extrude";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Extrude";
@@ -2846,21 +2846,8 @@ void CmdPartDesignExtrude::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
 
-    QMessageBox msgBox(Gui::getMainWindow());
-    msgBox.setWindowTitle(QObject::tr("Extrude"));
-    msgBox.setText(QObject::tr("Select extrude type:"));
-    msgBox.setIcon(QMessageBox::Question);
-    auto* padBtn = msgBox.addButton(QObject::tr("Pad (Add Material)"), QMessageBox::AcceptRole);
-    auto* pocketBtn = msgBox.addButton(QObject::tr("Pocket (Remove Material)"), QMessageBox::RejectRole);
-    msgBox.addButton(QMessageBox::Cancel);
-    msgBox.exec();
-
-    if (msgBox.clickedButton() == padBtn) {
-        prepareProfileBased(this, "Pad", 10.0);
-    }
-    else if (msgBox.clickedButton() == pocketBtn) {
-        prepareProfileBased(this, "Pocket", 5.0);
-    }
+    // Default to Pad (additive). The sidebar has a Join/Cut toggle to switch.
+    prepareProfileBased(this, "Pad", 10.0);
 }
 
 bool CmdPartDesignExtrude::isActive()

@@ -37,10 +37,14 @@ class PartDesignGuiExport ViewProviderExtrude: public ViewProviderSketchBased
     PROPERTY_HEADER_WITH_OVERRIDE(PartDesignGui::ViewProviderExtrude);
 
 public:
-    ViewProviderExtrude() = default;
-    ~ViewProviderExtrude() override = default;
+    ViewProviderExtrude();
+    ~ViewProviderExtrude() override;
 
     void highlightShapeFaces(const std::vector<std::string>& faces);
+    void highlightProfileFaces(const std::vector<std::string>& faces);
+
+protected:
+    TaskDlgFeatureParameters* getEditDialog() override;
 };
 
 

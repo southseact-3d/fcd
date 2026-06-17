@@ -24,7 +24,13 @@
 
 #include <QSignalBlocker>
 #include <QAction>
+#include <QRadioButton>
+#include <QButtonGroup>
 
+#include <Precision.hxx>
+#include <cmath>
+
+#include <TopAbs_ShapeEnum.hxx>
 
 #include <App/Document.h>
 #include <Base/Tools.h>
@@ -36,6 +42,7 @@
 #include <Gui/Inventor/Draggers/SoRotationDragger.h>
 #include <Mod/PartDesign/App/FeatureExtrude.h>
 #include <Mod/Part/App/GizmoHelper.h>
+#include <Mod/Part/App/Part2DObject.h>
 
 #include "ui_TaskPadPocketParameters.h"
 #include "TaskExtrudeParameters.h"
@@ -423,6 +430,24 @@ void TaskExtrudeParameters::setSelectionMode(SelectionMode mode, Side side)
         case SelectReferenceAxis:
             onSelectReference(AllowSelection::EDGE | AllowSelection::PLANAR | AllowSelection::CIRCLE);
             break;
+        case SelectProfileFace: {
+            // For profile face selection, we allow selecting faces on the sketch
+            onSelectReference(AllowSelection::FACE);
+            // Highlight currently selected profile faces
+            auto* unifiedParams = dynamic_cast<TaskUnifiedExtrudeParameters*>(this);
+            if (unifiedParams) {
+                // Get the selected faces from the list widget
+                std::vector<std::string> selectedFaces;
+                for (int i = 0; i < unifiedParams->listWidgetProfileFaces->count(); ++i) {
+                    auto* item = unifiedParams->listWidgetProfileFaces->item(i);
+                    if (item->checkState() == Qt::Checked) {
+                        selectedFaces.push_back(item->text().toStdString());
+                    }
+                }
+                getViewObject<ViewProviderExtrude>()->highlightProfileFaces(selectedFaces);
+            }
+            break;
+        }
         default:
             getViewObject<ViewProviderExtrude>()->highlightShapeFaces({});
             onSelectReference(AllowSelection::NONE);
@@ -459,6 +484,11 @@ void TaskExtrudeParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
 
             case SelectReferenceAxis:
                 selectedReferenceAxis(msg);
+                break;
+
+            case SelectProfileFace:
+                // Handle profile face selection from 3D view
+                // This is handled by the list widget checkboxes
                 break;
 
             default:
@@ -1449,7 +1479,11 @@ void TaskExtrudeParameters::setGizmoPositions()
 
 TaskDlgExtrudeParameters::TaskDlgExtrudeParameters(PartDesignGui::ViewProviderExtrude* vp)
     : TaskDlgSketchBasedParameters(vp)
-{}
+    , parameters(new TaskUnifiedExtrudeParameters(vp))
+{
+    Content.push_back(parameters);
+    Content.push_back(preview);
+}
 
 bool TaskDlgExtrudeParameters::accept()
 {
@@ -1463,6 +1497,314 @@ bool TaskDlgExtrudeParameters::reject()
     getTaskParameters()->setSelectionMode(TaskExtrudeParameters::None);
 
     return TaskDlgSketchBasedParameters::reject();
+}
+
+// --- TaskUnifiedExtrudeParameters ---
+
+TaskUnifiedExtrudeParameters::TaskUnifiedExtrudeParameters(
+    ViewProviderExtrude* vp,
+    QWidget* parent,
+    bool newObj
+)
+    : TaskExtrudeParameters(vp, parent, "PartDesign_Extrude", QObject::tr("Extrude Parameters"))
+{
+    setupTypeToggle();
+    setupProfileFaceSelection();
+
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+
+    // Set initial mode list based on current addSubType
+    if (extrude->getAddSubType() == PartDesign::FeatureAddSub::Subtractive) {
+        radioCut->setChecked(true);
+    }
+    else {
+        radioJoin->setChecked(true);
+    }
+
+    // Set initial mode list
+    translateModeList(ui->changeMode, extrude->Type.getValue());
+    translateModeList(ui->changeMode2, extrude->Type2.getValue());
+
+    // Compute and display profile faces
+    computeProfileFaces();
+    updateProfileFaceList();
+
+    if (newObj) {
+        readValuesFromHistory();
+    }
+}
+
+void TaskUnifiedExtrudeParameters::setupTypeToggle()
+{
+    // Create Join/Cut radio buttons and insert at the top of the layout
+    auto* toggleLayout = new QHBoxLayout();
+    radioJoin = new QRadioButton(QObject::tr("Join"), this);
+    radioCut = new QRadioButton(QObject::tr("Cut"), this);
+    radioJoin->setChecked(true);
+    toggleLayout->addWidget(radioJoin);
+    toggleLayout->addWidget(radioCut);
+
+    // Insert at the top of the group layout
+    this->groupLayout()->insertLayout(0, toggleLayout);
+
+    connect(radioJoin, &QRadioButton::toggled, this, &TaskUnifiedExtrudeParameters::onTypeToggled);
+}
+
+void TaskUnifiedExtrudeParameters::setupProfileFaceSelection()
+{
+    // Create profile face selection UI
+    auto* profileFaceLayout = new QVBoxLayout();
+
+    // Select button row
+    auto* buttonLayout = new QHBoxLayout();
+    buttonSelectProfileFace = new QToolButton(this);
+    buttonSelectProfileFace->setText(QObject::tr("Select Faces"));
+    buttonSelectProfileFace->setCheckable(true);
+    buttonLayout->addWidget(buttonSelectProfileFace);
+
+    buttonSelectAllProfileFaces = new QToolButton(this);
+    buttonSelectAllProfileFaces->setText(QObject::tr("Select All"));
+    buttonLayout->addWidget(buttonSelectAllProfileFaces);
+
+    buttonClearProfileFaces = new QToolButton(this);
+    buttonClearProfileFaces->setText(QObject::tr("Clear"));
+    buttonLayout->addWidget(buttonClearProfileFaces);
+
+    profileFaceLayout->addLayout(buttonLayout);
+
+    // Face list widget
+    listWidgetProfileFaces = new QListWidget(this);
+    listWidgetProfileFaces->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    profileFaceLayout->addWidget(listWidgetProfileFaces);
+
+    // Insert at the top of the group layout (after type toggle)
+    this->groupLayout()->insertLayout(1, profileFaceLayout);
+
+    // Connect signals
+    connect(buttonSelectProfileFace, &QToolButton::toggled, this,
+            &TaskUnifiedExtrudeParameters::onSelectProfileFaceToggled);
+    connect(buttonSelectAllProfileFaces, &QToolButton::clicked, this, [this]() {
+        for (int i = 0; i < listWidgetProfileFaces->count(); ++i) {
+            listWidgetProfileFaces->item(i)->setCheckState(Qt::Checked);
+        }
+        updateProfileSubValues();
+    });
+    connect(buttonClearProfileFaces, &QToolButton::clicked, this, [this]() {
+        for (int i = 0; i < listWidgetProfileFaces->count(); ++i) {
+            listWidgetProfileFaces->item(i)->setCheckState(Qt::Unchecked);
+        }
+        updateProfileSubValues();
+    });
+    connect(listWidgetProfileFaces, &QListWidget::itemChanged, this,
+            &TaskUnifiedExtrudeParameters::onProfileFaceItemChanged);
+}
+
+void TaskUnifiedExtrudeParameters::computeProfileFaces()
+{
+    profileFaces.clear();
+
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+    if (!extrude) {
+        return;
+    }
+
+    auto* profile = extrude->Profile.getValue();
+    if (!profile) {
+        return;
+    }
+
+    try {
+        // Get the profile shape
+        auto shape = extrude->getProfileShape();
+        if (shape.isNull()) {
+            return;
+        }
+
+        // Get all faces from the shape
+        auto faces = shape.getSubTopoShapes(TopAbs_FACE);
+        for (size_t i = 0; i < faces.size(); ++i) {
+            profileFaces.push_back("Face" + std::to_string(i + 1));
+        }
+    }
+    catch (const Base::Exception& e) {
+        e.reportException();
+    }
+}
+
+void TaskUnifiedExtrudeParameters::updateProfileFaceList()
+{
+    QSignalBlocker blocker(listWidgetProfileFaces);
+    listWidgetProfileFaces->clear();
+
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+    if (!extrude) {
+        return;
+    }
+
+    // Get currently selected faces from Profile sub-values
+    std::vector<std::string> selectedFaces;
+    auto* profile = extrude->Profile.getValue();
+    if (profile && profile->isDerivedFrom<Part::Part2DObject>()) {
+        selectedFaces = extrude->Profile.getSubValues();
+    }
+
+    for (const auto& faceName : profileFaces) {
+        auto* item = new QListWidgetItem(QString::fromStdString(faceName));
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+
+        // Check if this face is in the selected faces
+        bool isSelected = std::find(selectedFaces.begin(), selectedFaces.end(), faceName)
+            != selectedFaces.end();
+        item->setCheckState(isSelected ? Qt::Checked : Qt::Unchecked);
+
+        listWidgetProfileFaces->addItem(item);
+    }
+}
+
+void TaskUnifiedExtrudeParameters::updateProfileSubValues()
+{
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+    if (!extrude) {
+        return;
+    }
+
+    auto* profile = extrude->Profile.getValue();
+    if (!profile) {
+        return;
+    }
+
+    // Collect checked faces
+    std::vector<std::string> selectedFaces;
+    for (int i = 0; i < listWidgetProfileFaces->count(); ++i) {
+        auto* item = listWidgetProfileFaces->item(i);
+        if (item->checkState() == Qt::Checked) {
+            selectedFaces.push_back(item->text().toStdString());
+        }
+    }
+
+    // Update Profile property
+    if (profile->isDerivedFrom<Part::Part2DObject>()) {
+        extrude->Profile.setValue(profile, selectedFaces);
+        recomputeFeature();
+    }
+}
+
+void TaskUnifiedExtrudeParameters::onSelectProfileFaceToggled(bool checked)
+{
+    if (checked) {
+        setSelectionMode(SelectProfileFace);
+        buttonSelectProfileFace->setText(QObject::tr("Done"));
+    }
+    else {
+        setSelectionMode(None);
+        buttonSelectProfileFace->setText(QObject::tr("Select Faces"));
+    }
+}
+
+void TaskUnifiedExtrudeParameters::onProfileFaceItemChanged(QListWidgetItem* item)
+{
+    Q_UNUSED(item);
+
+    // Update Profile sub-values
+    updateProfileSubValues();
+
+    // Update highlighting if in SelectProfileFace mode
+    if (selectionMode == SelectProfileFace) {
+        std::vector<std::string> selectedFaces;
+        for (int i = 0; i < listWidgetProfileFaces->count(); ++i) {
+            auto* item = listWidgetProfileFaces->item(i);
+            if (item->checkState() == Qt::Checked) {
+                selectedFaces.push_back(item->text().toStdString());
+            }
+        }
+        getViewObject<ViewProviderExtrude>()->highlightProfileFaces(selectedFaces);
+    }
+}
+
+void TaskUnifiedExtrudeParameters::onTypeToggled(bool checked)
+{
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+
+    if (radioJoin->isChecked()) {
+        extrude->setAddSubType(PartDesign::FeatureAddSub::Additive);
+    }
+    else {
+        extrude->setAddSubType(PartDesign::FeatureAddSub::Subtractive);
+    }
+
+    // Update mode lists to match the type
+    int currentMode = ui->changeMode->currentIndex();
+    int currentMode2 = ui->changeMode2->currentIndex();
+    translateModeList(ui->changeMode, currentMode);
+    translateModeList(ui->changeMode2, currentMode2);
+
+    updateUI(Side::First);
+    recomputeFeature();
+}
+
+void TaskUnifiedExtrudeParameters::translateModeList(QComboBox* box, int index)
+{
+    box->clear();
+    box->addItem(QObject::tr("Dimension"));
+    box->addItem(QObject::tr("Through all"));
+    box->addItem(QObject::tr("To first"));
+    box->addItem(QObject::tr("Up to face"));
+    box->addItem(QObject::tr("Up to shape"));
+    if (index >= 0 && index < box->count()) {
+        box->setCurrentIndex(index);
+    }
+}
+
+void TaskUnifiedExtrudeParameters::updateUI(Side side)
+{
+    fillDirectionCombo();
+    updateWholeUI(Type::Pad, side);
+}
+
+void TaskUnifiedExtrudeParameters::onModeChanged(int index, Side side)
+{
+    auto& sideCtrl = getSideController(side);
+
+    switch (static_cast<Mode>(index)) {
+        case Mode::Dimension:
+            sideCtrl.Type->setValue("Length");
+            if (side == Side::First) {
+                double L = sideCtrl.lengthEdit->value().getValue();
+                Side otherSide = side == Side::First ? Side::Second : Side::First;
+                auto& sideCtrl2 = getSideController(otherSide);
+                double L2 = static_cast<SidesMode>(getSidesMode()) == SidesMode::TwoSides
+                    ? sideCtrl2.lengthEdit->value().getValue()
+                    : 0;
+                if (std::abs(L + L2) < Precision::Confusion()) {
+                    sideCtrl.lengthEdit->setValue(5.0);
+                }
+            }
+            break;
+        case Mode::ThroughAll:
+            sideCtrl.Type->setValue("ThroughAll");
+            break;
+        case Mode::ToFirst:
+            sideCtrl.Type->setValue("UpToFirst");
+            break;
+        case Mode::ToFace:
+            sideCtrl.Type->setValue("UpToFace");
+            if (sideCtrl.lineFaceName->text().isEmpty()) {
+                sideCtrl.buttonFace->setChecked(true);
+                handleLineFaceNameClick(sideCtrl.lineFaceName);
+            }
+            break;
+        case Mode::ToShape:
+            sideCtrl.Type->setValue("UpToShape");
+            break;
+    }
+
+    updateUI(side);
+    recomputeFeature();
+}
+
+void TaskUnifiedExtrudeParameters::apply()
+{
+    applyParameters();
 }
 
 #include "moc_TaskExtrudeParameters.cpp"

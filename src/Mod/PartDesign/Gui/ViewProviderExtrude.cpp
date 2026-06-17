@@ -39,6 +39,18 @@ using namespace PartDesignGui;
 
 PROPERTY_SOURCE(PartDesignGui::ViewProviderExtrude, PartDesignGui::ViewProviderSketchBased)
 
+ViewProviderExtrude::ViewProviderExtrude()
+{
+    sPixmap = "PartDesign_Extrude.svg";
+}
+
+ViewProviderExtrude::~ViewProviderExtrude() = default;
+
+TaskDlgFeatureParameters* ViewProviderExtrude::getEditDialog()
+{
+    return new TaskDlgExtrudeParameters(this);
+}
+
 void PartDesignGui::ViewProviderExtrude::highlightShapeFaces(const std::vector<std::string>& faces)
 {
     auto extrude = getObject<PartDesign::FeatureExtrude>();
@@ -64,5 +76,49 @@ void PartDesignGui::ViewProviderExtrude::highlightShapeFaces(const std::vector<s
         highlighter.getFaceMaterials(faces, materials);
 
         baseViewProvider->setHighlightedFaces(materials);
+    }
+}
+
+void PartDesignGui::ViewProviderExtrude::highlightProfileFaces(const std::vector<std::string>& faces)
+{
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+    if (!extrude) {
+        return;
+    }
+
+    auto* profile = extrude->Profile.getValue();
+    if (!profile) {
+        return;
+    }
+
+    auto profileViewProvider = dynamic_cast<PartGui::ViewProviderPart*>(
+        Gui::Application::Instance->getViewProvider(profile)
+    );
+
+    if (!profileViewProvider) {
+        return;
+    }
+
+    profileViewProvider->unsetHighlightedFaces();
+    profileViewProvider->updateView();
+
+    if (!faces.empty()) {
+        try {
+            auto shape = extrude->getProfileShape();
+            if (shape.isNull()) {
+                return;
+            }
+
+            std::vector<App::Material> materials = profileViewProvider->ShapeAppearance.getValues();
+            auto color = profileViewProvider->ShapeAppearance.getDiffuseColor();
+
+            PartGui::ReferenceHighlighter highlighter(shape.getShape(), color);
+            highlighter.getFaceMaterials(faces, materials);
+
+            profileViewProvider->setHighlightedFaces(materials);
+        }
+        catch (const Base::Exception& e) {
+            e.reportException();
+        }
     }
 }

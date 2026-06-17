@@ -566,7 +566,7 @@ from the model as reference</string>
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>Use custom vector for pad direction, otherwise
+         <string>Use custom vector for extrude direction, otherwise
 the sketch plane's normal vector will be used</string>
         </property>
         <property name="checkable">

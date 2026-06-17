@@ -60,6 +60,11 @@ FeatureAddSub::Type FeatureAddSub::getAddSubType()
     return addSubType;
 }
 
+void FeatureAddSub::setAddSubType(Type type)
+{
+    addSubType = type;
+}
+
 short FeatureAddSub::mustExecute() const
 {
     if (Refine.isTouched()) {
