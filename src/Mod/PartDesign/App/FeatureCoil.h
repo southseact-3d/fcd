@@ -28,7 +28,7 @@
 
 #include <App/PropertyUnits.h>
 #include "FeatureAddSub.h"
-#include <Part/AttachExtension.h>
+#include <Mod/Part/App/AttachExtension.h>
 #include <TopoDS_Shape.hxx>
 
 namespace PartDesign
