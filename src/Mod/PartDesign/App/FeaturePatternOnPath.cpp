@@ -402,9 +402,9 @@ const std::list<gp_Trsf> PatternOnPath::getTransformations(
                 // For Frenet, use curve normal if available
                 try {
                     BRepLProp_CLProps props(adapt, param, 1, Precision::Confusion());
-                    gp_Vec normalVec;
-                    props.Normal(normalVec);
-                    normal = gp_Dir(normalVec);
+                    gp_Dir normalDir;
+                    props.Normal(normalDir);
+                    normal = normalDir;
                 }
                 catch (...) {
                     // Fallback: use cross product with Z
