@@ -30,7 +30,6 @@
 #include <Mod/Part/App/FCBRepAlgoAPI_Cut.h>
 #include <Mod/Part/App/FCBRepAlgoAPI_Fuse.h>
 #include <BRepBndLib.hxx>
-#include <BRepBuilderAPI_MakeCircle.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeLine.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>

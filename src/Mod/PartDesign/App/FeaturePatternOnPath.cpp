@@ -26,7 +26,8 @@
 #include <limits>
 
 #include <BRepAdaptor_Curve.hxx>
-#include <BRepLProp_CurveTool.hxx>
+#include <BRepLProp_CLProps.hxx>
+#include <gp_Quaternion.hxx>
 #include <GCPnts_AbscissaPoint.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
@@ -222,7 +223,7 @@ gp_Dir PatternOnPath::getPathDirection() const
         throw Base::ValueError("No path sub-element specified");
     }
 
-    Part::TopoShape pathShape = Part::Feature::getTopoShape(pathObj);
+    Part::TopoShape pathShape = Part::Feature::getTopoShape(pathObj, Part::ShapeOption::ResolveLink);
     if (pathShape.isNull()) {
         throw Base::ValueError("Path shape is null");
     }
@@ -277,7 +278,7 @@ const std::list<gp_Trsf> PatternOnPath::getTransformations(
     }
 
     // Get the path edge
-    Part::TopoShape pathShape = Part::Feature::getTopoShape(pathObj);
+    Part::TopoShape pathShape = Part::Feature::getTopoShape(pathObj, Part::ShapeOption::ResolveLink);
     if (pathShape.isNull()) {
         throw Base::ValueError("Path shape is null");
     }
@@ -400,22 +401,31 @@ const std::list<gp_Trsf> PatternOnPath::getTransformations(
             if (alignment == PathAlignment::Frenet) {
                 // For Frenet, use curve normal if available
                 try {
+                    BRepLProp_CLProps props(adapt, param, 1, Precision::Confusion());
                     gp_Vec normalVec;
-                    adapt.Normal(param, normalVec);
+                    props.Normal(normalVec);
                     normal = gp_Dir(normalVec);
                 }
                 catch (...) {
                     // Fallback: use cross product with Z
-                    normal = tangentDir.Crossed(zDir);
-                    if (normal.IsZero()) {
-                        normal = tangentDir.Crossed(gp_Dir(1, 0, 0));
+                    gp_Vec cross = gp_Vec(tangentDir).Crossed(gp_Vec(zDir));
+                    if (cross.Magnitude() > Precision::Confusion()) {
+                        normal = gp_Dir(cross);
+                    }
+                    else {
+                        cross = gp_Vec(tangentDir).Crossed(gp_Vec(gp_Dir(1, 0, 0)));
+                        normal = gp_Dir(cross);
                     }
                 }
             }
             else {  // Tangent alignment
-                normal = tangentDir.Crossed(zDir);
-                if (normal.IsZero()) {
-                    normal = tangentDir.Crossed(gp_Dir(1, 0, 0));
+                gp_Vec cross = gp_Vec(tangentDir).Crossed(gp_Vec(zDir));
+                if (cross.Magnitude() > Precision::Confusion()) {
+                    normal = gp_Dir(cross);
+                }
+                else {
+                    cross = gp_Vec(tangentDir).Crossed(gp_Vec(gp_Dir(1, 0, 0)));
+                    normal = gp_Dir(cross);
                 }
             }
 
@@ -428,7 +438,7 @@ const std::list<gp_Trsf> PatternOnPath::getTransformations(
                 tangentDir.Z(), normal.Z(), binormal.Z()
             );
 
-            trans.SetRotation(rotationMatrix);
+            trans.SetRotation(gp_Quaternion(rotationMatrix));
             trans.SetTranslationPart(point.XYZ());
         }
 
