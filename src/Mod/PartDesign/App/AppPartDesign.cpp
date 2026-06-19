@@ -57,8 +57,10 @@
 #include "FeatureScaled.h"
 #include "FeatureSketchBased.h"
 #include "FeatureSolid.h"
+#include "FeatureStoneTexture.h"
 #include "FeatureThickness.h"
 #include "FeatureTransformed.h"
+#include "FeatureWoodPlankTexture.h"
 #include "ShapeBinder.h"
 
 
