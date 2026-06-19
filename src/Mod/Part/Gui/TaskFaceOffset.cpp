@@ -291,6 +291,8 @@ TaskFaceOffset::TaskFaceOffset(Part::FaceOffset* offset)
     addTaskBox(Gui::BitmapFactory().pixmap("Part_FaceOffset"), widget);
 }
 
+TaskFaceOffset::~TaskFaceOffset() = default;
+
 Part::FaceOffset* TaskFaceOffset::getObject() const
 {
     return widget->getObject();
