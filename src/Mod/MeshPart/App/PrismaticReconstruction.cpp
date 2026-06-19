@@ -52,6 +52,7 @@
 #include <BRepBuilderAPI_Sewing.hxx>
 
 #include <Base/Console.h>
+#include <Base/Converter.h>
 #include <Base/Vector3D.h>
 #include <Mod/Mesh/App/Core/Algorithm.h>
 #include <Mod/Mesh/App/Core/Grid.h>
@@ -138,9 +139,9 @@ std::vector<PrismaticReconstruction::Region> PrismaticReconstruction::segmentMes
             Base::Vector3f normal(0, 0, 0);
             for (auto idx : facetIndices) {
                 const auto& facet = mesh.GetFacet(idx);
-                center += mesh.GetPoint(facet._aulPoints[0]);
-                center += mesh.GetPoint(facet._aulPoints[1]);
-                center += mesh.GetPoint(facet._aulPoints[2]);
+                center += facet._aclPoints[0];
+                center += facet._aclPoints[1];
+                center += facet._aclPoints[2];
 
                 Base::Vector3f n = facet.GetNormal();
                 normal += n;
@@ -166,9 +167,9 @@ std::vector<PrismaticReconstruction::Region> PrismaticReconstruction::segmentMes
         for (unsigned long i = 0; i < mesh.CountFacets(); i++) {
             region.facets.push_back(i);
             const auto& facet = mesh.GetFacet(i);
-            center += mesh.GetPoint(facet._aulPoints[0]);
-            center += mesh.GetPoint(facet._aulPoints[1]);
-            center += mesh.GetPoint(facet._aulPoints[2]);
+            center += facet._aclPoints[0];
+            center += facet._aclPoints[1];
+            center += facet._aclPoints[2];
             count += 3;
 
             Base::Vector3f n = facet.GetNormal();
@@ -274,7 +275,7 @@ std::vector<TopoDS_Shape> PrismaticReconstruction::extractCrossSections(
         Base::Vector3f point = direction * pos;
         MeshCore::MeshAlgorithm algo(mesh);
 
-        Mesh::MeshObject::TPolylines polylines;
+        std::list<std::vector<Base::Vector3f>> polylines;
         algo.CutWithPlane(point, direction, grid, polylines, 0.001f, true);
 
         if (polylines.empty()) {
