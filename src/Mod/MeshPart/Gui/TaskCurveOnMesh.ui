@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MeshPartGui::TaskCurveOnMesh</class>
- <widget class="QWidget" name="MeshPartGui::TaskCurveOnMesh">
+ <class>TaskCurveOnMesh</class>
+ <widget class="QWidget" name="TaskCurveOnMesh">
   <property name="geometry">
    <rect>
     <x>0</x>

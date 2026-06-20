@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MeshPartGui::Tessellation</class>
- <widget class="QWidget" name="MeshPartGui::Tessellation">
+ <class>Tessellation</class>
+ <widget class="QWidget" name="Tessellation">
   <property name="geometry">
    <rect>
     <x>0</x>
