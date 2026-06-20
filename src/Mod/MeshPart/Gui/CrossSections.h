@@ -38,11 +38,12 @@ namespace Gui
 class View3DInventor;
 }
 
+class Ui_CrossSections;
+
 namespace MeshPartGui
 {
 
 class ViewProviderCrossSections;
-class Ui_CrossSections;
 class CrossSections: public QDialog
 {
     Q_OBJECT

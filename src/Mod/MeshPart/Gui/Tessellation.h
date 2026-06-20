@@ -38,6 +38,8 @@ namespace App
 class Document;
 class SubObjectT;
 }  // namespace App
+class Ui_Tessellation;
+
 namespace MeshPartGui
 {
 
@@ -67,7 +69,6 @@ private:
     std::unique_ptr<Private> d;
 };
 
-class Ui_Tessellation;
 class Tessellation: public QWidget
 {
     Q_OBJECT

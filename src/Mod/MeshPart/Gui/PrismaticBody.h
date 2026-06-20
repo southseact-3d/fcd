@@ -28,10 +28,11 @@
 #include <Gui/TaskView/TaskDialog.h>
 #include <Gui/TaskView/TaskView.h>
 
+class Ui_PrismaticBody;
+
 namespace MeshPartGui
 {
 
-class Ui_PrismaticBody;
 class PrismaticBody: public QDialog
 {
     Q_OBJECT

@@ -36,10 +36,11 @@ namespace Gui
 class View3DInventor;
 }
 
+class Ui_TaskCurveOnMesh;
+
 namespace MeshPartGui
 {
 
-class Ui_TaskCurveOnMesh;
 class CurveOnMeshHandler;
 
 class CurveOnMeshWidget: public QWidget

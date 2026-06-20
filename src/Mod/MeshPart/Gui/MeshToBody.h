@@ -28,10 +28,11 @@
 #include <Gui/TaskView/TaskDialog.h>
 #include <Gui/TaskView/TaskView.h>
 
+class Ui_MeshToBody;
+
 namespace MeshPartGui
 {
 
-class Ui_MeshToBody;
 class MeshToBody: public QDialog
 {
     Q_OBJECT
