@@ -444,7 +444,10 @@ void TaskPatternParameters::apply()
 
         FCMD_OBJ_CMD(pattern, "SpacingPattern2 = " << parametersWidget2->getSpacingPatternsAsString());
 
-        FCMD_OBJ_CMD(pattern, "Symmetric2 = " << linear->Symmetric2.getValue());
+        if (isLinear) {
+            auto* linear2 = static_cast<PartDesign::LinearPattern*>(pattern);
+            FCMD_OBJ_CMD(pattern, "Symmetric2 = " << linear2->Symmetric2.getValue());
+        }
     }
 
     // The user may have changed a value and immediately hit 'OK' or Enter.

@@ -2930,7 +2930,7 @@ void CmdPartDesignHole::activated(int iMsg)
                     }
 
                     // Get the face center as initial placement point
-                    TopoShape faceShape = Part::Feature::getTopoShape(
+                    Part::TopoShape faceShape = Part::Feature::getTopoShape(
                         obj,
                         Part::ShapeOption::NeedSubElement | Part::ShapeOption::ResolveLink
                             | Part::ShapeOption::Transform,
