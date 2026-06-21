@@ -25,6 +25,7 @@
 
 #include <BRep_Tool.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepGProp.hxx>
 #include <GeomLib_IsPlanarSurface.hxx>
 #include <QMessageBox>
 #include <QPushButton>
@@ -67,6 +68,8 @@
 #include "WorkflowManager.h"
 #include "ViewProvider.h"
 #include "ViewProviderBody.h"
+
+#include <Mod/Part/App/TopoShape.h>
 
 
 // TODO Remove this header after fixing code so it won;t be needed here (2015-10-20, Fat-Zer)
@@ -2912,7 +2915,7 @@ void CmdPartDesignHole::activated(int iMsg)
             for (const auto& sub : subs) {
                 if (sub.compare(0, 4, "Face") == 0) {
                     // Found a face selection — create hole in AtPoint mode
-                    App::DocumentObject* obj = sel.getObject();
+                    const App::DocumentObject* obj = sel.getObject();
                     if (!obj) {
                         continue;
                     }
@@ -2987,7 +2990,7 @@ void CmdPartDesignHole::activated(int iMsg)
                     );
 
                     updateActive();
-                    setEdit(Feat, pcActiveBody);
+                    PartDesignGui::setEdit(Feat, pcActiveBody);
                     doCommand(Gui, "Gui.Selection.clearSelection()");
                     return;
                 }

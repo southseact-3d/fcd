@@ -37,6 +37,8 @@
 #include "ViewProviderBody.h"
 #include "ViewProviderBoolean.h"
 #include "ViewProviderBrickTexture.h"
+#include "ViewProviderWoodPlankTexture.h"
+#include "ViewProviderStoneTexture.h"
 #include "ViewProviderChamfer.h"
 #include "ViewProviderDatumCS.h"
 #include "ViewProviderDatumLine.h"

@@ -296,7 +296,7 @@ public:
     bool reject() override;
 
 protected:
-    TaskExtrudeParameters* getTaskParameters();
+    virtual TaskExtrudeParameters* getTaskParameters();
 
 private:
     TaskExtrudeParameters* parameters = nullptr;
@@ -313,6 +313,8 @@ public:
         bool newObj = true
     );
     ~TaskUnifiedExtrudeParameters() override = default;
+
+    QListWidget* getListWidgetProfileFaces() const { return listWidgetProfileFaces; }
 
 protected:
     void onModeChanged(int index, Side side) override;

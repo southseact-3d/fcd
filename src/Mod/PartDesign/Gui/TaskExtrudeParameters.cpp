@@ -438,8 +438,9 @@ void TaskExtrudeParameters::setSelectionMode(SelectionMode mode, Side side)
             if (unifiedParams) {
                 // Get the selected faces from the list widget
                 std::vector<std::string> selectedFaces;
-                for (int i = 0; i < unifiedParams->listWidgetProfileFaces->count(); ++i) {
-                    auto* item = unifiedParams->listWidgetProfileFaces->item(i);
+                auto* listWidget = unifiedParams->getListWidgetProfileFaces();
+                for (int i = 0; i < listWidget->count(); ++i) {
+                    auto* item = listWidget->item(i);
                     if (item->checkState() == Qt::Checked) {
                         selectedFaces.push_back(item->text().toStdString());
                     }
