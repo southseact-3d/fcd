@@ -3552,7 +3552,7 @@ void CmdPartDesignAdditiveCoil::activated(int iMsg)
     // show the newly created feature
     Gui::Selection().clearSelection();
     Gui::Selection().addSelection(
-        Doc->getName(),
+        getDocument()->getName(),
         pcActiveBody->getNameInDocument(),
         FeatName.c_str()
     );
@@ -3619,7 +3619,7 @@ void CmdPartDesignSubtractiveCoil::activated(int iMsg)
 
     Gui::Selection().clearSelection();
     Gui::Selection().addSelection(
-        Doc->getName(),
+        getDocument()->getName(),
         pcActiveBody->getNameInDocument(),
         FeatName.c_str()
     );
