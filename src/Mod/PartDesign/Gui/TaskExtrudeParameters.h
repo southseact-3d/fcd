@@ -297,7 +297,10 @@ public:
     bool reject() override;
 
 protected:
-    virtual TaskExtrudeParameters* getTaskParameters();
+    virtual TaskExtrudeParameters* getTaskParameters()
+    {
+        return parameters;
+    }
 
 private:
     TaskExtrudeParameters* parameters = nullptr;
