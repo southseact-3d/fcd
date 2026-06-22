@@ -49,10 +49,9 @@ using namespace PartDesign;
 
 const char* FeatureExtrude::SideTypesEnums[] = {"One side", "Two sides", "Symmetric", nullptr};
 
-// Combined TypeEnums for unified Extrude (Pad used "UpToLast", Pocket used "ThroughAll";
-// they are aliased internally, so we use "ThroughAll" as the canonical name).
+// Combined TypeEnums for unified Extrude (Pad used "UpToLast", Pocket used "ThroughAll").
 const char* FeatureExtrude::TypeEnums[]
-    = {"Length", "ThroughAll", "UpToFirst", "UpToFace", "?TwoLengths", "UpToShape", nullptr};
+    = {"Length", "UpToLast", "UpToFirst", "UpToFace", "?TwoLengths", "UpToShape", "ThroughAll", nullptr};
 
 PROPERTY_SOURCE(PartDesign::FeatureExtrude, PartDesign::ProfileBased)
 
