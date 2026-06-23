@@ -98,7 +98,6 @@ class SnapManager
         void initParameters();
         void updateSnapParameter(const std::string& parametername);
         void updateSnapToObjectParameter(const std::string& parametername);
-        void updateSnapToGridParameter(const std::string& parametername);
         void updateSnapAngleParameter(const std::string& parametername);
         void updateSnapToObjectToleranceParameter(const std::string& parametername);
 
@@ -143,7 +142,6 @@ private:
     bool angleSnapRequested;
     bool snapRequested;
     bool snapToObjectsRequested;
-    bool snapToGridRequested;
 
     Base::Vector2d referencePoint;
     double lastMouseAngle;

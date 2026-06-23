@@ -1301,9 +1301,6 @@ void GridSpaceAction::updateWidget()
 
         updateCheckBoxFromProperty(gridAutoSpacing, sketchView->GridAuto);
 
-        ParameterGrp::handle hGrp = getParameterPath();
-        updateCheckBox(snapToGrid, hGrp->GetBool("SnapToGrid", false));
-
         gridSizeBox->setValue(sketchView->GridSize.getValue());
     }
 }
@@ -1320,12 +1317,6 @@ void GridSpaceAction::languageChange()
 
     sizeLabel->setText(tr("Spacing"));
     gridSizeBox->setToolTip(tr("Distance between two subsequent grid lines"));
-
-    snapToGrid->setText(tr("Snap to grid"));
-    snapToGrid->setToolTip(
-        tr("New points will snap to the nearest grid line.\nPoints must be set closer than a "
-            "fifth of the grid spacing to a grid line to snap."));
-    snapToGrid->setStatusTip(snapToGrid->toolTip());
 }
 
 QWidget* GridSpaceAction::createWidget(QWidget* parent)
@@ -1333,8 +1324,6 @@ QWidget* GridSpaceAction::createWidget(QWidget* parent)
     gridShow = new QCheckBox();
 
     gridAutoSpacing = new QCheckBox();
-
-    snapToGrid = new QCheckBox();
 
     sizeLabel = new QLabel();
 
@@ -1348,9 +1337,8 @@ QWidget* GridSpaceAction::createWidget(QWidget* parent)
     auto* layout = new QGridLayout(gridSizeW);
     layout->addWidget(gridShow, 0, 0, 1, 2);
     layout->addWidget(gridAutoSpacing, 1, 0, 1, 2);
-    layout->addWidget(snapToGrid, 2, 0, 1, 2);
-    layout->addWidget(sizeLabel, 3, 0);
-    layout->addWidget(gridSizeBox, 3, 1);
+    layout->addWidget(sizeLabel, 2, 0);
+    layout->addWidget(gridSizeBox, 2, 1);
 
     languageChange();
 
@@ -1378,15 +1366,6 @@ QWidget* GridSpaceAction::createWidget(QWidget* parent)
             auto enable = (state == Qt::Checked);
             sketchView->GridAuto.setValue(enable);
         }
-    });
-
-#if QT_VERSION >= QT_VERSION_CHECK(6,7,0)
-    QObject::connect(snapToGrid, &QCheckBox::checkStateChanged, [this](int state) {
-#else
-    QObject::connect(snapToGrid, &QCheckBox::stateChanged, [this](int state) {
-#endif
-        ParameterGrp::handle hGrp = this->getParameterPath();
-        hGrp->SetBool("SnapToGrid", state == Qt::Checked);
     });
 
     QObject::connect(gridSizeBox,

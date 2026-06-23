@@ -73,7 +73,6 @@ void SnapManager::ParameterObserver::initParameters()
     str2updatefunction = {
         {"Snap", [this](const std::string& param) { updateSnapParameter(param); }},
         {"SnapToObjects", [this](const std::string& param) { updateSnapToObjectParameter(param); }},
-        {"SnapToGrid", [this](const std::string& param) { updateSnapToGridParameter(param); }},
         {"SnapAngle", [this](const std::string& param) { updateSnapAngleParameter(param); }},
         {"SnapToObjectTolerance",
          [this](const std::string& param) { updateSnapToObjectToleranceParameter(param); }},
@@ -99,13 +98,6 @@ void SnapManager::ParameterObserver::updateSnapToObjectParameter(const std::stri
     ParameterGrp::handle hGrp = getParameterGrpHandle();
 
     client.snapToObjectsRequested = hGrp->GetBool(parametername.c_str(), true);
-}
-
-void SnapManager::ParameterObserver::updateSnapToGridParameter(const std::string& parametername)
-{
-    ParameterGrp::handle hGrp = getParameterGrpHandle();
-
-    client.snapToGridRequested = hGrp->GetBool(parametername.c_str(), true);
 }
 
 void SnapManager::ParameterObserver::updateSnapAngleParameter(const std::string& parametername)
@@ -218,9 +210,7 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
     }
 
     // 3 - Snap to grid (will work on coordinates not already locked by axis snap)
-    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Grid)) && snapToGridRequested
-        /*&& viewProvider.ShowGrid.getValue() */) {  // Snap to grid is enabled
-                                                     // even if the grid is not visible.
+    if (static_cast<int>(mask) & static_cast<int>(SnapType::Grid)) {
 
         // use snapPos as input (which may have one coordinate locked by axis)
         Base::Vector2d gridSnapResult = snapPos;
