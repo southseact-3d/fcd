@@ -144,6 +144,10 @@ if(BUILD_TUX)
     add_subdirectory(Tux)
 endif(BUILD_TUX)
 
+if(BUILD_UPDATE)
+    add_subdirectory(Update)
+endif(BUILD_UPDATE)
+
 if(BUILD_WEB)
     add_subdirectory(Web)
 endif(BUILD_WEB)

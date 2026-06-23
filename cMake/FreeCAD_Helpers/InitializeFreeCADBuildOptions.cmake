@@ -136,6 +136,7 @@ macro(InitializeFreeCADBuildOptions)
     option(BUILD_SLICER "Build the FreeCAD Slicer (3D printing) module" ON)
     option(BUILD_SURFACE "Build the FreeCAD surface module" ON)
     option(BUILD_VR "Build the FreeCAD Oculus Rift support (need Oculus SDK 4.x or higher)" OFF)
+    option(BUILD_UPDATE "Build the Tungsten CAD Update module (dev patches from GitHub)" ON)
     option(BUILD_CLOUD "Build the FreeCAD cloud module" OFF)
     option(ENABLE_DEVELOPER_TESTS "Build the FreeCAD unit tests suit" ON)
 
