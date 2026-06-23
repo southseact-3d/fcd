@@ -2,11 +2,13 @@
 
 """SlicerWorkbench UI widgets."""
 
-from .material_selector_widget import MaterialSelectorWidget
-from .printer_selector_widget import PrinterSelectorWidget
-from .slicer_output_widget import SlicerOutputWidget
-from .slicer_preferences import SlicerPreferencesDialog
-from .support_paint_widget import SupportPaintWidget
+from SlicerUI.material_selector_widget import MaterialSelectorWidget
+from SlicerUI.printer_selector_widget import PrinterSelectorWidget
+from SlicerUI.slicer_output_widget import SlicerOutputWidget
+from SlicerUI.slicer_preferences import SlicerPreferencesDialog
+from SlicerUI.support_paint_widget import SupportPaintWidget
+from SlicerUI.slicer_task_panel import SlicerTaskPanel
+from SlicerUI.cavity_result_dialog import CavityResultDialog
 
 __all__ = [
     "MaterialSelectorWidget",
@@ -14,4 +16,6 @@ __all__ = [
     "SlicerOutputWidget",
     "SlicerPreferencesDialog",
     "SupportPaintWidget",
+    "SlicerTaskPanel",
+    "CavityResultDialog",
 ]

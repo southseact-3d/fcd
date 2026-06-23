@@ -254,7 +254,11 @@ def _document_has_meshes():
 
 
 def _ensure_mesh_data(obj):
-    """Ensure an object has a valid mesh; convert shape if needed."""
+    """Ensure an object has a valid mesh; convert shape if needed.
+
+    Returns a FreeCAD :class:`Mesh.Mesh` object, **not** :class:`SlicerCore.mesh_io.MeshData`.
+    For code paths that need ``MeshData``, use :func:`_ensure_meshdata` instead.
+    """
     if obj.isDerivedFrom("Mesh::Feature"):
         return obj.Mesh
     if hasattr(obj, "Shape"):
@@ -266,6 +270,26 @@ def _ensure_mesh_data(obj):
                 "[Slicer] Mesh module unavailable, cannot convert shape to mesh.\n"
             )
     return None
+
+
+def _ensure_meshdata(obj):
+    """Ensure an object has a valid mesh and return it as :class:`SlicerCore.mesh_io.MeshData`.
+
+    This is the preferred helper when the result must be passed to
+    ``SlicerCore`` functions (hollowing, cavity detection, support
+    generation, etc.).
+    """
+    raw = _ensure_mesh_data(obj)
+    if raw is None:
+        return None
+    try:
+        from SlicerCore.mesh_io import MeshData
+        return MeshData.from_freecad_mesh(raw, name=getattr(obj, "Label", "Mesh"))
+    except Exception:
+        FreeCAD.Console.PrintError(
+            f"[Slicer] Failed to convert mesh to MeshData: {traceback.format_exc()}\n"
+        )
+        return None
 
 
 def _safe_call(fn, *args, **kwargs):
@@ -675,7 +699,7 @@ class Slicer_GenerateSupportsCommand:
 
         meshes = []
         for obj in sel_objs:
-            m = _ensure_mesh_data(obj)
+            m = _ensure_meshdata(obj)
             if m is not None:
                 meshes.append((obj, m))
 
@@ -687,7 +711,12 @@ class Slicer_GenerateSupportsCommand:
             f"[Slicer] Generating supports for {len(meshes)} object(s)...\n"
         )
 
-        worker = _SupportWorker(generator, [m for _, m in meshes], settings)
+        for idx, (obj, m) in enumerate(meshes):
+            FreeCAD.Console.PrintMessage(
+                f"[Slicer] Generating supports for {obj.Name}...\n"
+            )
+            worker = _SupportWorker(generator, m, settings)
+            Slicer_GenerateSupportsCommand._worker = worker
         Slicer_GenerateSupportsCommand._worker = worker
 
         def _on_progress(pct, msg):
@@ -752,7 +781,7 @@ class Slicer_PaintSupportsCommand:
             )
             return
 
-        mesh = _ensure_mesh_data(obj)
+        mesh = _ensure_meshdata(obj)
         if mesh is None:
             FreeCAD.Console.PrintError("[Slicer] Object has no mesh data.\n")
             return
@@ -811,7 +840,7 @@ class Slicer_HollowModelCommand:
             )
             return
 
-        mesh = _ensure_mesh_data(obj)
+        mesh = _ensure_meshdata(obj)
         if mesh is None:
             FreeCAD.Console.PrintError("[Slicer] Object has no mesh data.\n")
             return
@@ -898,7 +927,7 @@ class Slicer_DetectCavitiesCommand:
             )
             return
 
-        mesh = _ensure_mesh_data(obj)
+        mesh = _ensure_meshdata(obj)
         if mesh is None:
             FreeCAD.Console.PrintError("[Slicer] Object has no mesh data.\n")
             return
@@ -941,7 +970,7 @@ class Slicer_DetectCavitiesCommand:
             )
 
             try:
-                from SlicerUi.CavityResultDialog import CavityResultDialog
+                from SlicerUI.cavity_result_dialog import CavityResultDialog
                 dlg = CavityResultDialog(obj, result)
                 dlg.exec_()
             except ImportError:

@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Set, Tuple
 
-from .mesh_io import MeshData
+from SlicerCore.mesh_io import MeshData
 
 
 class HollowMethod(str, Enum):

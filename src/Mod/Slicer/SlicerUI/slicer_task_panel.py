@@ -21,7 +21,7 @@ try:
 except ImportError:
     Gui = None
 
-from ..SlicerCore.printer_profiles import (
+from SlicerCore.printer_profiles import (
     FDMProfile,
     FDMaterialProfile,
     Profile,
@@ -29,7 +29,7 @@ from ..SlicerCore.printer_profiles import (
     ResinMaterialProfile,
     ResinProfile,
 )
-from ..SlicerCore.libslic3r_wrapper import LibSlic3rWrapper
+from SlicerCore.libslic3r_wrapper import LibSlic3rWrapper
 
 # ---------------------------------------------------------------------------
 # Constants
