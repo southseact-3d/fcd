@@ -261,7 +261,12 @@ void StartView::configureFileCardWidget(QListView* fileCardWidget)
     auto delegate = gsl::owner<FileCardDelegate*>(new FileCardDelegate(fileCardWidget));
     fileCardWidget->setItemDelegate(delegate);
 
-    fileCardWidget->setMinimumWidth(fileCardWidget->parentWidget()->width());
+    // Do not pin a fixed minimum width here. Pinning to the parent's current
+    // width at construction time captures whatever size the parent happens to
+    // have before it has been laid out, which leaves unshrinkable blank rows
+    // or oversized gaps once the view is shown at its real size. The
+    // FileCardView's size policy (MinimumExpanding + HeightForWidth) already
+    // lets the layout system compute the correct width.
     //    fileCardWidget->setGridSize(
     //        fileCardWidget->itemDelegate()->sizeHint(QStyleOptionViewItem(),
     //                                                 fileCardWidget->model()->index(0, 0)));

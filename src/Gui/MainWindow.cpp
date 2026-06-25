@@ -1505,6 +1505,20 @@ void MainWindow::onWindowActivated(QMdiSubWindow* mdi)
 
     auto view = dynamic_cast<MDIView*>(mdi->widget());
     setActiveWindow(view);
+
+    // Toggle the ComboView (Model tree + Properties tabs) based on whether the
+    // active MDI view is the Start page. The Start page has no document tree, so
+    // the ComboView would otherwise display empty tabs and waste dock width.
+    if (auto* dockWidget = DockWindowManager::instance()->getDockContainer("Model")) {
+        const bool isStartView =
+            view && view->metaObject()->className() == QByteArray("StartGui::StartView");
+        if (isStartView && dockWidget->isVisible()) {
+            dockWidget->hide();
+        }
+        else if (!isStartView && !dockWidget->isVisible()) {
+            dockWidget->show();
+        }
+    }
 }
 
 void MainWindow::onWindowsMenuAboutToShow()
