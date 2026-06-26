@@ -22,12 +22,16 @@
 
 
 #include <QApplication>
+#include <QClipboard>
 #include <QContextMenuEvent>
 #include <QGridLayout>
+#include <QGuiApplication>
 #include <QMenu>
+#include <QMouseEvent>
 #include <QTextCursor>
 #include <QTextStream>
 #include <QTime>
+#include <QToolTip>
 
 
 #include <Base/Interpreter.h>
@@ -412,6 +416,11 @@ public:
     static bool redirected_stderr;
     static PyObject* default_stderr;
     static PyObject* replace_stderr;
+
+    // Map from QTextBlock number -> full original message text. Used by the
+    // per-line copy-to-clipboard icon feature.
+    QHash<int, QString> blockMessages;
+    int nextBlockNumber = 0;
 #ifdef FC_DEBUG
     long logMessageSize = 0;
 #else
@@ -574,6 +583,30 @@ void ReportOutput::customEvent(QEvent* ev)
         cursor.beginEditBlock();
         cursor.movePosition(QTextCursor::End);
         cursor.insertText(text);
+        // Remember the original (pre-icon) message so the per-line copy icon
+        // can reproduce it on click. The icon is appended after we record the
+        // block number, so the stored text is unaffected by it.
+        int newBlockNumber = cursor.blockNumber();
+        if (text.endsWith(QLatin1Char('\n'))) {
+            d->blockMessages[newBlockNumber] = text.left(text.size() - 1);
+        } else {
+            d->blockMessages[newBlockNumber] = text;
+        }
+        d->nextBlockNumber = newBlockNumber + 1;
+
+        // Append a small inline copy icon for Error/Warning/Critical messages
+        // so users can copy the line to the clipboard with a single click.
+        if (ce->messageType() == ReportHighlighter::Error
+            || ce->messageType() == ReportHighlighter::Warning
+            || ce->messageType() == ReportHighlighter::Critical) {
+            QPixmap copyPix = BitmapFactory().pixmap("edit-copy").scaled(
+                QSize(12, 12), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            if (!copyPix.isNull()) {
+                cursor.insertImage(copyPix.toImage());
+                cursor.insertText(QStringLiteral(" "));
+            }
+        }
+
         cursor.endEditBlock();
 
         blockStart = cursor.atBlockStart();
@@ -594,6 +627,65 @@ bool ReportOutput::event(QEvent* event)
         }
     }
     return QTextEdit::event(event);
+}
+
+void ReportOutput::mousePressEvent(QMouseEvent* e)
+{
+    // Detect a click on a per-line copy icon and copy that message to the
+    // clipboard. The inline icon is the first inline image in the block.
+    QTextCursor cursor = cursorForPosition(e->pos());
+    int blockNum = cursor.blockNumber();
+    if (!d->blockMessages.value(blockNum).isEmpty()) {
+        // Inspect the current block's char formats to see if the click
+        // landed inside the inline image. We approximate the hit zone as
+        // the first 18 px at the block's left edge after the text.
+        QTextBlock block = cursor.block();
+        QTextLayout* layout = block.layout();
+        if (layout) {
+            QTextLine line = layout->lineAt(0);
+            QPointF blockPos = block.layout()->position();
+            qreal textWidth = line.cursorToX(block.length() - 1);
+            QRectF iconRect(blockPos.x() + textWidth, blockPos.y(), 18.0, line.height());
+            if (iconRect.contains(e->pos())) {
+                QString text = d->blockMessages.value(blockNum);
+                if (QClipboard* cb = QGuiApplication::clipboard()) {
+                    cb->setText(text);
+                    QToolTip::showText(e->globalPosition().toPoint(),
+                                       tr("Copied to clipboard"), this);
+                }
+                e->accept();
+                return;
+            }
+        }
+    }
+    QTextEdit::mousePressEvent(e);
+}
+
+void ReportOutput::mouseMoveEvent(QMouseEvent* e)
+{
+    QTextCursor cursor = cursorForPosition(e->pos());
+    int blockNum = cursor.blockNumber();
+    if (!d->blockMessages.value(blockNum).isEmpty()) {
+        QTextBlock block = cursor.block();
+        if (QTextLayout* layout = block.layout()) {
+            QTextLine line = layout->lineAt(0);
+            QPointF blockPos = layout->position();
+            qreal textWidth = line.cursorToX(block.length() - 1);
+            QRectF iconRect(blockPos.x() + textWidth, blockPos.y(), 18.0, line.height());
+            if (iconRect.contains(e->pos())) {
+                if (!QToolTip::isVisible()
+                    || QToolTip::text() != tr("Click to copy this message")) {
+                    QToolTip::showText(
+                        e->globalPosition().toPoint() + QPoint(0, 16),
+                        tr("Click to copy this message"), this);
+                }
+                setCursor(Qt::PointingHandCursor);
+                return;
+            }
+        }
+    }
+    setCursor(Qt::IBeamCursor);
+    QTextEdit::mouseMoveEvent(e);
 }
 
 void ReportOutput::changeEvent(QEvent* ev)

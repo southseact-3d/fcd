@@ -181,6 +181,10 @@ protected:
     void contextMenuEvent(QContextMenuEvent* e) override;
     /** Handle shortcut override events */
     bool event(QEvent* event) override;
+    /** Handle clicks on per-line copy icons */
+    void mousePressEvent(QMouseEvent* e) override;
+    /** Show tooltip when hovering per-line copy icons */
+    void mouseMoveEvent(QMouseEvent* e) override;
 
 public Q_SLOTS:
     /** Save the report messages into a file. */

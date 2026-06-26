@@ -1,5 +1,6 @@
 <RCC>
     <qresource>
+        <file>icons/Part_Boolean.svg</file>
         <file>icons/booleans/Part_BooleanFragments.svg</file>
         <file>icons/booleans/Part_Booleans.svg</file>
         <file>icons/booleans/Part_CheckGeometry.svg</file>
@@ -49,7 +50,10 @@
         <file>icons/tools/Part_Chamfer.svg</file>
         <file>icons/tools/Part_ColorFace.svg</file>
         <file>icons/tools/Part_Element_Copy.svg</file>
+        <file>icons/tools/Part_SimpleCopy.svg</file>
+        <file>icons/tools/Part_ToleranceSet.svg</file>
         <file>icons/tools/Part_Extrude.svg</file>
+        <file>icons/tools/Part_FaceOffset.svg</file>
         <file>icons/tools/Part_Scale.svg</file>
         <file>icons/tools/Part_Fillet.svg</file>
         <file>icons/tools/Part_Loft.svg</file>

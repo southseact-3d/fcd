@@ -29,7 +29,6 @@ from SlicerCore.printer_profiles import (
     ResinMaterialProfile,
     ResinProfile,
 )
-from SlicerCore.libslic3r_wrapper import LibSlic3rWrapper
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -173,7 +172,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
         self.setMinimumWidth(320)
 
         self._profile_manager = ProfileManager()
-        self._prusa_wrapper = LibSlic3rWrapper()
         self._current_mode: str = _MODE_FDM
         self._suppress_signals: bool = False
 
@@ -204,7 +202,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
         self._main_layout.addWidget(self._build_mode_section())
         self._main_layout.addWidget(self._build_printer_section())
         self._main_layout.addWidget(self._build_material_section())
-        self._main_layout.addWidget(self._build_engine_section())
 
         self._fdm_settings_widget = self._build_fdm_settings()
         self._main_layout.addWidget(self._fdm_settings_widget)
@@ -283,62 +280,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
         )
         row.addWidget(self._material_combo, 1)
         layout.addLayout(row)
-
-        gb.setLayout(layout)
-        return gb
-
-    # ------------------------------------------------------------------
-    # Engine selector (FDM only)
-    # ------------------------------------------------------------------
-
-    def _build_engine_section(self) -> QtWidgets.QGroupBox:
-        gb = _make_group_box("Slicing Engine")
-        self._engine_group_box = gb
-        layout = QtWidgets.QVBoxLayout()
-
-        self._builtin_radio = QtWidgets.QRadioButton("Built-in Slicer")
-        self._builtin_radio.setToolTip("Use the built-in Python slicing engine")
-        self._builtin_radio.setChecked(True)
-
-        self._prusa_radio = QtWidgets.QRadioButton("PrusaSlicer (libslic3r)")
-        self._prusa_radio.setToolTip(
-            "Use PrusaSlicer CLI as the slicing backend "
-            "(requires PrusaSlicer to be installed)"
-        )
-
-        engine_btn_group = QtWidgets.QButtonGroup(self)
-        engine_btn_group.addButton(self._builtin_radio)
-        engine_btn_group.addButton(self._prusa_radio)
-        self._engine_group = engine_btn_group
-
-        layout.addWidget(self._builtin_radio)
-        layout.addWidget(self._prusa_radio)
-
-        self._prusa_path_widget = QtWidgets.QWidget()
-        prusa_layout = QtWidgets.QHBoxLayout(self._prusa_path_widget)
-        prusa_layout.setContentsMargins(20, 0, 0, 0)
-        self._prusa_path_edit = QtWidgets.QLineEdit()
-        self._prusa_path_edit.setPlaceholderText("Path to PrusaSlicer binary")
-        self._prusa_path_edit.setToolTip("Full path to the PrusaSlicer executable")
-        self._prusa_browse_btn = QtWidgets.QPushButton("Browse...")
-        self._prusa_browse_btn.setMaximumWidth(60)
-        prusa_layout.addWidget(self._prusa_path_edit, 1)
-        prusa_layout.addWidget(self._prusa_browse_btn)
-        layout.addWidget(self._prusa_path_widget)
-        self._prusa_path_widget.setVisible(False)
-
-        self._prusa_status_label = QtWidgets.QLabel("")
-        self._prusa_status_label.setStyleSheet("font-size: 10px;")
-        layout.addWidget(self._prusa_status_label)
-
-        if self._prusa_wrapper.is_available():
-            version = self._prusa_wrapper.get_version()
-            self._prusa_status_label.setText(f"PrusaSlicer detected -- {version}")
-            self._prusa_status_label.setStyleSheet("color: green; font-size: 10px;")
-        else:
-            self._prusa_status_label.setText("PrusaSlicer not found on this system")
-            self._prusa_status_label.setStyleSheet("color: red; font-size: 10px;")
-            self._prusa_radio.setEnabled(False)
 
         gb.setLayout(layout)
         return gb
@@ -942,8 +883,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
 
     def _connect_signals(self) -> None:
         self._fdm_radio.toggled.connect(self._on_mode_changed)
-        self._prusa_radio.toggled.connect(self._on_engine_changed)
-        self._prusa_browse_btn.clicked.connect(self._on_prusa_browse)
         self._printer_combo.currentIndexChanged.connect(self._on_printer_changed)
         self._material_combo.currentIndexChanged.connect(self._on_material_changed)
         self._output_browse_btn.clicked.connect(self._on_browse_output)
@@ -1020,7 +959,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
         is_fdm = self._current_mode == _MODE_FDM
         self._fdm_settings_widget.setVisible(is_fdm)
         self._resin_settings_widget.setVisible(not is_fdm)
-        self._engine_group_box.setVisible(is_fdm)
         self._update_output_formats()
 
     def _update_output_formats(self) -> None:
@@ -1085,19 +1023,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
             self._resin_retract_speed.setValue(profile.retract_speed)
         self._on_settings_changed()
 
-    def _on_engine_changed(self, checked: bool) -> None:
-        show_prusa = self._prusa_radio.isChecked()
-        self._prusa_path_widget.setVisible(show_prusa)
-
-    def _on_prusa_browse(self) -> None:
-        path = _browse_file(
-            self,
-            "Select PrusaSlicer Executable",
-            "Executables (*.exe);;All Files (*)",
-        )
-        if path:
-            self._prusa_path_edit.setText(path)
-
     def _on_browse_output(self) -> None:
         path = _browse_directory(self, "Select Output Directory")
         if path:
@@ -1150,8 +1075,7 @@ class SlicerTaskPanel(QtWidgets.QWidget):
             "material_index": self._material_combo.currentIndex(),
             "output_format": self._output_format_combo.currentText(),
             "output_dir": self._output_dir_edit.text().strip(),
-            "engine": "prusa" if self._prusa_radio.isChecked() else "builtin",
-            "prusa_path": self._prusa_path_edit.text().strip(),
+            "engine": "builtin",
         }
 
         if self._current_mode == _MODE_FDM:
@@ -1223,13 +1147,6 @@ class SlicerTaskPanel(QtWidgets.QWidget):
             mi = settings_dict.get("material_index", -1)
             if 0 <= mi < self._material_combo.count():
                 self._material_combo.setCurrentIndex(mi)
-
-            engine = settings_dict.get("engine", "builtin")
-            if engine == "prusa" and self._prusa_radio.isEnabled():
-                self._prusa_radio.setChecked(True)
-            else:
-                self._builtin_radio.setChecked(True)
-            self._prusa_path_edit.setText(settings_dict.get("prusa_path", ""))
 
             fmt = settings_dict.get("output_format", "")
             idx = self._output_format_combo.findText(fmt)

@@ -365,7 +365,7 @@ class MeshData:
     @classmethod
     def from_freecad_mesh(cls, mesh_obj: Mesh.Mesh, name: str = "") -> MeshData:
         """Extract MeshData from a FreeCAD Mesh.Mesh object."""
-        pts = mesh_obj.getPoints()
+        pts = mesh_obj.Points
         verts: List[float] = []
         for pt in pts:
             verts.extend([pt.x, pt.y, pt.z])

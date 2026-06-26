@@ -1,9 +1,11 @@
 """
 Wrapper around PrusaSlicer CLI for FDM slicing via libslic3r.
 
-Provides a Python interface to PrusaSlicer's command-line slicing engine,
-translating application-level settings into PrusaSlicer parameters and
-parsing the resulting output.
+DEPRECATED: Tungsten CAD no longer uses PrusaSlicer as a slicing engine. The
+built-in FDM engine in :mod:`SlicerCore.fdm_slicer` is used exclusively. This
+module is retained so that any third-party code or tests importing it do not
+break, but it is no longer invoked by the Slicer workbench and will be removed
+in a future release.
 
 License: LGPL-2.1-or-later
 """

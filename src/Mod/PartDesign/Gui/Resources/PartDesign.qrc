@@ -1,6 +1,7 @@
 <RCC>
     <qresource>
         <file>icons/PartDesign_AdditiveBox.svg</file>
+        <file>icons/PartDesign_AdditiveCoil.svg</file>
         <file>icons/PartDesign_AdditiveCone.svg</file>
         <file>icons/PartDesign_AdditiveCylinder.svg</file>
         <file>icons/PartDesign_AdditiveEllipsoid.svg</file>
@@ -15,6 +16,7 @@
         <file>icons/PartDesign_Body.svg</file>
         <file alias="icons/PartDesign_Body_Create_New.svg">icons/PartDesign_Body.svg</file>
         <file>icons/PartDesign_Boolean.svg</file>
+        <file>icons/PartDesign_BrickTexture.svg</file>
         <file>icons/PartDesign_Chamfer.svg</file>
         <file>icons/PartDesign_Clone.svg</file>
         <file>icons/PartDesign_CoordinateSystem.svg</file>
@@ -43,8 +45,10 @@
         <file>icons/PartDesign_Scaled.svg</file>
         <file>icons/PartDesign_ShapeBinder.svg</file>
         <file>icons/PartDesign_Sprocket.svg</file>
+        <file>icons/PartDesign_StoneTexture.svg</file>
         <file>icons/PartDesign_SubShapeBinder.svg</file>
         <file>icons/PartDesign_SubtractiveBox.svg</file>
+        <file>icons/PartDesign_SubtractiveCoil.svg</file>
         <file>icons/PartDesign_SubtractiveCone.svg</file>
         <file>icons/PartDesign_SubtractiveCylinder.svg</file>
         <file>icons/PartDesign_SubtractiveEllipsoid.svg</file>
@@ -56,6 +60,7 @@
         <file>icons/PartDesign_SubtractiveTorus.svg</file>
         <file>icons/PartDesign_SubtractiveWedge.svg</file>
         <file>icons/PartDesign_Thickness.svg</file>
+        <file>icons/PartDesign_WoodPlankTexture.svg</file>
         <file>icons/PartDesignWorkbench.svg</file>
         <file>images/hole_counterbore_angled.svg</file>
         <file>images/hole_counterbore_angled_included.svg</file>

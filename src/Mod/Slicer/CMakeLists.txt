@@ -78,7 +78,7 @@ fc_target_copy_resource(SlicerScripts
 
 fc_target_copy_resource(SlicerScripts
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_BINARY_DIR}/Mod/Slicer
+    ${CMAKE_BINARY_DIR}/Mod/Slicer/Resources
     ${Slicer_Resources})
 
 install(
@@ -107,4 +107,11 @@ install(
         ${Slicer_Profiles}
     DESTINATION
         Mod/Slicer/Profiles
+)
+
+install(
+    FILES
+        ${Slicer_Resources}
+    DESTINATION
+        Mod/Slicer/Resources/icons
 )

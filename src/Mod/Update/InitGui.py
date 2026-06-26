@@ -3,7 +3,10 @@
 Adds a "Check for Updates" command to the Help menu across all workbenches.
 """
 
+import os
 import threading
+
+_UPDATE_ICON = os.path.join(os.path.dirname(__file__), "icon.svg")
 
 try:
     import FreeCAD
@@ -103,15 +106,13 @@ try:
 
         def GetResources(self):
             return {
-                "Pixmap": os.path.join(os.path.dirname(__file__), "icon.svg"),
+                "Pixmap": _UPDATE_ICON,
                 "MenuText": "Check for Updates...",
                 "ToolTip": "Check for and install dev patch updates from GitHub Actions",
             }
 
         def IsActive(self):
             return True
-
-    import os
 
     FreeCADGui.addCommand("Tungsten_UpdateCheck", _UpdateCommand())
 

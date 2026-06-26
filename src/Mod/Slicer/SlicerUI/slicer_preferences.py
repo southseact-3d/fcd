@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 from typing import Any, Dict, List, Optional
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -30,7 +29,6 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     },
     "fdm_engine": {
         "engine": "builtin",
-        "prusaslicer_path": "",
         "default_printer": "",
         "default_material": "",
     },
@@ -351,39 +349,16 @@ class _FDMEngineTab(QtWidgets.QWidget):
         self._settings = settings.get("fdm_engine", {})
         layout = QtWidgets.QVBoxLayout(self)
 
-        engine_group = QtWidgets.QGroupBox("Slicing Engine")
-        engine_layout = QtWidgets.QVBoxLayout(engine_group)
-
-        self._builtin_radio = QtWidgets.QRadioButton("Built-in Engine")
-        self._builtin_radio.setToolTip("Use the built-in Python slicer (experimental)")
-        self._prusaslicer_radio = QtWidgets.QRadioButton("PrusaSlicer")
-        self._prusaslicer_radio.setToolTip("Use PrusaSlicer as an external engine")
-        engine_layout.addWidget(self._builtin_radio)
-        engine_layout.addWidget(self._prusaslicer_radio)
-
-        if self._settings.get("engine", "builtin") == "prusaslicer":
-            self._prusaslicer_radio.setChecked(True)
-        else:
-            self._builtin_radio.setChecked(True)
-
-        path_layout = QtWidgets.QHBoxLayout()
-        self._prusaslicer_path = QtWidgets.QLineEdit(
-            self._settings.get("prusaslicer_path", "")
+        info_group = QtWidgets.QGroupBox("Slicing Engine")
+        info_layout = QtWidgets.QVBoxLayout(info_group)
+        info_label = QtWidgets.QLabel(
+            "Tungsten CAD uses the built-in Python slicing engine for both FDM "
+            "and Resin workflows. No external binaries (e.g. PrusaSlicer) are "
+            "required or probed at startup."
         )
-        self._prusaslicer_path.setPlaceholderText("Path to PrusaSlicer executable")
-        self._prusaslicer_path_btn = QtWidgets.QPushButton("Browse...")
-        self._test_btn = QtWidgets.QPushButton("Test")
-        self._test_btn.setToolTip("Verify the PrusaSlicer binary responds to --version")
-        path_layout.addWidget(self._prusaslicer_path, 1)
-        path_layout.addWidget(self._prusaslicer_path_btn)
-        path_layout.addWidget(self._test_btn)
-        engine_layout.addRow("PrusaSlicer Path:", path_layout)
-
-        self._test_result = QtWidgets.QLabel("")
-        self._test_result.setStyleSheet("font-size: 11px;")
-        engine_layout.addRow(self._test_result)
-
-        layout.addWidget(engine_group)
+        info_label.setWordWrap(True)
+        info_layout.addWidget(info_label)
+        layout.addWidget(info_group)
 
         defaults_group = QtWidgets.QGroupBox("Defaults")
         defaults_layout = QtWidgets.QFormLayout(defaults_group)
@@ -404,48 +379,7 @@ class _FDMEngineTab(QtWidgets.QWidget):
         layout.addWidget(defaults_group)
         layout.addStretch()
 
-        self._prusaslicer_path_btn.clicked.connect(self._browse_prusaslicer)
-        self._test_btn.clicked.connect(self._test_prusaslicer)
-
-    def _browse_prusaslicer(self) -> None:
-        path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self,
-            "Select PrusaSlicer Executable",
-            "",
-            "Executables (*.exe);;All Files (*)",
-        )
-        if path:
-            self._prusaslicer_path.setText(path)
-
-    def _test_prusaslicer(self) -> None:
-        path = self._prusaslicer_path.text().strip()
-        if not path or not os.path.isfile(path):
-            self._test_result.setText("File not found")
-            self._test_result.setStyleSheet("color: red; font-size: 11px;")
-            return
-        try:
-            result = subprocess.run(
-                [path, "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            version = result.stdout.strip() or result.stderr.strip()
-            if version:
-                self._test_result.setText(f"OK: {version}")
-                self._test_result.setStyleSheet("color: green; font-size: 11px;")
-            else:
-                self._test_result.setText("Warning: No version output")
-                self._test_result.setStyleSheet("color: orange; font-size: 11px;")
-        except Exception as exc:
-            self._test_result.setText(f"Error: {exc}")
-            self._test_result.setStyleSheet("color: red; font-size: 11px;")
-
     def save(self) -> None:
-        self._settings["engine"] = (
-            "prusaslicer" if self._prusaslicer_radio.isChecked() else "builtin"
-        )
-        self._settings["prusaslicer_path"] = self._prusaslicer_path.text().strip()
         self._settings["default_printer"] = self._default_printer.text().strip()
         self._settings["default_material"] = self._default_material.text().strip()
 
