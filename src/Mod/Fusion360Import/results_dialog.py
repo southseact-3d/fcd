@@ -4,11 +4,12 @@
 Shows:
 
 - The reconstructed body's name
-- How many features and sketches were created
+- How many features, sketches, datums, bodies and occurrences were
+  created.
 - Lists of warnings (e.g. "Fillet radius recovered as 2.5mm but edge
   selection could not be mapped")
-- Lists of skipped items (e.g. "RectangularPattern - deep reference
-  mapping not yet implemented")
+- Lists of skipped items (e.g. "ReplaceFace - no Tungsten CAD
+  equivalent")
 
 The dialog is read-only - the user just clicks "OK" to dismiss.
 """
@@ -26,6 +27,9 @@ class ResultsDialog(QtWidgets.QDialog):
         body_name: str,
         feature_count: int,
         sketch_count: int,
+        construction_count: int,
+        body_count: int,
+        occurrence_count: int,
         skipped: list[str],
         warnings: list[str],
         parent: QtWidgets.QWidget | None = None,
@@ -33,7 +37,7 @@ class ResultsDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.setWindowTitle("Fusion 360 Import Results")
         self.setModal(True)
-        self.resize(520, 400)
+        self.resize(560, 480)
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -41,17 +45,26 @@ class ResultsDialog(QtWidgets.QDialog):
             f"<b>Import complete</b><br>"
             f"Body: <code>{body_name}</code><br>"
             f"Features created: <b>{feature_count}</b><br>"
-            f"Sketches created: <b>{sketch_count}</b>"
+            f"Sketches created: <b>{sketch_count}</b><br>"
+            f"Datums created: <b>{construction_count}</b><br>"
+            f"Bodies created: <b>{body_count}</b> "
+            f"(occurrences: <b>{occurrence_count}</b>)"
         )
         layout.addWidget(summary)
 
         tabs = QtWidgets.QTabWidget()
         layout.addWidget(tabs, 1)
 
-        tabs.addTab(self._make_list_widget(warnings, "No warnings."), "Warnings")
         tabs.addTab(
-            self._make_list_widget(skipped, "Nothing was skipped - all features reconstructed."),
-            "Skipped",
+            self._make_list_widget(warnings, "No warnings."),
+            f"Warnings ({len(warnings)})",
+        )
+        tabs.addTab(
+            self._make_list_widget(
+                skipped,
+                "Nothing was skipped - every Fusion feature was rebuilt.",
+            ),
+            f"Skipped ({len(skipped)})",
         )
 
         button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
@@ -72,12 +85,23 @@ def show(
     body_name: str,
     feature_count: int,
     sketch_count: int,
+    construction_count: int,
+    body_count: int,
+    occurrence_count: int,
     skipped: list[str],
     warnings: list[str],
     parent: QtWidgets.QWidget | None = None,
 ) -> None:
     """Open the results dialog modally."""
     dlg = ResultsDialog(
-        body_name, feature_count, sketch_count, skipped, warnings, parent
+        body_name,
+        feature_count,
+        sketch_count,
+        construction_count,
+        body_count,
+        occurrence_count,
+        skipped,
+        warnings,
+        parent,
     )
     dlg.exec_()

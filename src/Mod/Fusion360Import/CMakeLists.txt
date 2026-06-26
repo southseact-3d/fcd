@@ -13,6 +13,7 @@ set(Fusion360Import_Scripts
     extractor.py
     sketch_rebuilder.py
     feature_rebuilder.py
+    reference_resolver.py
     importer.py
     commands.py
     connection_dialog.py

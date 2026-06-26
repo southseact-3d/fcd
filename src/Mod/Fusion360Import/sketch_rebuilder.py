@@ -160,35 +160,35 @@ def _add_constraints(
     warnings: list[str] = []
     for con in constraints:
         ctype = con.get("type", "")
+        tokens = con.get("entities") or []
+        indices = con.get("entity_indices")
         try:
             if ctype == "HorizontalConstraint":
                 sketch.addConstraint(Sketcher.Constraint("Horizontal", _first(con, curve_geo_ids)))
             elif ctype == "VerticalConstraint":
                 sketch.addConstraint(Sketcher.Constraint("Vertical", _first(con, curve_geo_ids)))
             elif ctype in ("CoincidentConstraint",):
-                ents = con.get("entities") or []
-                ids = _resolve_entities(ents, curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 if len(ids) >= 2 and ids[0] is not None and ids[1] is not None:
                     sketch.addConstraint(Sketcher.Constraint("Coincident", ids[0], 2, ids[1], 1))
             elif ctype in ("TangentConstraint",):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 sketch.addConstraint(Sketcher.Constraint("Tangent", _safe(ids, 0), _safe(ids, 1)))
             elif ctype in ("EqualConstraint",):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 sketch.addConstraint(Sketcher.Constraint("Equal", _safe(ids, 0), _safe(ids, 1)))
             elif ctype in ("SymmetricConstraint",):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 sketch.addConstraint(Sketcher.Constraint("Symmetric", _safe(ids, 0), 1, _safe(ids, 1), 1, _safe(ids, 2)))
             elif ctype in ("DistanceConstraint",):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 val = con.get("value")
                 if val is None:
                     continue
-                # Heuristic: if both endpoints look like points, treat as DistanceX/Y
                 if len(ids) == 2 and ids[0] is not None and ids[1] is not None:
                     sketch.addConstraint(Sketcher.Constraint("Distance", ids[0], 2, ids[1], 1, float(val)))
             elif ctype in ("RadiusConstraint", "DiameterConstraint"):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 val = con.get("value")
                 if val is not None and ids and ids[0] is not None:
                     sketch.addConstraint(Sketcher.Constraint("Radius", ids[0], float(val)))
@@ -196,16 +196,15 @@ def _add_constraints(
                 val = con.get("value")
                 if val is None:
                     continue
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 sketch.addConstraint(Sketcher.Constraint("Angle", _safe(ids, 0), _safe(ids, 1), float(val)))
             elif ctype in ("PerpendicularConstraint",):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 sketch.addConstraint(Sketcher.Constraint("Perpendicular", _safe(ids, 0), _safe(ids, 1)))
             elif ctype in ("ParallelConstraint",):
-                ids = _resolve_entities(con.get("entities") or [], curve_geo_ids, point_geo_ids)
+                ids = _resolve_entities(tokens, curve_geo_ids, point_geo_ids, indices)
                 sketch.addConstraint(Sketcher.Constraint("Parallel", _safe(ids, 0), _safe(ids, 1)))
             else:
-                # Dimensional constraints of unknown type - skip silently.
                 continue
         except Exception as exc:
             warnings.append(f"Could not add {ctype}: {exc}")
@@ -229,25 +228,34 @@ def _resolve_entities(
     fusion_tokens: list[str | None],
     curve_geo_ids: list[int],
     point_geo_ids: list[int],
+    fusion_indices: list[int | None] | None = None,
 ) -> list[int]:
-    """Translate Fusion entity tokens into FreeCAD GeoIds.
+    """Translate Fusion entity tokens / indices into FreeCAD GeoIds.
 
-    The Fusion extractor returns opaque entity tokens that we cannot
-    map back to specific GeoIds without rebuilding the full topology.
-    In practice we only need to assign *some* GeoId so the constraint
-    has geometry to attach to; we fall back to the first curve/point
-    for any token we cannot resolve.
+    The Fusion extractor returns two parallel arrays:
+
+    - ``fusion_tokens``  - opaque UUID strings for each referenced
+      entity (curve, edge or vertex).
+    - ``fusion_indices`` - the *positional index* of the entity within
+      its sketch (0, 1, 2, ...).  This is the more reliable mapping
+      because the index matches the order we built the geometry in.
+
+    We prefer the positional index when available; otherwise we fall
+    back to the old behaviour of cycling through the GeoIds we have.
     """
     out: list[int] = []
-    for token in fusion_tokens:
-        out.append(-1)  # placeholder, replaced below
-    # Use the curve/point indices in order, cycling if needed.
     sources = curve_geo_ids + point_geo_ids
-    for i in range(len(out)):
-        if sources:
-            out[i] = sources[i % len(sources)]
+    for i, token in enumerate(fusion_tokens or []):
+        idx = None
+        if fusion_indices is not None and i < len(fusion_indices):
+            idx = fusion_indices[i]
+        if idx is not None and idx >= 0 and idx < len(sources):
+            out.append(int(sources[idx]))
+        elif sources:
+            # Fall back: cycle through the GeoIds we have.
+            out.append(int(sources[i % len(sources)]))
         else:
-            out[i] = -1
+            out.append(-1)
     return out
 
 

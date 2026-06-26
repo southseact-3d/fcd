@@ -14,8 +14,9 @@ README_TEXT = """\
 <h2>Fusion 360 Import for Tungsten CAD</h2>
 <p>
 This workbench lets you open a Fusion 360 design and rebuild it as a
-fully parametric Tungsten CAD document - sketches, parameters and
-feature tree are all reconstructed.
+fully parametric Tungsten CAD document - sketches, parameters,
+patterns, mirror, boolean, fillet, chamfer, hole, primitives, datum
+geometry, sub-components and more.
 </p>
 
 <h3>One-time setup</h3>
@@ -52,44 +53,63 @@ feature tree are all reconstructed.
     <ul>
       <li>Connecting to the MCP add-in</li>
       <li>Sending the extraction script to Fusion</li>
-      <li>Parsing the JSON timeline</li>
+      <li>Parsing the JSON timeline (parameters, sketches,
+        features, bodies, occurrences)</li>
       <li>Copying the exported STEP file</li>
-      <li>Rebuilding sketches, then features</li>
+      <li>Rebuilding parameters (Spreadsheet), then datums,
+        sketches, features and patterns</li>
     </ul>
   </li>
-  <li>The result dialog tells you how many features and sketches were
-    created, and lists anything that was skipped (for example
-    rectangular patterns, which are reconstructed as comments because
-    their internal references are not yet mapped).</li>
+  <li>The result dialog tells you how many features, sketches,
+    datums and bodies were created, and lists anything that was
+    skipped (for example ReplaceFace, which has no Tungsten CAD
+    equivalent).</li>
 </ol>
 
-<h3>What gets reconstructed</h3>
+<h3>What gets reconstructed (full parametric)</h3>
 <table border="1" cellpadding="4" cellspacing="0">
   <tr><th>Fusion 360 feature</th><th>Tungsten CAD feature</th></tr>
-  <tr><td>Extrude (add)</td><td>PartDesign::Pad</td></tr>
-  <tr><td>Extrude (cut)</td><td>PartDesign::Pocket</td></tr>
-  <tr><td>Revolve (add)</td><td>PartDesign::Revolution</td></tr>
-  <tr><td>Revolve (cut)</td><td>PartDesign::Groove</td></tr>
+  <tr><td>Extrude (add/cut/intersect)</td><td>PartDesign::Pad / Pocket</td></tr>
+  <tr><td>Revolve (add/cut)</td><td>PartDesign::Revolution / Groove</td></tr>
+  <tr><td>Loft (add/cut)</td><td>PartDesign::AdditiveLoft / SubtractiveLoft</td></tr>
+  <tr><td>Sweep (add/cut)</td><td>PartDesign::AdditivePipe / SubtractivePipe</td></tr>
+  <tr><td>Coil (helix)</td><td>PartDesign::AdditiveHelix / SubtractiveHelix</td></tr>
+  <tr><td>Hole (with thread)</td><td>PartDesign::Hole</td></tr>
   <tr><td>Fillet</td><td>PartDesign::Fillet</td></tr>
   <tr><td>Chamfer</td><td>PartDesign::Chamfer</td></tr>
-  <tr><td>Hole</td><td>PartDesign::Hole</td></tr>
+  <tr><td>Draft</td><td>PartDesign::Draft</td></tr>
   <tr><td>Shell</td><td>PartDesign::Thickness</td></tr>
+  <tr><td>Rectangular Pattern</td><td>PartDesign::LinearPattern</td></tr>
+  <tr><td>Circular Pattern</td><td>PartDesign::PolarPattern</td></tr>
+  <tr><td>Path Pattern</td><td>PartDesign::PatternOnPath</td></tr>
+  <tr><td>Mirror</td><td>PartDesign::Mirrored</td></tr>
+  <tr><td>Scale</td><td>PartDesign::Scaled</td></tr>
+  <tr><td>Boolean / Combine (Join/Cut/Intersect)</td><td>PartDesign::Boolean</td></tr>
   <tr><td>Box primitive</td><td>PartDesign::AdditiveBox</td></tr>
   <tr><td>Cylinder primitive</td><td>PartDesign::AdditiveCylinder</td></tr>
+  <tr><td>Sphere primitive</td><td>PartDesign::AdditiveSphere</td></tr>
+  <tr><td>Torus primitive</td><td>PartDesign::AdditiveTorus</td></tr>
+  <tr><td>Cone primitive</td><td>PartDesign::AdditiveCone</td></tr>
+  <tr><td>Construction plane</td><td>Part::DatumPlane</td></tr>
+  <tr><td>Construction axis</td><td>Part::DatumLine</td></tr>
+  <tr><td>Construction point</td><td>Part::DatumPoint</td></tr>
   <tr><td>Sketch + constraints</td><td>Sketcher::SketchObject</td></tr>
-  <tr><td>User/Model parameters</td><td>Spreadsheet parameters + properties</td></tr>
+  <tr><td>User/Model parameters</td><td>Spreadsheet::Sheet</td></tr>
+  <tr><td>Occurrences (assemblies)</td><td>PartDesign::Body + transform</td></tr>
 </table>
 
-<h3>Limitations</h3>
+<h3>Recorded but not rebuilt</h3>
 <ul>
-  <li>Rectangular and circular patterns are recorded but not yet
-    rebuilt - the deep reference mapping needs to be added.</li>
-  <li>Mirrored features are recorded but not yet rebuilt.</li>
-  <li>Loft, sweep and coil features are recorded but not yet rebuilt.</li>
-  <li>Fillet/chamfer edge selection is set to "use all edges" as a
-    first pass - refine the selection in the GUI if needed.</li>
-  <li>Assemblies are flattened into a single body. Multi-body
-    reconstruction is on the roadmap.</li>
+  <li>ReplaceFace, BoundaryFill, Patch, Stitch, Unstitch, Thicken,
+    Form, Rip, SilhouetteSplit, RuleFillet, Pipe-wall, Rib, Web -
+    Fusion surface-only operations with no PartDesign equivalent.
+  </li>
+  <li>Cosmetic Thread features (ThreadFeature on existing cylindrical
+    faces) - add a PartDesign Hole with Threaded=True manually.
+  </li>
+  <li>Components inside assemblies are flattened to a single Body;
+    parametric children cannot be reconstructed from F3D alone.
+  </li>
 </ul>
 
 <h3>Troubleshooting</h3>
@@ -105,6 +125,9 @@ feature tree are all reconstructed.
   <li><b>Sketch misaligned:</b> If Fusion's reference plane is not
     XY/XZ/YZ the rebuilder falls back to XY. Reattach the sketch in
     the GUI after import.</li>
+  <li><b>Pattern direction unresolved:</b> Some Fusion patterns
+    reference custom datum planes or faces. The pattern is created
+    but with no direction - set it manually in the property panel.</li>
 </ul>
 """
 
@@ -113,7 +136,7 @@ def show(parent: QtWidgets.QWidget | None = None) -> None:
     """Open the help dialog modally."""
     dialog = QtWidgets.QDialog(parent)
     dialog.setWindowTitle("Fusion 360 Import - Help")
-    dialog.resize(640, 640)
+    dialog.resize(680, 720)
 
     layout = QtWidgets.QVBoxLayout(dialog)
     text = QtWidgets.QTextBrowser()

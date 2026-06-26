@@ -27,6 +27,7 @@ __all__ = [
     "extractor",
     "sketch_rebuilder",
     "feature_rebuilder",
+    "reference_resolver",
     "importer",
     "commands",
     "connection_dialog",
