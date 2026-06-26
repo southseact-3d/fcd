@@ -1,6 +1,6 @@
 <RCC>
     <qresource>
-        <file>icons/Part_Boolean.svg</file>
+        <file>icons/booleans/Part_Boolean.svg</file>
         <file>icons/booleans/Part_BooleanFragments.svg</file>
         <file>icons/booleans/Part_Booleans.svg</file>
         <file>icons/booleans/Part_CheckGeometry.svg</file>
