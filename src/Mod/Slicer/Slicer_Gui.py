@@ -717,32 +717,31 @@ class Slicer_GenerateSupportsCommand:
             )
             worker = _SupportWorker(generator, m, settings)
             Slicer_GenerateSupportsCommand._worker = worker
-        Slicer_GenerateSupportsCommand._worker = worker
 
-        def _on_progress(pct, msg):
-            FreeCAD.Console.PrintMessage(f"[Slicer] Support gen: {pct}% - {msg}\n")
+            def _on_progress(pct, msg):
+                FreeCAD.Console.PrintMessage(f"[Slicer] Support gen: {pct}% - {msg}\n")
 
-        def _on_finished(result):
-            if result is None:
-                FreeCAD.Console.PrintError("[Slicer] Support generation returned None.\n")
-                return
-            FreeCAD.Console.PrintMessage("[Slicer] Support generation complete.\n")
-            try:
-                panel = SupportPaintWidget()
-                Slicer_GenerateSupportsCommand._panel = panel
-                FreeCADGui.Control.showDialog(panel)
-            except Exception:
-                FreeCAD.Console.PrintError(
-                    f"[Slicer] Cannot open support editor: {traceback.format_exc()}\n"
-                )
+            def _on_finished(result):
+                if result is None:
+                    FreeCAD.Console.PrintError("[Slicer] Support generation returned None.\n")
+                    return
+                FreeCAD.Console.PrintMessage("[Slicer] Support generation complete.\n")
+                try:
+                    panel = SupportPaintWidget()
+                    Slicer_GenerateSupportsCommand._panel = panel
+                    FreeCADGui.Control.showDialog(panel)
+                except Exception:
+                    FreeCAD.Console.PrintError(
+                        f"[Slicer] Cannot open support editor: {traceback.format_exc()}\n"
+                    )
 
-        def _on_error(msg):
-            FreeCAD.Console.PrintError(f"[Slicer] Support generation failed: {msg}\n")
+            def _on_error(msg):
+                FreeCAD.Console.PrintError(f"[Slicer] Support generation failed: {msg}\n")
 
-        worker.progress.connect(_on_progress)
-        worker.finished.connect(_on_finished)
-        worker.error.connect(_on_error)
-        worker.start()
+            worker.progress.connect(_on_progress)
+            worker.finished.connect(_on_finished)
+            worker.error.connect(_on_error)
+            worker.start()
 
     def IsActive(self):
         return FreeCAD.ActiveDocument is not None and _document_has_meshes()

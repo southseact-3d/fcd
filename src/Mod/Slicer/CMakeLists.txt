@@ -29,6 +29,7 @@ set(Slicer_UI_Scripts
     SlicerUI/gcode_preview_widget.py
     SlicerUI/slicer_output_widget.py
     SlicerUI/slicer_preferences.py
+    SlicerUI/cavity_result_dialog.py
 )
 
 set(Slicer_Profiles
@@ -47,8 +48,12 @@ set(Slicer_Profiles
     Profiles/resin_materials/generic_resin.json
 )
 
+set(Slicer_Resources
+    Resources/icons/Slicer_Workbench.svg
+)
+
 add_custom_target(SlicerScripts ALL
-    SOURCES ${Slicer_Scripts} ${Slicer_Core_Scripts} ${Slicer_UI_Scripts} ${Slicer_Profiles}
+    SOURCES ${Slicer_Scripts} ${Slicer_Core_Scripts} ${Slicer_UI_Scripts} ${Slicer_Profiles} ${Slicer_Resources}
 )
 
 fc_target_copy_resource(SlicerScripts
@@ -70,6 +75,11 @@ fc_target_copy_resource(SlicerScripts
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_BINARY_DIR}/Mod/Slicer
     ${Slicer_Profiles})
+
+fc_target_copy_resource(SlicerScripts
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/Mod/Slicer
+    ${Slicer_Resources})
 
 install(
     FILES
