@@ -121,7 +121,7 @@ try:
     class _UpdateMenuManipulator:
         def modifyMenuBar(self):
             return [
-                {"insert": "Tungsten_UpdateCheck", "menuItem": "Std_About", "after": ""},
+                {"insert": "Tungsten_UpdateCheck", "menuItem": "Std_ReportBug", "after": ""},
             ]
 
     FreeCADGui.addWorkbenchManipulator(_UpdateMenuManipulator())
