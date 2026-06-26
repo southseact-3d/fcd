@@ -26,6 +26,10 @@ if(BUILD_FEM)
     add_subdirectory(Fem)
 endif(BUILD_FEM)
 
+if(BUILD_FUSION360IMPORT)
+    add_subdirectory(Fusion360Import)
+endif(BUILD_FUSION360IMPORT)
+
 if(BUILD_HELP)
   add_subdirectory(Help)
 endif(BUILD_HELP)
