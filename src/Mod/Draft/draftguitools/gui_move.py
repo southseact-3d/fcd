@@ -244,4 +244,178 @@ class Move(gui_base_original.Modifier):
 
 Gui.addCommand("Draft_Move", Move())
 
+
+class PointToPointMove(gui_base_original.Modifier):
+    """Gui Command for the Point-to-Point Move tool."""
+
+    def GetResources(self):
+        """Set icon, menu and tooltip."""
+        return {
+            "Pixmap": "Draft_Move",
+            "MenuText": QT_TRANSLATE_NOOP("Draft_PointToPointMove", "Point-to-Point Move"),
+            "ToolTip": QT_TRANSLATE_NOOP(
+                "Draft_PointToPointMove",
+                "Move objects by clicking on start and end points.\n"
+                'First click: where objects start, Second click: where objects end.\n'
+                'Works like Fusion 360\'s point-to-point movement.',
+            ),
+        }
+
+    def Activated(self):
+        """Execute when the command is called."""
+        super().Activated(name="PointToPointMove")
+        if not self.ui:
+            return
+
+        self.ghosts = []
+        self.finished = False
+        self.get_object_selection()
+
+    def get_object_selection(self):
+        """Get the object selection."""
+        if Gui.Selection.hasSelection():
+            return self.proceed()
+        self.ui.selectUi(on_close_call=self.finish)
+        _msg(translate("draft", "Select objects to move"))
+        self.call = self.view.addEventCallback("SoEvent", gui_tool_utils.selectObject)
+
+    def proceed(self):
+        """Continue with the command after a selection has been made."""
+        if self.call:
+            self.view.removeEventCallback("SoEvent", self.call)
+        self.selection = FreeCADGui.Selection.getSelectionEx("", 0)
+        selection = self.selection
+        self.ui.lineUi(title=translate("draft", "Point-to-Point Move"), icon="Draft_Move")
+        self.ui.modUi()
+        self.ui.isCopy.setVisible(True)
+        self.ui.isRelative.setVisible(False)
+        self.ui.xValue.setFocus()
+
+        self.call = self.view.addEventCallback("SoEvent", self.action)
+        self.point1 = None
+        self.point2 = None
+        _toolmsg(translate("draft", "Click on start point of movement"))
+        return selection
+
+    def action(self, arg):
+        """Handle the 3D scene events for point-to-point movement."""
+        if arg["Type"] == "SoKeyboardEvent" and arg["Key"] == "ESCAPE":
+            self.finish()
+        elif arg["Type"] == "SoLocation2Event":
+            self.handle_mouse_move_event(arg)
+        elif (
+            arg["Type"] == "SoMouseButtonEvent"
+            and arg["State"] == "DOWN"
+            and arg["Button"] == "BUTTON1"
+        ):
+            self.handle_mouse_click_event(arg)
+
+    def handle_mouse_move_event(self, arg):
+        """Handle the mouse when moving."""
+        for ghost in self.ghosts:
+            ghost.off()
+        self.point, ctrlPoint, info = gui_tool_utils.getPoint(self, arg)
+
+        if self.ghosts:
+            for ghost in self.ghosts:
+                if self.point:
+                    ghost.move(self.point)
+                ghost.on()
+
+        gui_tool_utils.redraw3DView()
+
+    def handle_mouse_click_event(self, arg):
+        """Handle the mouse when the first button is clicked."""
+        if not self.ghosts:
+            self.set_ghosts()
+
+        if not self.point:
+            return
+
+        if self.point1 is None:
+            self.point1 = self.point
+            for ghost in self.ghosts:
+                ghost.on()
+            _toolmsg(translate("draft", "Click on end point of movement"))
+            self.node.append(self.point1)
+            if self.planetrack:
+                self.planetrack.set(self.point1)
+        else:
+            self.point2 = self.point
+            self.ui.redraw()
+
+            self.vector = self.point2.sub(self.point1)
+
+            copy = self.ui.isCopy.isChecked()
+            subelements = self.ui.isSubelementMode.isChecked()
+
+            cmd = "Draft.move_point_to_point(selection, {}, {}, {}, {})".format(
+                DraftVecUtils.toString(self.point1), DraftVecUtils.toString(self.point2),
+                str(copy), str(subelements)
+            )
+            cmd_list = [cmd, "FreeCAD.ActiveDocument.recompute()"]
+            self.commit(_toolmsg(translate("draft", "Move")), cmd_list)
+            self.finish(cont=None)
+
+    def set_ghosts(self):
+        """Set the ghost to display."""
+        for ghost in self.ghosts:
+            ghost.remove()
+        copy = self.ui.isCopy.isChecked()
+        if self.ui.isSubelementMode.isChecked():
+            self.ghosts = self.get_subelement_ghosts(self.selection, copy)
+            if not self.ghosts:
+                _err(translate("draft", "No valid subelements selected"))
+        else:
+            objs, places, _ = utils._modifiers_process_selection(
+                self.selection, copy, add_movable_children=(not copy)
+            )
+            self.ghosts = [trackers.ghostTracker(objs, parent_places=places)]
+
+    def get_subelement_ghosts(self, selection, copy):
+        """Get ghost for the subelements (vertices, edges)."""
+        import Part
+
+        ghosts = []
+        for sel in selection:
+            for sub in sel.SubElementNames if sel.SubElementNames else [""]:
+                if (not copy and "Vertex" in sub) or "Edge" in sub:
+                    shape = Part.getShape(sel.Object, sub, needSubElement=True, retType=0)
+                    ghosts.append(trackers.ghostTracker(shape))
+        return ghosts
+
+    def move(self, vector, copy, subelements):
+        """Perform the move of the subelement(s) or the entire object(s)."""
+        cmd_name = translate("draft", "Move")
+
+        Gui.addModule("Draft")
+        cmd = "Draft.move_point_to_point(selection, "
+        cmd += DraftVecUtils.toString(self.point1) + ", "
+        cmd += DraftVecUtils.toString(self.point2) + ", "
+        cmd += "copy=" + str(copy) + ", "
+        cmd += "subelements=" + str(subelements) + ")"
+        cmd_list = [cmd, "FreeCAD.ActiveDocument.recompute()"]
+        self.commit(cmd_name, cmd_list)
+
+    def numericInput(self, numx, numy, numz):
+        """Validate the entry fields in the user interface."""
+        self.point = App.Vector(numx, numy, numz)
+
+        if self.point1 is None:
+            self.point1 = self.point
+            self.node.append(self.point1)
+            self.ui.isRelative.setVisible(False)
+            self.ui.isCopy.setVisible(True)
+            for ghost in self.ghosts:
+                ghost.on()
+            _toolmsg(translate("draft", "Click on end point"))
+        else:
+            self.point2 = self.point
+            self.vector = self.point2.sub(self.point1)
+            self.move(self.vector, self.ui.isCopy.isChecked(), self.ui.isSubelementMode.isChecked())
+            self.finish(cont=None)
+
+
+Gui.addCommand("Draft_PointToPointMove", PointToPointMove())
+
 ## @}

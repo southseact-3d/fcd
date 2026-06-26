@@ -83,6 +83,7 @@ def get_draft_modification_commands():
 
     return [
         "Draft_Move",
+        "Draft_PointToPointMove",
         "Draft_Rotate",
         "Draft_Scale",
         "Draft_Mirror",

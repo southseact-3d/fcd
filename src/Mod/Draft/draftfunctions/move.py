@@ -243,4 +243,53 @@ def copy_moved_edge(obj, edge_idx, vector, global_place=None):
     return newobj
 
 
+def move_point_to_point(selection, point1=None, point2=None, copy=False, subelements=False):
+    """move_point_to_point(selection, [point1], [point2], [copy], [subelements])
+
+    Performs point-to-point movement: click on point1, then click on point2 to move objects
+    from point1 to point2. This mimics Fusion 360's intuitive point-to-point workflow.
+
+    Parameters
+    ----------
+    selection: single object / list of objects / selection set
+        When dealing with nested objects, use `Gui.Selection.getSelectionEx("", 0)`
+        to create the selection set.
+
+    point1, point2: App.Vector, optional
+        The starting and ending points. If not provided, the GUI will prompt for them.
+        If only point1 is provided, the function will use the first clicked point as point1
+        and then wait for point2.
+
+    copy: bool, optional
+        Defaults to `False`.
+        If `True` the selected objects are not moved, but moved copies are
+        created instead.
+
+    subelements: bool, optional
+        Defaults to `False`.
+        If `True` subelements instead of whole objects are processed.
+        Only used if selection is a selection set.
+
+    Returns
+    -------
+    single object / list with 2 or more objects / empty list
+        The objects (or their copies) that were moved
+    """
+    import FreeCADGui as Gui
+
+    # Convert selection to the right format if needed
+    if selection and not isinstance(selection, list):
+        selection = [selection]
+
+    if point1 is not None and point2 is not None:
+        vector = point2.sub(point1)
+        return move(selection, vector, copy, subelements)
+
+    # Otherwise, start GUI interaction for point-to-point movement
+    if Gui.ActiveDocument:
+        doc_name = Gui.ActiveDocument.Name
+        if hasattr(Gui, "PointToPointMoveCommand"):
+            return Gui.runCommand("Draft_PointToPointMove", [])
+
+    return None
 ## @}

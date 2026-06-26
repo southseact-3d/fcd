@@ -147,7 +147,7 @@ from draftfunctions.fuse import fuse
 
 from draftfunctions.heal import heal
 
-from draftfunctions.move import move, move_vertex, move_edge, copy_moved_edge
+from draftfunctions.move import move, move_point_to_point, move_vertex, move_edge, copy_moved_edge
 
 from draftfunctions.rotate import rotate, rotate_vertex, rotate_edge, copy_rotated_edge
 
