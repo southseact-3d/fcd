@@ -40,6 +40,7 @@
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
+#include <Precision.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -220,6 +221,11 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
         );
     }
 
+    // Strip any placement on the base shape so all geometry we build is in
+    // world coordinates with Location = identity. Matches the pattern used by
+    // Chamfer/Fillet/Draft.
+    TopShape.setTransform(Base::Matrix4D());
+
     auto faces = getFaces(TopShape);
     if (faces.empty()) {
         return new App::DocumentObjectExecReturn(
@@ -243,6 +249,17 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
             QT_TRANSLATE_NOOP("Exception", "Plank dimensions must be positive")
         );
     }
+    if (plankD < 0 || gapW < 0 || gapD < 0) {
+        return new App::DocumentObjectExecReturn(
+            QT_TRANSLATE_NOOP("Exception", "Gap and depth values must be non-negative")
+        );
+    }
+
+    // Small overlap so outward-extruded planks share 3D volume with the base
+    // solid. Without this, BRepAlgoAPI_Fuse produces a disjoint compound when
+    // plank bottoms sit exactly on the base face.
+    const double overlap = 10.0 * Precision::Confusion();
+    const double plankExtrudeTotal = plankD + overlap;
 
     try {
         BRep_Builder builder;
@@ -304,15 +321,22 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
                 stackAxis = vAxis * (1.0 / std::sqrt(2.0)) - uAxis * (1.0 / std::sqrt(2.0));
             }
 
-            int cols = static_cast<int>(std::ceil(faceW / (plankL + gapW)));
-            int rows = static_cast<int>(std::ceil(faceH / (plankH + gapW)));
+            // Treat degenerate gaps as a tight fit to keep integer math well-behaved.
+            double effGapW = std::max(gapW, Precision::Confusion());
 
-            if (cols <= 0 || rows <= 0) {
+            int cols = static_cast<int>(std::ceil(faceW / (plankL + effGapW)));
+            int rows = static_cast<int>(std::ceil(faceH / (plankH + effGapW)));
+
+            // Sanity cap to prevent runaway geometry on tiny faces / huge planks.
+            constexpr int kMaxPlankGrid = 10000;
+            if (cols <= 0 || rows <= 0 || cols > kMaxPlankGrid || rows > kMaxPlankGrid) {
+                FC_WARN(getFullName() << ": skipping face, plank grid out of bounds ("
+                                      << cols << "x" << rows << ")");
                 continue;
             }
 
-            gp_Vec runStep = runAxis * (plankL + gapW);
-            gp_Vec stackStep = stackAxis * (plankH + gapW);
+            gp_Vec runStep = runAxis * (plankL + effGapW);
+            gp_Vec stackStep = stackAxis * (plankH + effGapW);
             gp_Vec runPlank = runAxis * plankL;
             gp_Vec stackPlank = stackAxis * plankH;
 
@@ -322,7 +346,7 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
             for (int row = 0; row < rows; row++) {
                 gp_Vec rowOffset = (row % 2 == 1) ? endOffVec : gp_Vec(0, 0, 0);
 
-                for (int col = -1; col <= cols; col++) {
+                for (int col = 0; col < cols; col++) {
                     gp_Pnt plankOrigin(p00.XYZ()
                         + runStep.XYZ() * col
                         + stackStep.XYZ() * row
@@ -346,9 +370,17 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
                             }
                         }
 
+                        // Translate the clipped profile down by `overlap` so
+                        // its bottom face sits inside the base solid, then
+                        // extrude by `plankD + overlap` outward. This gives a
+                        // single fused solid rather than disjoint ones.
+                        gp_Trsf translation;
+                        translation.SetTranslation(gp_Vec(normal) * (-overlap));
+                        TopoDS_Shape shiftedClipped = clipped.Moved(translation);
                         gp_Vec extrudeVec(normal);
-                        extrudeVec.Multiply(plankD);
-                        TopoDS_Shape plank3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+                        extrudeVec.Multiply(plankExtrudeTotal);
+                        TopoDS_Shape plank3D =
+                            BRepPrimAPI_MakePrism(shiftedClipped, extrudeVec).Shape();
 
                         builder.Add(compound, plank3D);
                     }
@@ -419,7 +451,7 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
                             - runAxis.XYZ() * (gapW / 2.0));
 
                         gp_Vec gapLength = runAxis * gapW;
-                        gp_Vec gapHeight = stackAxis * (plankH + gapW);
+                        gp_Vec gapHeight = stackAxis * (plankH + effGapW);
                         TopoDS_Shape gap2D = makePlankFace(gapOrigin, gapLength, gapHeight);
 
                         try {
@@ -459,8 +491,19 @@ App::DocumentObjectExecReturn* WoodPlankTexture::execute()
                 QT_TRANSLATE_NOOP("Exception", "Failed to fuse wood planks with base shape")
             );
         }
+
         Part::TopoShape result(fuse.Shape());
+
+        // Enforce single-solid body rule (matches Chamfer/Fillet/Draft).
+        if (!isSingleSolidRuleSatisfied(result.getShape())) {
+            return new App::DocumentObjectExecReturn(QT_TRANSLATE_NOOP(
+                "Exception",
+                "Result has multiple solids: enable 'Allow Compound' in the active body."
+            ));
+        }
+
         result = refineShapeIfActive(result);
+        result = getSolid(result);
         this->Shape.setValue(result);
         return App::DocumentObject::StdReturn;
     }

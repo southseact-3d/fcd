@@ -41,6 +41,7 @@
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
+#include <Precision.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -248,6 +249,11 @@ App::DocumentObjectExecReturn* StoneTexture::execute()
         );
     }
 
+    // Strip any placement on the base shape so all geometry we build is in
+    // world coordinates with Location = identity. Matches the pattern used by
+    // Chamfer/Fillet/Draft.
+    TopShape.setTransform(Base::Matrix4D());
+
     auto faces = getFaces(TopShape);
     if (faces.empty()) {
         return new App::DocumentObjectExecReturn(
@@ -285,6 +291,11 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
             QT_TRANSLATE_NOOP("Exception", "Stone size must be positive")
         );
     }
+    if (stoneD < 0 || mortarT < 0 || mortarD < 0) {
+        return new App::DocumentObjectExecReturn(
+            QT_TRANSLATE_NOOP("Exception", "Depth and mortar values must be non-negative")
+        );
+    }
 
     // Use seed for reproducible randomness
     unsigned int seed = Seed.getValue();
@@ -292,6 +303,12 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
         seed = static_cast<unsigned int>(std::random_device{}());
     }
     std::mt19937 rng(seed);
+
+    // Small overlap so outward-extruded stones share 3D volume with the base
+    // solid. Without this, BRepAlgoAPI_Fuse produces a disjoint compound when
+    // stone bottoms sit exactly on the base face.
+    const double overlap = 10.0 * Precision::Confusion();
+    const double stoneExtrudeTotalBase = stoneD + overlap;
 
     try {
         BRep_Builder builder;
@@ -339,15 +356,22 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
             // Size variation controlled by roughness
             std::uniform_real_distribution<> sizeVar(-roughness * 0.2, roughness * 0.2);
 
-            int cols = static_cast<int>(std::ceil(faceW / (stoneS + mortarT)));
-            int rows = static_cast<int>(std::ceil(faceH / (stoneS + mortarT)));
+            // Treat degenerate mortar as a tight fit to keep integer math well-behaved.
+            double effMortarT = std::max(mortarT, Precision::Confusion());
 
-            if (cols <= 0 || rows <= 0) {
+            int cols = static_cast<int>(std::ceil(faceW / (stoneS + effMortarT)));
+            int rows = static_cast<int>(std::ceil(faceH / (stoneS + effMortarT)));
+
+            // Sanity cap to prevent runaway geometry on tiny faces / huge stones.
+            constexpr int kMaxStoneGrid = 10000;
+            if (cols <= 0 || rows <= 0 || cols > kMaxStoneGrid || rows > kMaxStoneGrid) {
+                FC_WARN(getFullName() << ": skipping face, stone grid out of bounds ("
+                                      << cols << "x" << rows << ")");
                 continue;
             }
 
-            gp_Vec uStep = uAxis * (stoneS + mortarT);
-            gp_Vec vStep = vAxis * (stoneS + mortarT);
+            gp_Vec uStep = uAxis * (stoneS + effMortarT);
+            gp_Vec vStep = vAxis * (stoneS + effMortarT);
             gp_Vec rowOffVec = uAxis * (0.5 * stoneS);
 
             std::uniform_real_distribution<> depthDist(-depthVar * stoneD, depthVar * stoneD);
@@ -355,7 +379,7 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
             for (int row = 0; row < rows; row++) {
                 gp_Vec rowOffset = (row % 2 == 1) ? rowOffVec : gp_Vec(0, 0, 0);
 
-                for (int col = -1; col <= cols; col++) {
+                for (int col = 0; col < cols; col++) {
                     // Add size variation
                     double varW = stoneS * (1.0 + sizeVar(rng));
                     double varH = stoneS * (1.0 + sizeVar(rng));
@@ -386,10 +410,18 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
                             }
                         }
 
+                        // Translate clipped profile down by `overlap` so its
+                        // bottom sits inside the base solid, then extrude
+                        // by `stoneD + overlap` outward. This guarantees a
+                        // 3D overlap with the base for a single fused solid.
                         double extrudeD = stoneD + depthDist(rng);
+                        gp_Trsf translation;
+                        translation.SetTranslation(gp_Vec(normal) * (-overlap));
+                        TopoDS_Shape shiftedClipped = clipped.Moved(translation);
                         gp_Vec extrudeVec(normal);
-                        extrudeVec.Multiply(extrudeD);
-                        TopoDS_Shape stone3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+                        extrudeVec.Multiply(extrudeD + overlap);
+                        TopoDS_Shape stone3D =
+                            BRepPrimAPI_MakePrism(shiftedClipped, extrudeVec).Shape();
 
                         builder.Add(compound, stone3D);
                     }
@@ -460,8 +492,8 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
                             + rowOffset.XYZ()
                             - uAxis.XYZ() * (mortarT / 2.0));
 
-                        gp_Vec mortarWidth = uAxis * mortarT;
-                        gp_Vec mortarHeight = vAxis * (stoneS + mortarT);
+gp_Vec mortarWidth = uAxis * mortarT;
+                            gp_Vec mortarHeight = vAxis * (stoneS + effMortarT);
                         TopoDS_Shape mortar2D = makeRectFace(mortarOrigin, mortarWidth, mortarHeight);
 
                         try {
@@ -501,8 +533,19 @@ App::DocumentObjectExecReturn* StoneTexture::executeAshlar(
                 QT_TRANSLATE_NOOP("Exception", "Failed to fuse stones with base shape")
             );
         }
+
         Part::TopoShape result(fuse.Shape());
+
+        // Enforce single-solid body rule (matches Chamfer/Fillet/Draft).
+        if (!isSingleSolidRuleSatisfied(result.getShape())) {
+            return new App::DocumentObjectExecReturn(QT_TRANSLATE_NOOP(
+                "Exception",
+                "Result has multiple solids: enable 'Allow Compound' in the active body."
+            ));
+        }
+
         result = refineShapeIfActive(result);
+        result = getSolid(result);
         this->Shape.setValue(result);
         return App::DocumentObject::StdReturn;
     }
@@ -531,6 +574,11 @@ App::DocumentObjectExecReturn* StoneTexture::executeRubble(
             QT_TRANSLATE_NOOP("Exception", "Stone size must be positive")
         );
     }
+    if (stoneD < 0 || mortarT < 0 || mortarD < 0) {
+        return new App::DocumentObjectExecReturn(
+            QT_TRANSLATE_NOOP("Exception", "Depth and mortar values must be non-negative")
+        );
+    }
 
     // Use seed for reproducible randomness
     unsigned int seed = Seed.getValue();
@@ -538,6 +586,12 @@ App::DocumentObjectExecReturn* StoneTexture::executeRubble(
         seed = static_cast<unsigned int>(std::random_device{}());
     }
     std::mt19937 rng(seed);
+
+    // Small overlap so outward-extruded stones share 3D volume with the base
+    // solid. Without this, BRepAlgoAPI_Fuse produces a disjoint compound when
+    // stone bottoms sit exactly on the base face.
+    const double overlap = 10.0 * Precision::Confusion();
+    const double stoneExtrudeTotalBase = stoneD + overlap;
 
     try {
         BRep_Builder builder;
@@ -583,11 +637,16 @@ App::DocumentObjectExecReturn* StoneTexture::executeRubble(
 
             // For rubble/fieldstone, use grid-based approach with vertex perturbation
             // Cell size is based on stone size
-            double cellSize = stoneS + mortarT;
+            double effMortarT = std::max(mortarT, Precision::Confusion());
+            double cellSize = stoneS + effMortarT;
             int cols = static_cast<int>(std::ceil(faceW / cellSize));
             int rows = static_cast<int>(std::ceil(faceH / cellSize));
 
-            if (cols <= 0 || rows <= 0) {
+            // Sanity cap to prevent runaway geometry on tiny faces / huge stones.
+            constexpr int kMaxStoneGrid = 10000;
+            if (cols <= 0 || rows <= 0 || cols > kMaxStoneGrid || rows > kMaxStoneGrid) {
+                FC_WARN(getFullName() << ": skipping face, stone grid out of bounds ("
+                                      << cols << "x" << rows << ")");
                 continue;
             }
 
@@ -694,10 +753,18 @@ App::DocumentObjectExecReturn* StoneTexture::executeRubble(
                             }
                         }
 
+                        // Translate clipped profile down by `overlap` so its
+                        // bottom sits inside the base solid, then extrude
+                        // by `stoneD + overlap` outward. Guarantees 3D
+                        // overlap with the base for a single fused solid.
                         double extrudeD = stoneD + depthDist(rng);
+                        gp_Trsf translation;
+                        translation.SetTranslation(gp_Vec(normal) * (-overlap));
+                        TopoDS_Shape shiftedClipped = clipped.Moved(translation);
                         gp_Vec extrudeVec(normal);
-                        extrudeVec.Multiply(extrudeD);
-                        TopoDS_Shape stone3D = BRepPrimAPI_MakePrism(clipped, extrudeVec).Shape();
+                        extrudeVec.Multiply(extrudeD + overlap);
+                        TopoDS_Shape stone3D =
+                            BRepPrimAPI_MakePrism(shiftedClipped, extrudeVec).Shape();
 
                         builder.Add(compound, stone3D);
                     }
@@ -815,8 +882,19 @@ App::DocumentObjectExecReturn* StoneTexture::executeRubble(
                 QT_TRANSLATE_NOOP("Exception", "Failed to fuse stones with base shape")
             );
         }
+
         Part::TopoShape result(fuse.Shape());
+
+        // Enforce single-solid body rule (matches Chamfer/Fillet/Draft).
+        if (!isSingleSolidRuleSatisfied(result.getShape())) {
+            return new App::DocumentObjectExecReturn(QT_TRANSLATE_NOOP(
+                "Exception",
+                "Result has multiple solids: enable 'Allow Compound' in the active body."
+            ));
+        }
+
         result = refineShapeIfActive(result);
+        result = getSolid(result);
         this->Shape.setValue(result);
         return App::DocumentObject::StdReturn;
     }
