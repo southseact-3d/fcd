@@ -250,7 +250,7 @@ private:
 
     friend class TaskDialogPy;
     friend class TaskView;
-    friend class ToolSettingsPanel;
+    friend class ::Gui::ToolSettingsPanel;
 };
 
 }  // namespace TaskView
