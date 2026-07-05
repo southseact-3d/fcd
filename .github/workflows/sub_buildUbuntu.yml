@@ -165,30 +165,26 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install ifcopenshell==0.8.2 --break-system-packages
 
-      - name: Install shiboken6-generator (provides sbkversion.h)
+      - name: Verify shiboken6 setup
         run: |
-          # The KDE Neon libshiboken6-py3-6.11 apt package DOES ship
-          # sbkversion.h, but at:
+          # The KDE Neon libshiboken6-py3-6.11 apt package already ships
+          # sbkversion.h at:
           #   /usr/lib/python3/dist-packages/shiboken6/include/shiboken6/sbkversion.h
           # (note the nested 'shiboken6/' subdir). The apt-installed
           # Shiboken6Config.cmake only adds the parent 'include/' dir to
-          # SHIBOKEN_INCLUDE_DIR, so #include <sbkversion.h> fails.
+          # SHIBOKEN_INCLUDE_DIR, so #include <sbkversion.h> would fail
+          # without our patched cMake/FindShiboken6.cmake (which appends
+          # the nested subdir).
           #
-          # As a robust fallback, also pip-install shiboken6 +
-          # shiboken6-generator. This puts sbkversion.h at:
-          #   ~/.local/lib/python3.12/site-packages/shiboken6_generator/include/sbkversion.h
-          # (directly in include/, no subdir) which our patched
-          # cMake/FindShiboken6.cmake picks up via find_path.
-          #
-          # Version pinning: KDE Neon's PySide6 apt package is 6.11.1, so
-          # we install matching 6.11.1 shiboken6 via pip. Earlier versions
-          # (6.8.x) caused ABI mismatches with the apt-installed PySide6.
-          python3 -m pip install --break-system-packages \
-            "shiboken6==6.11.1" \
-            "shiboken6-generator==6.11.1"
-
-          # Quick verification: print where sbkversion.h now lives.
-          find / -name 'sbkversion.h' 2>/dev/null | head -5
+          # This step just verifies sbkversion.h is present and prints
+          # where, so failures are easy to diagnose.
+          echo "=== sbkversion.h locations ==="
+          find /usr/lib/python3 -name 'sbkversion.h' 2>/dev/null
+          if ! find /usr/lib/python3 -name 'sbkversion.h' 2>/dev/null | grep -q .; then
+            echo "::error::sbkversion.h not found under /usr/lib/python3"
+            exit 1
+          fi
+          echo "✓ sbkversion.h present"
 
       - name: Install AppImage tooling
         run: |
