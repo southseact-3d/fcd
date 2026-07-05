@@ -167,45 +167,28 @@ jobs:
 
       - name: Install shiboken6-generator (provides sbkversion.h)
         run: |
-          # The KDE Neon apt packages for shiboken6 do NOT ship sbkversion.h
-          # in /usr/lib/python3/dist-packages/shiboken6/include/ — that header
-          # lives in the shiboken6-generator package, which is only reliably
-          # available via pip. FreeCAD's cMake/FindShiboken6.cmake has an
-          # explicit pip fallback (find_pip_package(shiboken6_generator)) that
-          # uses the pip-installed include directory, so we install both
-          # shiboken6 and shiboken6-generator via pip to ensure sbkversion.h
-          # is available at build time.
+          # The KDE Neon libshiboken6-py3-6.11 apt package DOES ship
+          # sbkversion.h, but at:
+          #   /usr/lib/python3/dist-packages/shiboken6/include/shiboken6/sbkversion.h
+          # (note the nested 'shiboken6/' subdir). The apt-installed
+          # Shiboken6Config.cmake only adds the parent 'include/' dir to
+          # SHIBOKEN_INCLUDE_DIR, so #include <sbkversion.h> fails.
           #
-          # We pin to a version compatible with the KDE Neon PySide6 (6.8.x).
+          # As a robust fallback, also pip-install shiboken6 +
+          # shiboken6-generator. This puts sbkversion.h at:
+          #   ~/.local/lib/python3.12/site-packages/shiboken6_generator/include/sbkversion.h
+          # (directly in include/, no subdir) which our patched
+          # cMake/FindShiboken6.cmake picks up via find_path.
+          #
+          # Version pinning: KDE Neon's PySide6 apt package is 6.11.1, so
+          # we install matching 6.11.1 shiboken6 via pip. Earlier versions
+          # (6.8.x) caused ABI mismatches with the apt-installed PySide6.
           python3 -m pip install --break-system-packages \
-            "shiboken6==6.8.3" \
-            "shiboken6-generator==6.8.3"
+            "shiboken6==6.11.1" \
+            "shiboken6-generator==6.11.1"
 
-          # Verify sbkversion.h is now findable
-          SbkDir=$(python3 -c "import shiboken6_generator, os; print(os.path.dirname(shiboken6_generator.__file__))")
-          echo "shiboken6_generator package dir: $SbkDir"
-          find "$SbkDir" -name 'sbkversion.h' -o -name 'sbkversion.h.in' | head -5
-          if ! find "$SbkDir" -name 'sbkversion.h' | grep -q .; then
-            echo "::error::sbkversion.h still not found after pip install"
-            find / -name 'sbkversion.h' 2>/dev/null | head -5
-            exit 1
-          fi
-          echo "✓ sbkversion.h located via pip-installed shiboken6-generator"
-
-      - name: Debug shiboken6 include paths
-        if: true
-        run: |
-          echo "=== Installed PySide6 / shiboken6 apt packages ==="
-          dpkg -l | grep -iE 'shiboken|pyside' | head -20
-          echo ""
-          echo "=== Pip-installed PySide6 / shiboken6 packages ==="
-          python3 -m pip list 2>/dev/null | grep -iE 'shiboken|pyside' | head -20
-          echo ""
-          echo "=== Find all sbkversion.h on the system ==="
-          find / -name 'sbkversion.h' 2>/dev/null
-          echo ""
-          echo "=== shiboken6 include dir contents (apt) ==="
-          ls -la /usr/lib/python3/dist-packages/shiboken6/include/ 2>&1 | head -20
+          # Quick verification: print where sbkversion.h now lives.
+          find / -name 'sbkversion.h' 2>/dev/null | head -5
 
       - name: Install AppImage tooling
         run: |

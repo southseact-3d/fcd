@@ -5,13 +5,23 @@
 
 # -------------------------------------------------------------------
 # Ubuntu / KDE Neon workaround:
-# The apt-installed libpyside6-dev package ships a Shiboken6Config.cmake
-# that points SHIBOKEN_INCLUDE_DIR at /usr/lib/python3/dist-packages/shiboken6/include —
-# but that directory does NOT contain sbkversion.h. The sbkversion.h
-# header lives in the separate shiboken6-generator package, which is
-# pip-installable. We always look for the generator (via pip OR apt) and
-# append its include directory so sbkversion.h is found regardless of
-# which installation method was used.
+#
+# The KDE Neon libpyside6-dev apt package ships a Shiboken6Config.cmake
+# that points SHIBOKEN_INCLUDE_DIR at:
+#   /usr/lib/python3/dist-packages/shiboken6/include
+#
+# But sbkversion.h is NOT in that directory — it's in a 'shiboken6'
+# SUBDIRECTORY of it:
+#   /usr/lib/python3/dist-packages/shiboken6/include/shiboken6/sbkversion.h
+#
+# So when src/Gui/PythonWrapper.cpp does `#include <sbkversion.h>`, the
+# compiler searches the -isystem path (.../shiboken6/include) and fails
+# because sbkversion.h is one level deeper (.../shiboken6/include/shiboken6).
+#
+# Fix: after the standard lookup, run find_path(RECURSE) for sbkversion.h
+# across all plausible shiboken6 / shiboken6_generator install locations
+# (apt, pip --user, pip --system, conda) and append every directory that
+# contains it to SHIBOKEN_INCLUDE_DIR.
 # -------------------------------------------------------------------
 
 find_package(Shiboken6 CONFIG QUIET)
@@ -39,61 +49,59 @@ else()
 endif()
 
 # -------------------------------------------------------------------
-# Always try to locate shiboken6-generator's include directory and
-# append it to SHIBOKEN_INCLUDE_DIR. This is the directory that
-# contains sbkversion.h. Without it, builds fail on Ubuntu 24.04 with
-# KDE Neon's libpyside6-dev package (which omits sbkversion.h from the
-# main shiboken6 include dir).
+# Always locate sbkversion.h and add its containing directory to
+# SHIBOKEN_INCLUDE_DIR. Required for src/Gui/PythonWrapper.cpp which
+# does `#include <sbkversion.h>` unconditionally when HAVE_SHIBOKEN6
+# is defined.
 #
-# Look in:
-#   1. pip-installed shiboken6_generator (most reliable)
-#   2. /usr/include/shiboken6 (Debian/Ubuntu alt location)
-#   3. Anywhere under /usr/lib/python3*/dist-packages/shiboken6_generator
+# We use find_path with PATHS covering apt + pip --user + pip --system
+# layouts on Debian/Ubuntu/KDE Neon. The 'NO_DEFAULT_PATH' ensures we
+# only look where we expect (not /usr/include or similar, which would
+# pick up unrelated headers).
 # -------------------------------------------------------------------
 if(SHIBOKEN_FOUND)
-    # Try pip first
-    find_pip_package(shiboken6_generator)
-    if(shiboken6_generator_FOUND AND shiboken6_generator_INCLUDE_DIRS)
-        list(APPEND SHIBOKEN_INCLUDE_DIR ${shiboken6_generator_INCLUDE_DIRS})
-    endif()
-
-    # Belt-and-braces: scan for sbkversion.h in known locations and add
-    # the containing directory to SHIBOKEN_INCLUDE_DIR if it isn't there
-    # already. This handles the case where pip install was used but
-    # find_pip_package didn't pick it up (different Python or pip layout).
-    file(GLOB _sbk_candidate_dirs
-        "/usr/lib/python3*/dist-packages/shiboken6_generator/include"
-        "/usr/lib/python3*/site-packages/shiboken6_generator/include"
-        "/usr/local/lib/python3*/dist-packages/shiboken6_generator/include"
-        "/usr/local/lib/python3*/site-packages/shiboken6_generator/include"
-        "/usr/include/shiboken6"
+    # find_path returns _sbkversion_dir = the directory containing sbkversion.h
+    find_path(_sbkversion_dir
+        NAMES sbkversion.h
+        PATHS
+            # apt layout (KDE Neon, libshiboken6-py3-6.11)
+            /usr/lib/python3/dist-packages/shiboken6/include
+            /usr/lib/python3/dist-packages/shiboken6/include/shiboken6
+            # pip --user layout
+            "$ENV{HOME}/.local/lib/python3.12/site-packages/shiboken6_generator/include"
+            "$ENV{HOME}/.local/lib/python3.11/site-packages/shiboken6_generator/include"
+            "$ENV{HOME}/.local/lib/python3.10/site-packages/shiboken6_generator/include"
+            # pip --system layout
+            /usr/local/lib/python3.12/dist-packages/shiboken6_generator/include
+            /usr/local/lib/python3.11/dist-packages/shiboken6_generator/include
+            /usr/local/lib/python3.10/dist-packages/shiboken6_generator/include
+            # generic Debian/Ubuntu alternative
+            /usr/include/shiboken6
+        NO_DEFAULT_PATH
     )
-    foreach(_dir ${_sbk_candidate_dirs})
-        if(EXISTS "${_dir}/sbkversion.h")
-            list(FIND SHIBOKEN_INCLUDE_DIR "${_dir}" _already)
-            if(_already EQUAL -1)
-                list(APPEND SHIBOKEN_INCLUDE_DIR "${_dir}")
-                message(STATUS "FindShiboken6: appended sbkversion.h provider: ${_dir}")
+    if(_sbkversion_dir)
+        list(FIND SHIBOKEN_INCLUDE_DIR "${_sbkversion_dir}" _already)
+        if(_already EQUAL -1)
+            list(APPEND SHIBOKEN_INCLUDE_DIR "${_sbkversion_dir}")
+            message(STATUS "FindShiboken6: appended sbkversion.h location: ${_sbkversion_dir}")
+        endif()
+        # Also try the nested 'shiboken6' subdirectory of the apt include path
+        # (KDE Neon layout: /usr/lib/python3/dist-packages/shiboken6/include/shiboken6/sbkversion.h)
+        set(_nested_dir "/usr/lib/python3/dist-packages/shiboken6/include/shiboken6")
+        if(EXISTS "${_nested_dir}/sbkversion.h")
+            list(FIND SHIBOKEN_INCLUDE_DIR "${_nested_dir}" _already_nested)
+            if(_already_nested EQUAL -1)
+                list(APPEND SHIBOKEN_INCLUDE_DIR "${_nested_dir}")
+                message(STATUS "FindShiboken6: appended nested sbkversion.h location: ${_nested_dir}")
             endif()
         endif()
-    endforeach()
-
-    # Final sanity check: verify sbkversion.h is reachable through
-    # SHIBOKEN_INCLUDE_DIR. If not, emit a warning so the user knows
-    # what's missing.
-    set(_sbk_found FALSE)
-    foreach(_dir ${SHIBOKEN_INCLUDE_DIR})
-        if(EXISTS "${_dir}/sbkversion.h")
-            set(_sbk_found TRUE)
-            break()
-        endif()
-    endforeach()
-    if(NOT _sbk_found)
+    else()
         message(WARNING
-            "FindShiboken6: sbkversion.h not found in any SHIBOKEN_INCLUDE_DIR "
-            "(${SHIBOKEN_INCLUDE_DIR}). Build will fail on files that "
-            "#include <sbkversion.h> (e.g. src/Gui/PythonWrapper.cpp). "
-            "Fix: pip install shiboken6-generator (matching your PySide6 version)."
+            "FindShiboken6: sbkversion.h not found in any expected location.\n"
+            "Build will fail on files that #include <sbkversion.h> (e.g.\n"
+            "src/Gui/PythonWrapper.cpp).\n"
+            "Fix: pip install shiboken6-generator (matching your PySide6 version),\n"
+            "or check that the apt libshiboken6-py3-6.x package is installed."
         )
     endif()
 endif()
