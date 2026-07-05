@@ -109,7 +109,7 @@
 #include "OverlayManager.h"
 #include "ProgressBar.h"
 #include "ProgressDialog.h"
-#include "PropertyEditor/PropertyEditor.h"
+#include "propertyeditor/PropertyEditor.h"
 #include "PropertyView.h"
 #include "PythonConsole.h"
 #include "Quarter/Quarter.h"
