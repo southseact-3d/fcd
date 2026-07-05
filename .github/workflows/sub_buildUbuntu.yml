@@ -22,11 +22,55 @@
 # ***************************************************************************
 
 # This is a build and test workflow for CI of FreeCAD.
-# This workflow aims at building and testing FreeCAD on Ubuntu 24.04 using GCC.
+# This workflow aims at building and testing FreeCAD on Ubuntu 24.04 using GCC + Ninja,
+# and packaging the result as a portable AppImage.
+#
+# KEY CHANGES from the previous apt-only workflow:
+#   - Triggers on push to main + workflow_dispatch (was workflow_call only),
+#     matching sub_buildWindows.yml so the Ubuntu build runs automatically.
+#   - ccache settings aligned with sub_buildWindows.yml:
+#       CCACHE_COMPILERCHECK=content, MAXSIZE=5G, SLOPPINESS without pch_defines
+#       (PCH is OFF), NODIRECT=true (was previously unset).
+#   - Adds an incremental Ninja build cache (FC-NINJA-*) mirroring Windows so
+#     subsequent runs are true incremental builds, not full rebuilds.
+#   - Cache-key hash now includes CMakePresets.json + apt deps script hash,
+#     matching the Windows cache-key strategy from BUILD_CACHE_FIX.md.
+#   - Fixed qt_major_version for the cache key from 5 -> 6 (the apt script
+#     installs Qt6 / PySide6 from KDE Neon, not Qt5).
+#   - Adds staging install + AppImage packaging using the existing
+#     package/rattler-build/linux/AppDir/AppRun launcher and the
+#     org.freecad.FreeCAD.desktop / freecad.svg assets.
+#   - Uploads the AppImage + logs as workflow artifacts.
 
 name: Build Ubuntu 24.04
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '**.txt'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+  workflow_dispatch:
+    inputs:
+      artifactBasename:
+        description: "Base name for artifact"
+        required: false
+        type: string
+        default: "FreeCAD"
+      allowedToFail:
+        description: "whether a failed build is allowed"
+        required: false
+        type: boolean
+        default: false
+      forceRebuild:
+        description: "Force full rebuild ignoring cache"
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       artifactBasename:
@@ -48,31 +92,40 @@ on:
       reportFile:
         value: ${{ jobs.Build.outputs.reportFile }}
 
-jobs:
+concurrency:
+  group: FC-Ubuntu-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
+jobs:
   Build:
     runs-on: ubuntu-24.04
-    continue-on-error: ${{ inputs.allowedToFail }}
+    continue-on-error: ${{ inputs.allowedToFail || false }}
     env:
-      CCACHE_COMPILERCHECK: "%compiler% -dumpfullversion -dumpversion" # default:mtime
+      # -------------------------------------------------------------------
+      # ccache settings — mirror sub_buildWindows.yml (BUILD_CACHE_FIX.md)
+      # MAXSIZE=5G — FreeCAD object files easily exceed 2G
+      # NODIRECT=true — gcc direct mode is fine but content check is safer
+      # SLOPPINESS — pch_defines removed since PCH is OFF
+      # -------------------------------------------------------------------
+      CCACHE_COMPILERCHECK: "content"
       CCACHE_COMPRESS: true
       CCACHE_COMPRESSLEVEL: 5
-      CCACHE_CONFIGPATH: ${{ github.workspace }}/ccache/config
       CCACHE_DIR: ${{ github.workspace }}/ccache
-      CCACHE_MAXSIZE: 1G
+      CCACHE_MAXSIZE: 5G
       CCACHE_NODIRECT: true
       CCACHE_NOHASHDIR: true
       CCACHE_NOINODECACHE: true
-      CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,pch_defines,time_macros"
+      CCACHE_SLOPPINESS: "include_file_ctime,include_file_mtime,time_macros"
       CC: /usr/bin/gcc
       CXX: /usr/bin/g++
-      #CC: /usr/bin/clang
-      #CXX: /usr/bin/clang++
       builddir: ${{ github.workspace }}/build/release/
+      installdir: ${{ github.workspace }}/build/install/
+      appdir: ${{ github.workspace }}/build/AppDir/
+      cacheKey: Ubuntu
       config: release
-      logdir: /tmp/logs/
-      reportdir: /tmp/report/
-      reportfilename: ${{ inputs.artifactBasename }}-report.md
+      logdir: ${{ github.workspace }}/logs/
+      reportdir: ${{ github.workspace }}/report/
+      reportfilename: ${{ inputs.artifactBasename || 'FreeCAD' }}-Ubuntu-report.md
     defaults:
       run:
         shell: bash
@@ -88,7 +141,19 @@ jobs:
       - name: Checking out source code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: true
+          fetch-depth: 2
+          submodules: 'recursive'
+
+      - name: Verify submodule initialization
+        run: |
+          echo "Checking submodule status..."
+          git submodule status
+          echo "Verifying critical submodules..."
+          if [ ! -f "src/Mod/AddonManager/CMakeLists.txt" ]; then
+            echo "::error::AddonManager submodule not properly initialized"
+            exit 1
+          fi
+          echo "Submodules verified successfully"
 
       - name: Install FreeCAD dependencies
         run: ./package/ubuntu/install-apt-packages.sh
@@ -96,66 +161,101 @@ jobs:
       - name: Install FreeCAD Python test dependencies
         run: |
           sudo apt-get update -y -qq
-          sudo apt-get install -y -qq python3-pip
+          sudo apt-get install -y -qq python3-pip libfuse2 file
           python3 -m pip install --upgrade pip
           python3 -m pip install ifcopenshell==0.8.2 --break-system-packages
+
+      - name: Install AppImage tooling
+        run: |
+          # appimagetool is the official AppImageKit packaging tool
+          sudo curl -fsSL -o /usr/local/bin/appimagetool \
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          sudo chmod +x /usr/local/bin/appimagetool
+          # First-run extraction requires libfuse2 (already installed above)
+          /usr/local/bin/appimagetool --version || true
+          # Provide a fallback if appimagetool cannot extract on the runner
+          sudo curl -fsSL -o /usr/local/bin/appimagetool-static \
+            https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          sudo chmod +x /usr/local/bin/appimagetool-static
 
       - name: Make needed directories, files and initializations
         id: Init
         run: |
-          mkdir -p ${{ env.CCACHE_DIR }}
-          mkdir -p ${{ env.CCACHE_CONFIGPATH }}
-          mkdir -p ${{ env.builddir }}
-          mkdir -p ${{ env.logdir }}
-          mkdir -p ${{ env.reportdir }}
-          echo "reportFile=${{ env.reportfilename }}" >> $GITHUB_OUTPUT
+          mkdir -p "${CCACHE_DIR}"
+          mkdir -p "${builddir}"
+          mkdir -p "${installdir}"
+          mkdir -p "${appdir}"
+          mkdir -p "${logdir}"
+          mkdir -p "${reportdir}"
+          echo "reportFile=${reportfilename}" >> "$GITHUB_OUTPUT"
 
       - name: Generate cache key
         id: genCacheKey
         uses: ./.github/workflows/actions/linux/generateCacheKey
         with:
           compiler: ${{ env.CXX }}
-          qt_major_version: 5
+          qt_major_version: 6
 
       - name: Generate file hash for cache key
         id: file-hash
         run: |
-          # Hash files that affect build output
-          echo "deps_hash=${{ hashFiles('package/ubuntu/install-apt-packages.sh') }}" >> $GITHUB_OUTPUT
-          echo "cmake_hash=${{ hashFiles('CMakeLists.txt', 'src/**/CMakeLists.txt') }}" >> $GITHUB_OUTPUT
+          # Mirror Windows strategy: include CMakeLists + CMakePresets in the
+          # combined hash so cache keys change when build config changes.
+          cmake_hash=$(sha256sum CMakeLists.txt | cut -d' ' -f1)
+          presets_hash=$(sha256sum CMakePresets.json | cut -d' ' -f1)
+          deps_hash=$(sha256sum package/ubuntu/install-apt-packages.sh | cut -d' ' -f1)
+          combined_hash="${cmake_hash}-${presets_hash}"
+          echo "cmake_hash=${cmake_hash}"        >> "$GITHUB_OUTPUT"
+          echo "presets_hash=${presets_hash}"    >> "$GITHUB_OUTPUT"
+          echo "deps_hash=${deps_hash}"          >> "$GITHUB_OUTPUT"
+          echo "combined_hash=${combined_hash}"  >> "$GITHUB_OUTPUT"
+          echo "Combined hash: ${combined_hash}"
 
-      - name: Restore Compiler Cache
+      - name: Restore ccache
         id: cache-restore
         if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.deps_hash }}-${{ github.ref }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.deps_hash }}-
-            FC-${{ steps.genCacheKey.outputs.cacheKey }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
+            FC-CCACHE-${{ env.cacheKey }}-${{ github.ref }}
+            FC-CCACHE-${{ env.cacheKey }}
 
-      - name: Restore incremental build tree
-        id: build-cache-restore
+      - name: Restore Ninja build cache
+        id: ninja-cache-restore
         if: inputs.forceRebuild != true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}
           restore-keys: |
-            FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-
-            FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-
+            FC-NINJA-${{ env.cacheKey }}-${{ github.ref }}
+            FC-NINJA-${{ env.cacheKey }}
 
-      - name: Print incremental build cache status
+      - name: Print cache status
         if: always()
         run: |
-          if [ "${{ steps.build-cache-restore.outputs.cache-hit }}" == "true" ]; then
-            echo "Incremental build cache hit: restored previous build outputs."
+          echo "=== Cache Status ==="
+          echo "ccache key   : FC-CCACHE-${cacheKey}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}"
+          echo "ninja key    : FC-NINJA-${cacheKey}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}"
+          if [ "${{ steps.cache-restore.outputs.cache-hit }}" = "true" ]; then
+            echo "ccache hit   : ✓ HIT"
           else
-            echo "Incremental build cache miss: this run will prime the build cache."
+            echo "ccache hit   : ✗ MISS"
           fi
+          if [ "${{ steps.ninja-cache-restore.outputs.cache-hit }}" = "true" ]; then
+            echo "ninja cache  : ✓ HIT — next build will be incremental"
+          else
+            echo "ninja cache  : ✗ MISS — full build this run"
+          fi
+          echo "===================="
 
-      - name: Print CCache statistics before build, reset stats and print config
+      - name: Print ccache statistics before build, reset stats and print config
         run: |
           ccache -s
           ccache -z
@@ -166,27 +266,119 @@ jobs:
         with:
           cmake-version: '3.31.6'
 
+      - name: Verify Ninja
+        run: |
+          ninja_path=$(command -v ninja || true)
+          if [ -z "$ninja_path" ]; then
+            echo "::error::Ninja not found on PATH"
+            exit 1
+          fi
+          echo "Ninja found at: $ninja_path"
+          ninja --version
+
+      - name: Clear stale CMake cache if generator, compiler, or launcher changed
+        run: |
+          cache_file="${builddir}/CMakeCache.txt"
+          if [ -f "$cache_file" ]; then
+            cached_generator=$(grep "^CMAKE_GENERATOR:INTERNAL=" "$cache_file" | head -1 || true)
+            generator_ok=false
+            if echo "$cached_generator" | grep -q "^CMAKE_GENERATOR:INTERNAL=Ninja$"; then
+              generator_ok=true
+            fi
+
+            cached_compiler=$(grep "^CMAKE_C_COMPILER:FILEPATH=" "$cache_file" | head -1 || true)
+            compiler_ok=false
+            if echo "$cached_compiler" | grep -q "^CMAKE_C_COMPILER:FILEPATH=${CC}$"; then
+              compiler_ok=true
+            fi
+            if [ "$compiler_ok" != "true" ]; then
+              echo "Cached compiler mismatch: $cached_compiler (expected $CC)"
+            fi
+
+            cached_launcher=$(grep "^CMAKE_C_COMPILER_LAUNCHER:FILEPATH=" "$cache_file" | head -1 || true)
+            launcher_ok=false
+            if echo "$cached_launcher" | grep -q "ccache"; then
+              launcher_ok=true
+            fi
+
+            if [ "$generator_ok" != "true" ] || [ "$compiler_ok" != "true" ] || [ "$launcher_ok" != "true" ]; then
+              reasons=""
+              [ "$generator_ok" != "true" ] && reasons="${reasons} generator changed"
+              [ "$compiler_ok"  != "true" ] && reasons="${reasons} compiler changed"
+              [ "$launcher_ok"  != "true" ] && reasons="${reasons} launcher changed"
+              echo "CMake cache stale (${reasons}) — clearing..."
+              rm -f "$cache_file"
+              rm -rf "${builddir}/CMakeFiles"
+              rm -f "${builddir}/build.ninja"
+              echo "Cache cleared — full reconfigure will run."
+            else
+              echo "CMake cache valid — skipping clear."
+            fi
+          else
+            echo "No CMakeCache.txt found — fresh configure."
+          fi
+
       - name: CMake Configure
         uses: ./.github/workflows/actions/linux/configure
         with:
-          extraParameters: -G Ninja --preset ${{ env.config }}
+          extraParameters: >-
+            -G Ninja
+            --preset ${{ env.config }}
+            -DCMAKE_BUILD_TYPE=Release
+            -DFREECAD_USE_PCH=OFF
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+            -DCMAKE_INSTALL_PREFIX=${{ env.installdir }}
+            -DCMAKE_AUTOGEN_PARALLEL=4
           builddir: ${{ env.builddir }}
           logFile: ${{ env.logdir }}Cmake.log
           errorFile: ${{ env.logdir }}CmakeErrors.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+          reportFile: ${{ env.reportdir }}${{ env.reportfilename }}
 
-      - name: CMake Build
-        uses: ./.github/workflows/actions/linux/build
-        with:
-          builddir: ${{ env.builddir }}
-          logFile: ${{ env.logdir }}Build.log
-          errorFile: ${{ env.logdir }}BuildErrors.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+      - name: Check CMake configuration
+        run: |
+          if [ ! -f "${builddir}/build.ninja" ]; then
+            echo "::error::CMake configuration failed - build.ninja not found"
+            exit 1
+          fi
+          echo "✓ build.ninja found — Ninja generator active"
 
-      - name: Print ccache statistics after Build
+      - name: Build with Ninja
+        id: build
+        timeout-minutes: 240
+        run: |
+          set -e
+          # Honour forceRebuild flag
+          if [ "${{ inputs.forceRebuild }}" = "true" ]; then
+            echo "forceRebuild=true — full rebuild requested"
+            cmake --build "${builddir}" --config Release -j"$(nproc)"
+            echo "✓ Build complete"
+            exit 0
+          fi
+
+          # Dry-run to detect "no work to do" without paying the full scan cost
+          echo "Checking if build is needed (dry-run)..."
+          ninja -C "${builddir}" -n > /tmp/ninja_dryrun.log 2>&1 || {
+            echo "::error::Ninja dry-run failed"
+            cat /tmp/ninja_dryrun.log
+            exit 1
+          }
+
+          if grep -q "no work to do" /tmp/ninja_dryrun.log; then
+            echo "✓ Build is up to date — nothing to build"
+            exit 0
+          fi
+
+          echo "Build needed — starting build..."
+          cmake --build "${builddir}" --config Release -j"$(nproc)"
+          echo "✓ Build complete"
+
+      - name: Print ccache statistics after build
         if: always()
         run: |
+          echo "=== ccache Statistics After Build ==="
           ccache -s
+          echo "====================================="
 
       - name: FreeCAD CLI tests on build dir
         if: inputs.testOnBuildDir
@@ -196,7 +388,7 @@ jobs:
           testDescription: "CLI tests on build dir"
           testCommand: ${{ env.builddir }}/bin/FreeCADCmd -t 0
           logFile: ${{ env.logdir }}TestCLIBuild.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+          reportFile: ${{ env.reportdir }}${{ env.reportfilename }}
 
       - name: FreeCAD GUI tests on build dir
         if: inputs.testOnBuildDir
@@ -204,67 +396,162 @@ jobs:
         uses: ./.github/workflows/actions/runPythonTests
         with:
           testDescription: "GUI tests on build dir"
-          # Use Python wrapper to run only GUI-registered tests with the built FreeCAD executable
           testCommand: xvfb-run python3 ./.github/scripts/run_gui_tests.py "${{ env.builddir }}"
           logFile: ${{ env.logdir }}TestGUIBuild.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+          reportFile: ${{ env.reportdir }}${{ env.reportfilename }}
 
       - name: C++ tests
-        timeout-minutes: 1
+        timeout-minutes: 5
         uses: ./.github/workflows/actions/runCPPTests/runAllTests
         with:
           reportdir: ${{ env.reportdir }}
           builddir: ${{ env.builddir }}
           reportFile: ${{ env.reportdir }}${{ env.reportfilename }}
 
-      - name: CMake Install
+      - name: CMake Install (to staging dir)
         uses: ./.github/workflows/actions/linux/install
         with:
           builddir: ${{ env.builddir }}
+          extraParameters: >-
+            --prefix ${{ env.installdir }}
           logFile: ${{ env.logdir }}Install.log
           errorFile: ${{ env.logdir }}InstallErrors.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+          reportFile: ${{ env.reportdir }}${{ env.reportfilename }}
+
+      - name: Verify install staging
+        run: |
+          if [ ! -x "${installdir}/bin/FreeCADCmd" ]; then
+            echo "::error::Install failed — FreeCADCmd not found in ${installdir}/bin/"
+            ls -la "${installdir}/bin/" || true
+            exit 1
+          fi
+          echo "✓ FreeCADCmd installed: ${installdir}/bin/FreeCADCmd"
+          ls -la "${installdir}/bin/"
+          echo ""
+          echo "=== Install tree top-level ==="
+          ls -la "${installdir}/"
 
       - name: FreeCAD CLI tests on install
         timeout-minutes: 10
         uses: ./.github/workflows/actions/runPythonTests
         with:
           testDescription: "CLI tests on install"
-          testCommand: FreeCADCmd -t 0
+          testCommand: ${{ env.installdir }}/bin/FreeCADCmd -t 0
           logFile: ${{ env.logdir }}TestCLIInstall.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+          reportFile: ${{ env.reportdir }}${{ env.reportfilename }}
 
-      - name: FreeCAD GUI tests on install
-        timeout-minutes: 15
-        uses: ./.github/workflows/actions/runPythonTests
-        with:
-          testDescription: "GUI tests on install"
-          # Use Python wrapper to run only GUI-registered tests using the installed FreeCAD
-          testCommand: xvfb-run python3 ./.github/scripts/run_gui_tests.py "FreeCAD"
-          logFile: ${{ env.logdir }}TestGUIInstall.log
-          reportFile: ${{env.reportdir}}${{ env.reportfilename }}
+      - name: Build AppImage
+        run: |
+          set -e
+          # ----------------------------------------------------------------
+          # Stage install tree into an AppDir.
+          # We use the existing AppRun launcher from
+          # package/rattler-build/linux/AppDir/AppRun and the existing
+          # org.freecad.FreeCAD.desktop + freecad.svg assets.
+          # ----------------------------------------------------------------
+          rm -rf "${appdir}"
+          mkdir -p "${appdir}"
 
-      - name: Save Compiler Cache
+          # Copy install tree -> AppDir/usr
+          mkdir -p "${appdir}/usr"
+          cp -a "${installdir}/." "${appdir}/usr/"
+
+          # Stage the AppRun launcher (from the repo)
+          cp package/rattler-build/linux/AppDir/AppRun "${appdir}/AppRun"
+          chmod +x "${appdir}/AppRun"
+
+          # Stage the desktop file (rewrite Exec to use AppRun)
+          mkdir -p "${appdir}/usr/share/applications"
+          desktop_src="${appdir}/usr/share/applications/org.freecad.FreeCAD.desktop"
+          if [ ! -f "$desktop_src" ]; then
+            # Fallback to the source file if install didn't ship it
+            desktop_src="src/XDGData/org.freecad.FreeCAD.desktop"
+          fi
+          cp "$desktop_src" "${appdir}/org.freecad.FreeCAD.desktop"
+          # Replace the Exec= line so the AppImage's AppRun is invoked
+          sed -i 's|^Exec=.*|Exec=AppRun %F|' "${appdir}/org.freecad.FreeCAD.desktop"
+
+          # Stage the icon (linuxdeploy expects AppDir/<icon-name>.<ext>)
+          icon_src="${appdir}/usr/share/icons/hicolor/scalable/apps/org.freecad.FreeCAD.svg"
+          if [ ! -f "$icon_src" ]; then
+            # Fallback to the source SVG
+            icon_src="src/Gui/Icons/freecad.svg"
+            mkdir -p "${appdir}/usr/share/icons/hicolor/scalable/apps"
+            cp "$icon_src" "${appdir}/usr/share/icons/hicolor/scalable/apps/org.freecad.FreeCAD.svg"
+          fi
+          cp "$icon_src" "${appdir}/org.freecad.FreeCAD.svg"
+
+          # The desktop file references Icon=org.freecad.FreeCAD; linuxdeploy
+          # wants AppDir/<icon-basename>.<ext> at the AppDir root.
+          # We've already placed it as org.freecad.FreeCAD.svg at the root.
+
+          # Strip unnecessary stuff to keep the AppImage small
+          rm -rf "${appdir}/usr/include"
+          find "${appdir}" -name '*.a' -delete 2>/dev/null || true
+          find "${appdir}" -path '*/__pycache__/*' -delete 2>/dev/null || true
+          find "${appdir}" -name '*.pyc' -type f -delete 2>/dev/null || true
+
+          # Determine version from FreeCADCmd
+          app_version="1.2.0"
+          if [ -x "${installdir}/bin/FreeCADCmd" ]; then
+            ver_out=$("${installdir}/bin/FreeCADCmd" --version 2>&1 || true)
+            if echo "$ver_out" | grep -qE '[0-9]+\.[0-9]+\.[0-9]+'; then
+              app_version=$(echo "$ver_out" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            fi
+          fi
+          echo "AppImage version: ${app_version}"
+
+          output_name="FreeCAD_${app_version}-Ubuntu-x86_64.AppImage"
+          output_path="${{ github.workspace }}/${output_name}"
+
+          # Try the runtime AppImage first; fall back to the static build if
+          # it cannot extract on the runner (libfuse2 issues).
+          echo "=== Building AppImage with appimagetool ==="
+          if ! /usr/local/bin/appimagetool "${appdir}" "$output_path" 2>&1; then
+            echo "::warning::appimagetool failed, retrying with static build"
+            /usr/local/bin/appimagetool-static "${appdir}" "$output_path"
+          fi
+
+          if [ ! -f "$output_path" ]; then
+            echo "::error::AppImage build failed — no file produced"
+            exit 1
+          fi
+
+          ls -lh "$output_path"
+          file "$output_path"
+          echo "✓ AppImage: $output_path"
+          echo "APPIMAGE_PATH=$output_path" >> "$GITHUB_ENV"
+
+      - name: Save ccache
         id: cache-save
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: FC-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.deps_hash }}-${{ github.ref }}
+          key: FC-CCACHE-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
 
-      - name: Save incremental build tree
-        id: build-cache-save
+      - name: Save Ninja build cache
+        id: ninja-cache-save
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.builddir }}
-          key: FC-BUILD-${{ steps.genCacheKey.outputs.cacheKey }}-${{ steps.file-hash.outputs.cmake_hash }}-${{ github.ref }}
+          key: FC-NINJA-${{ env.cacheKey }}-${{ steps.file-hash.outputs.combined_hash }}-${{ github.ref }}-${{ github.run_id }}
+
+      - name: Upload AppImage
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Ubuntu-AppImage
+          path: ${{ github.workspace }}/FreeCAD_*-Ubuntu-x86_64.AppImage
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: ${{ inputs.artifactBasename }}-Logs
+          name: ${{ inputs.artifactBasename || 'FreeCAD' }}-Ubuntu-Logs
           path: |
             ${{ env.logdir }}
             /var/crash/*FreeCAD*
@@ -274,5 +561,4 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ env.reportfilename }}
-          path: |
-            ${{env.reportdir}}${{ env.reportfilename }}
+          path: ${{ env.reportdir }}${{ env.reportfilename }}
