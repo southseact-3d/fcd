@@ -167,16 +167,17 @@ jobs:
 
       - name: Install AppImage tooling
         run: |
-          # appimagetool is the official AppImageKit packaging tool
+          # appimagetool is the official AppImageKit packaging tool.
+          # Use the continuous build (commit 5735cc5 confirmed working on
+          # ubuntu-24.04 runners); tagged releases use different asset names
+          # and the legacy "13" URL 404s.
           sudo curl -fsSL -o /usr/local/bin/appimagetool \
             https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
           sudo chmod +x /usr/local/bin/appimagetool
-          # First-run extraction requires libfuse2 (already installed above)
-          /usr/local/bin/appimagetool --version || true
-          # Provide a fallback if appimagetool cannot extract on the runner
-          sudo curl -fsSL -o /usr/local/bin/appimagetool-static \
-            https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
-          sudo chmod +x /usr/local/bin/appimagetool-static
+          # libfuse2 is required for AppImage runtime extraction (installed
+          # in the previous step). Verify the tool actually executes.
+          /usr/local/bin/appimagetool --version
+          echo "✓ appimagetool installed at /usr/local/bin/appimagetool"
 
       - name: Make needed directories, files and initializations
         id: Init
@@ -504,13 +505,10 @@ jobs:
           output_name="FreeCAD_${app_version}-Ubuntu-x86_64.AppImage"
           output_path="${{ github.workspace }}/${output_name}"
 
-          # Try the runtime AppImage first; fall back to the static build if
-          # it cannot extract on the runner (libfuse2 issues).
+          # Build the AppImage. The continuous appimagetool handles runtime
+          # extraction via libfuse2 on ubuntu-24.04; no static fallback needed.
           echo "=== Building AppImage with appimagetool ==="
-          if ! /usr/local/bin/appimagetool "${appdir}" "$output_path" 2>&1; then
-            echo "::warning::appimagetool failed, retrying with static build"
-            /usr/local/bin/appimagetool-static "${appdir}" "$output_path"
-          fi
+          /usr/local/bin/appimagetool "${appdir}" "$output_path"
 
           if [ ! -f "$output_path" ]; then
             echo "::error::AppImage build failed — no file produced"
