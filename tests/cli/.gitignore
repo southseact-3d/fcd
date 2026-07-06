@@ -1,0 +1,3 @@
+# CLI test results (per-run CSV/JSON output)
+# These are run artifacts, not source code.
+results/
