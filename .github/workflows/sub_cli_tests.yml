@@ -1,0 +1,138 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# CLI test harness for the PartDesign workbench.
+#
+# Runs after sub_buildUbuntu.yml succeeds. Downloads the install tree
+# artifact, sets FREECADCMD, and invokes tests/cli/runner.py.
+# Uploads the results/ directory as a workflow artifact for review.
+
+name: PartDesign CLI Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      allowedToFail:
+        description: "Allow tests to fail without failing the workflow"
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      allowedToFail:
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: FC-CLI-Tests-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  RunCLITests:
+    runs-on: ubuntu-24.04
+    continue-on-error: ${{ inputs.allowedToFail || false }}
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Checking out source code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Install Python deps for the runner
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq python3-pip
+          python3 -m pip install --upgrade pip --break-system-packages
+
+      - name: Download Ubuntu AppImage artifact
+        uses: actions/download-artifact@634f93cb2916e3a0c0dd606d2be1b0f9e7c4a1f5 # v5.0.0
+        with:
+          name: FreeCAD-Ubuntu-AppImage
+          # Try to find the AppImage artifact from the latest Ubuntu build run
+          # If the name doesn't match, the runner will fall back to a manual path below.
+          path: /tmp/appimage
+        continue-on-error: true
+
+      - name: Fallback — find AppImage from previous run on same branch
+        if: failure()
+        id: find-appimage
+        run: |
+          echo "Looking for AppImage artifact from latest successful Ubuntu build..."
+          # Use the GitHub CLI-equivalent REST call to find the latest successful
+          # sub_buildUbuntu run on this branch, then download its artifact.
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          echo "Branch: $BRANCH"
+          RUNS=$(curl -s -H "Authorization: token ${{ github.token }}" \
+                       -H "Accept: application/vnd.github+json" \
+                       "https://api.github.com/repos/${{ github.repository }}/actions/workflows/sub_buildUbuntu.yml/runs?branch=$BRANCH&status=success&per_page=1")
+          RUN_ID=$(echo "$RUNS" | jq -r '.workflow_runs[0].id // empty')
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::No successful Ubuntu build run found on branch $BRANCH. Trigger sub_buildUbuntu.yml first."
+            exit 1
+          fi
+          echo "Found successful Ubuntu build run: $RUN_ID"
+          ART_URL=$(curl -s -H "Authorization: token ${{ github.token }}" \
+                         -H "Accept: application/vnd.github+json" \
+                         "https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts" \
+                  | jq -r '.artifacts[] | select(.name | test("AppImage")) | .archive_download_url' | head -1)
+          if [ -z "$ART_URL" ]; then
+            echo "::error::No AppImage artifact found in run $RUN_ID"
+            exit 1
+          fi
+          mkdir -p /tmp/appimage
+          curl -sL -H "Authorization: token ${{ github.token }}" -o /tmp/appimage/appimage.zip "$ART_URL"
+          cd /tmp/appimage && unzip -o appimage.zip
+          ls -lh /tmp/appimage/
+
+      - name: Make AppImage executable + extract FreeCADCmd
+        id: extract
+        run: |
+          APPIMAGE_PATH=$(find /tmp/appimage -name "*.AppImage" -type f | head -1)
+          if [ -z "$APPIMAGE_PATH" ]; then
+            echo "::error::No AppImage found in /tmp/appimage"
+            ls -la /tmp/appimage/
+            exit 1
+          fi
+          echo "AppImage: $APPIMAGE_PATH"
+          chmod +x "$APPIMAGE_PATH"
+
+          # Extract the AppImage to a directory so we can call FreeCADCmd directly
+          # (AppRun requires FUSE which isn't always available on runners)
+          EXTRACT_DIR=/tmp/fcd-extract
+          mkdir -p "$EXTRACT_DIR"
+          cd "$EXTRACT_DIR"
+          "$APPIMAGE_PATH" --appimage-extract >/dev/null 2>&1 || true
+          ls "$EXTRACT_DIR/squashfs-root/usr/bin/" 2>&1 | head -10
+
+          FREECADCMD="$EXTRACT_DIR/squashfs-root/usr/bin/freecadcmd"
+          if [ ! -x "$FREECADCMD" ]; then
+            FREECADCMD="$EXTRACT_DIR/squashfs-root/usr/bin/FreeCADCmd"
+          fi
+          if [ ! -x "$FREECADCMD" ]; then
+            echo "::error::FreeCADCmd not found in extracted AppImage"
+            find "$EXTRACT_DIR" -name "*freecadcmd*" -o -name "*FreeCADCmd*" 2>/dev/null
+            exit 1
+          fi
+          echo "FreeCADCmd: $FREECADCMD"
+          echo "FREECADCMD=$FREECADCMD" >> $GITHUB_OUTPUT
+          "$FREECADCMD" --version || true
+
+      - name: Run CLI tests
+        env:
+          FREECADCMD: ${{ steps.extract.outputs.FREECADCMD }}
+        run: |
+          cd ${{ github.workspace }}
+          python3 tests/cli/runner.py --timeout 90
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: partdesign-cli-test-results
+          path: |
+            tests/cli/results/
+          if-no-files-found: warn
+          retention-days: 30
