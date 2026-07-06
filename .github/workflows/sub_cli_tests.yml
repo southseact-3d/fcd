@@ -48,7 +48,7 @@ jobs:
           python3 -m pip install --upgrade pip --break-system-packages
 
       - name: Download Ubuntu AppImage artifact
-        uses: actions/download-artifact@634f93cb2916e3a0c0dd606d2be1b0f9e7c4a1f5 # v5.0.0
+        uses: actions/download-artifact@v5 # v5.0.0
         with:
           name: FreeCAD-Ubuntu-AppImage
           # Try to find the AppImage artifact from the latest Ubuntu build run
