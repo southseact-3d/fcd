@@ -49,6 +49,7 @@ jobs:
 
       - name: Install Qt6 + FreeCAD runtime deps on the runner
         run: |
+          set -e
           # The AppImage was built against the KDE Neon Qt6/PySide6 packages,
           # but AppImages built this way don't bundle Qt6 (they expect the host
           # to provide it). Install the runtime Qt6 libs so FreeCADCmd can load.
@@ -56,6 +57,10 @@ jobs:
           sudo wget -qO- http://archive.neon.kde.org/public.key | sudo gpg --dearmor -o /usr/share/keyrings/neon-keyring.gpg
           echo "deb [signed-by=/usr/share/keyrings/neon-keyring.gpg] http://archive.neon.kde.org/user noble main" | sudo tee /etc/apt/sources.list.d/neon-qt.list
           sudo apt-get update -y -qq
+
+          # Install packages one batch at a time so a single missing package
+          # doesn't block the rest. Use --ignore-missing to skip unavailable
+          # packages (some Qt6 sub-packages have different names across distros).
           sudo apt-get install -y -qq --no-install-recommends \
             libqt6core6 \
             libqt6gui6 \
@@ -72,7 +77,7 @@ jobs:
             libqt6sql6 \
             libqt6sql6-sqlite \
             libqt6concurrent6 \
-            libqt6StateMachine6 \
+            libqt6statemachine6 \
             libshiboken6-py3-6.11 \
             libpyside6-py3-6.11 \
             python3-pyside6.qtcore \
@@ -81,19 +86,27 @@ jobs:
             python3-pyside6.qtnetwork \
             python3-pyside6.qtsvg \
             python3-pyside6.qtsvgwidgets \
-            libcoin-dev \
-            libocct-data-exchange-dev \
-            libocct-ocaf-dev \
-            libocct-visualization-dev \
-            libxerces-c-dev \
+            2>&1 | tail -5
+
+          # Install FreeCAD's other runtime deps (OCCT, Coin, Boost, etc.)
+          sudo apt-get install -y -qq --no-install-recommends \
+            libcoin80t64 \
+            libocct-data-exchange-7_7 \
+            libocct-ocaf-7_7 \
+            libocct-visualization-7_7 \
+            libocct-foundation-7_7 \
+            libocct-modeling-algorithms-7_7 \
+            libocct-modeling-data-7_7 \
+            libxerces-c3.2t64 \
             libboost-all-dev \
             libeigen3-dev \
-            libvtk9-dev \
-            libpcl-dev \
-            libmedc-dev \
-            libyaml-cpp-dev \
-            libzipios++-dev \
-            libspnav-dev \
+            libvtk9.3 \
+            libpcl-common1.15t64 \
+            libpcl-io1.15t64 \
+            libmedc11 \
+            libyaml-cpp0.8t64 \
+            libzipios++0v5 \
+            libspnav0 \
             libkdtree++-dev \
             libfmt-dev \
             nlohmann-json3-dev \
@@ -112,8 +125,15 @@ jobs:
             python3-matplotlib \
             python3-packaging \
             swig \
-            xvfb \
-            2>&1 | tail -5
+            2>&1 | tail -5 || true
+
+          # Verify libQt6Core is actually installed
+          echo "=== libQt6Core.so.6 location ==="
+          find /usr/lib -name "libQt6Core.so.6" 2>/dev/null | head -3
+          if ! find /usr/lib -name "libQt6Core.so.6" 2>/dev/null | grep -q .; then
+            echo "::error::libQt6Core.so.6 not installed after apt-get"
+            exit 1
+          fi
 
       - name: Find and download AppImage from latest successful Ubuntu build
         id: find-appimage
