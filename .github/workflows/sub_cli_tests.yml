@@ -111,7 +111,9 @@ jobs:
 
           # Find all lib dirs in the extracted AppImage (FreeCAD bundles libs
           # in multiple subdirs: usr/lib, usr/lib/x86_64-linux-gnu, etc.)
-          LIB_DIRS=$(find "$EXTRACT_DIR/squashfs-root/usr" -type d \( -name "lib" -o -name "lib64" -o -name "x86_64-linux-gnu" \) 2>/dev/null | sort -u | tr '\n' ':' | sed 's/:$//')
+          # Use a broad find that catches any directory containing .so files.
+          LIB_DIRS=$(find "$EXTRACT_DIR/squashfs-root" -type f -name "*.so*" 2>/dev/null \
+                    | xargs -n1 dirname 2>/dev/null | sort -u | tr '\n' ':' | sed 's/:$//')
           echo "Library dirs: $LIB_DIRS"
 
           # Write a wrapper script that sets LD_LIBRARY_PATH + PYTHONHOME only
