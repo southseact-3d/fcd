@@ -109,7 +109,19 @@ jobs:
           fi
           echo "FreeCADCmd: $FREECADCMD"
           echo "FREECADCMD=$FREECADCMD" >> $GITHUB_OUTPUT
-          "$FREECADCMD" --version || true
+
+          # FreeCADCmd needs LD_LIBRARY_PATH set to find libFreeCADApp.so
+          # and other bundled libs in the extracted AppImage.
+          LIB_DIR="$EXTRACT_DIR/squashfs-root/usr/lib"
+          echo "LD_LIBRARY_PATH=$LIB_DIR" >> $GITHUB_ENV
+          # Also set PYTHONHOME so FreeCAD's Python finds its site-packages
+          echo "PYTHONHOME=$EXTRACT_DIR/squashfs-root/usr" >> $GITHUB_ENV
+          # And PATH so FreeCADCmd can find python3 if it shells out
+          echo "PATH=$EXTRACT_DIR/squashfs-root/usr/bin:$PATH" >> $GITHUB_ENV
+
+          # Verify it actually runs
+          echo "=== FreeCADCmd version check ==="
+          "$FREECADCMD" --version 2>&1 || true
 
       - name: Run CLI tests
         env:
