@@ -47,6 +47,74 @@ jobs:
           sudo apt-get install -y -qq python3-pip jq unzip
           python3 -m pip install --upgrade pip --break-system-packages
 
+      - name: Install Qt6 + FreeCAD runtime deps on the runner
+        run: |
+          # The AppImage was built against the KDE Neon Qt6/PySide6 packages,
+          # but AppImages built this way don't bundle Qt6 (they expect the host
+          # to provide it). Install the runtime Qt6 libs so FreeCADCmd can load.
+          # Also add the KDE Neon repo so we get the exact same Qt6 version.
+          sudo wget -qO- http://archive.neon.kde.org/public.key | sudo gpg --dearmor -o /usr/share/keyrings/neon-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/neon-keyring.gpg] http://archive.neon.kde.org/user noble main" | sudo tee /etc/apt/sources.list.d/neon-qt.list
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            libqt6core6 \
+            libqt6gui6 \
+            libqt6widgets6 \
+            libqt6network6 \
+            libqt6opengl6 \
+            libqt6openglwidgets6 \
+            libqt6printsupport6 \
+            libqt6svg6 \
+            libqt6svgwidgets6 \
+            libqt6uitools6 \
+            libqt6xml6 \
+            libqt6dbus6 \
+            libqt6sql6 \
+            libqt6sql6-sqlite \
+            libqt6concurrent6 \
+            libqt6StateMachine6 \
+            libshiboken6-py3-6.11 \
+            libpyside6-py3-6.11 \
+            python3-pyside6.qtcore \
+            python3-pyside6.qtgui \
+            python3-pyside6.qtwidgets \
+            python3-pyside6.qtnetwork \
+            python3-pyside6.qtsvg \
+            python3-pyside6.qtsvgwidgets \
+            libcoin-dev \
+            libocct-data-exchange-dev \
+            libocct-ocaf-dev \
+            libocct-visualization-dev \
+            libxerces-c-dev \
+            libboost-all-dev \
+            libeigen3-dev \
+            libvtk9-dev \
+            libpcl-dev \
+            libmedc-dev \
+            libyaml-cpp-dev \
+            libzipios++-dev \
+            libspnav-dev \
+            libkdtree++-dev \
+            libfmt-dev \
+            nlohmann-json3-dev \
+            netgen \
+            netgen-headers \
+            python3-pivy \
+            python3-ply \
+            python3-pybind11 \
+            python3-cxx-dev \
+            python3-av \
+            python-is-python3 \
+            python3-defusedxml \
+            python3-git \
+            python3-lark \
+            python3-markdown \
+            python3-matplotlib \
+            python3-packaging \
+            swig \
+            xvfb \
+            2>&1 | tail -5
+
       - name: Find and download AppImage from latest successful Ubuntu build
         id: find-appimage
         run: |
