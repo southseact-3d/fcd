@@ -44,27 +44,16 @@ jobs:
       - name: Install Python deps for the runner
         run: |
           sudo apt-get update -y -qq
-          sudo apt-get install -y -qq python3-pip
+          sudo apt-get install -y -qq python3-pip jq unzip
           python3 -m pip install --upgrade pip --break-system-packages
 
-      - name: Download Ubuntu AppImage artifact
-        uses: actions/download-artifact@v5 # v5.0.0
-        with:
-          name: FreeCAD-Ubuntu-AppImage
-          # Try to find the AppImage artifact from the latest Ubuntu build run
-          # If the name doesn't match, the runner will fall back to a manual path below.
-          path: /tmp/appimage
-        continue-on-error: true
-
-      - name: Fallback — find AppImage from previous run on same branch
-        if: failure()
+      - name: Find and download AppImage from latest successful Ubuntu build
         id: find-appimage
         run: |
-          echo "Looking for AppImage artifact from latest successful Ubuntu build..."
-          # Use the GitHub CLI-equivalent REST call to find the latest successful
-          # sub_buildUbuntu run on this branch, then download its artifact.
+          set -e
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
-          echo "Branch: $BRANCH"
+          echo "Looking for AppImage artifact from latest successful Ubuntu build on branch: $BRANCH"
+          # Find the latest successful sub_buildUbuntu run on this branch
           RUNS=$(curl -s -H "Authorization: token ${{ github.token }}" \
                        -H "Accept: application/vnd.github+json" \
                        "https://api.github.com/repos/${{ github.repository }}/actions/workflows/sub_buildUbuntu.yml/runs?branch=$BRANCH&status=success&per_page=1")
@@ -74,6 +63,7 @@ jobs:
             exit 1
           fi
           echo "Found successful Ubuntu build run: $RUN_ID"
+          # Find the AppImage artifact in that run (name matches *AppImage*)
           ART_URL=$(curl -s -H "Authorization: token ${{ github.token }}" \
                          -H "Accept: application/vnd.github+json" \
                          "https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts" \
@@ -82,6 +72,7 @@ jobs:
             echo "::error::No AppImage artifact found in run $RUN_ID"
             exit 1
           fi
+          echo "Downloading: $ART_URL"
           mkdir -p /tmp/appimage
           curl -sL -H "Authorization: token ${{ github.token }}" -o /tmp/appimage/appimage.zip "$ART_URL"
           cd /tmp/appimage && unzip -o appimage.zip
