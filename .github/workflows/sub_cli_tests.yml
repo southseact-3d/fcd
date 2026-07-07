@@ -108,20 +108,34 @@ jobs:
             exit 1
           fi
           echo "FreeCADCmd: $FREECADCMD"
-          echo "FREECADCMD=$FREECADCMD" >> $GITHUB_OUTPUT
 
-          # FreeCADCmd needs LD_LIBRARY_PATH set to find libFreeCADApp.so
-          # and other bundled libs in the extracted AppImage.
-          LIB_DIR="$EXTRACT_DIR/squashfs-root/usr/lib"
-          echo "LD_LIBRARY_PATH=$LIB_DIR" >> $GITHUB_ENV
-          # Also set PYTHONHOME so FreeCAD's Python finds its site-packages
-          echo "PYTHONHOME=$EXTRACT_DIR/squashfs-root/usr" >> $GITHUB_ENV
-          # And PATH so FreeCADCmd can find python3 if it shells out
-          echo "PATH=$EXTRACT_DIR/squashfs-root/usr/bin:$PATH" >> $GITHUB_ENV
+          # Find all lib dirs in the extracted AppImage (FreeCAD bundles libs
+          # in multiple subdirs: usr/lib, usr/lib/x86_64-linux-gnu, etc.)
+          LIB_DIRS=$(find "$EXTRACT_DIR/squashfs-root/usr" -type d \( -name "lib" -o -name "lib64" -o -name "x86_64-linux-gnu" \) 2>/dev/null | sort -u | tr '\n' ':' | sed 's/:$//')
+          echo "Library dirs: $LIB_DIRS"
 
-          # Verify it actually runs
-          echo "=== FreeCADCmd version check ==="
-          "$FREECADCMD" --version 2>&1 || true
+          # Write a wrapper script that sets LD_LIBRARY_PATH + PYTHONHOME only
+          # for FreeCADCmd invocations (NOT globally, so the system python3
+          # that runs runner.py keeps working).
+          # Using printf to avoid heredoc indentation issues.
+          WRAPPER=/tmp/fcd-extract/freecadcmd-wrapper.sh
+          {
+            printf '#!/bin/bash\n'
+            printf '# Wrapper to invoke FreeCADCmd with correct LD_LIBRARY_PATH\n'
+            printf '# and PYTHONHOME so it finds its bundled libs and Python.\n'
+            printf 'export LD_LIBRARY_PATH="%s:$LD_LIBRARY_PATH"\n' "$LIB_DIRS"
+            printf 'export PYTHONHOME="%s"\n' "$EXTRACT_DIR/squashfs-root/usr"
+            printf 'export PYTHONPATH="%s/lib/python3.12:%s/lib/python3.12/lib-dynload"\n' "$EXTRACT_DIR/squashfs-root/usr" "$EXTRACT_DIR/squashfs-root/usr"
+            printf 'exec "%s" "$@"\n' "$FREECADCMD"
+          } > "$WRAPPER"
+          chmod +x "$WRAPPER"
+          echo "Wrapper contents:"
+          cat "$WRAPPER"
+          echo "FREECADCMD=$WRAPPER" >> $GITHUB_OUTPUT
+
+          # Verify it actually runs (via the wrapper)
+          echo "=== FreeCADCmd version check (via wrapper) ==="
+          "$WRAPPER" --version 2>&1 | head -5 || true
 
       - name: Run CLI tests
         env:
