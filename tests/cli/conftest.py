@@ -87,7 +87,24 @@ def run_freecad_script(
     with tempfile.NamedTemporaryFile(
         suffix=".py", mode="w", delete=False, prefix=f"fcd_test_{command_id}_"
     ) as f:
-        f.write(script)
+        # FreeCAD captures Python's print() and sys.stdout, so we need to
+        # replace print() with os.write(1, ...) which writes directly to the
+        # OS-level stdout, bypassing FreeCAD's capture.
+        import re as _re
+        # Replace: print("TEST_PASS") -> os.write(1, b"TEST_PASS\n")
+        # Use a function replacement to avoid backslash escaping issues
+        _patched = _re.sub(
+            r'print\("TEST_PASS"\)',
+            lambda m: 'import os; os.write(1, b"TEST_PASS" + b"\\n")',
+            script
+        )
+        # Replace: print("TEST_FAIL:", json.dumps(errors)) -> os.write(1, b"TEST_FAIL: " + json.dumps(errors).encode() + b"\n")
+        _patched = _re.sub(
+            r'print\("TEST_FAIL:", json\.dumps\(errors\)\)',
+            lambda m: 'import os; os.write(1, b"TEST_FAIL: " + json.dumps(errors).encode() + b"\\n")',
+            _patched
+        )
+        f.write(_patched)
         script_path = f.name
 
     start = time.monotonic()
