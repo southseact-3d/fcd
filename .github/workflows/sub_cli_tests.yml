@@ -135,6 +135,20 @@ jobs:
             exit 1
           fi
 
+          # The AppImage was built against older lib versions than what
+          # Ubuntu 24.04 ships. Create symlinks so FreeCADCmd can find them.
+          # This is fragile but works for libfmt (API-compatible across versions).
+          echo "=== Creating lib version symlinks ==="
+          # libfmt: Ubuntu 24.04 has .so.11, FreeCAD wants .so.9
+          FMT_ACTUAL=$(find /usr/lib -name "libfmt.so.*" -not -name "*.dev" 2>/dev/null | head -1)
+          if [ -n "$FMT_ACTUAL" ] && [ ! -f /usr/lib/x86_64-linux-gnu/libfmt.so.9 ]; then
+            sudo ln -sf "$FMT_ACTUAL" /usr/lib/x86_64-linux-gnu/libfmt.so.9
+            echo "Symlinked libfmt.so.9 -> $FMT_ACTUAL"
+          fi
+          # List what we have for debugging
+          echo "libfmt versions available:"
+          find /usr/lib -name "libfmt.so*" 2>/dev/null
+
       - name: Find and download AppImage from latest successful Ubuntu build
         id: find-appimage
         run: |
