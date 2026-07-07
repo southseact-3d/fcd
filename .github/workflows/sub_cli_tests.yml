@@ -109,6 +109,7 @@ jobs:
             libspnav0 \
             libkdtree++-dev \
             libfmt-dev \
+            libfmt11 \
             nlohmann-json3-dev \
             netgen \
             netgen-headers \
