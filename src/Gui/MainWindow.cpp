@@ -433,7 +433,7 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
     d->centralLayout->addWidget(d->mdiArea, 1);
 
     d->timeline = new Timeline(d->centralContainer);
-    d->timeline->setVisible(false);
+    d->timeline->setVisible(true);
     d->centralLayout->addWidget(d->timeline);
 
     setCentralWidget(d->centralContainer);

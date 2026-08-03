@@ -147,7 +147,7 @@ void CmdPartBox2::activated(int iMsg)
     doCommand(Doc, "from FreeCAD import Base");
     doCommand(Doc, "import Part");
     doCommand(Doc, "__fb__ = App.ActiveDocument.addObject(\"Part::Box\",\"PartBox\")");
-    doCommand(Doc, "__fb__.Location = Base.Vector(0.0,0.0,0.0)");
+    doCommand(Doc, "__fb__.Placement = Base.Placement(Base.Vector(0.0,0.0,0.0), Base.Rotation())");
     doCommand(Doc, "__fb__.Length = 100.0");
     doCommand(Doc, "__fb__.Width = 100.0");
     doCommand(Doc, "__fb__.Height = 100.0");
@@ -190,7 +190,7 @@ void CmdPartBox3::activated(int iMsg)
     doCommand(Doc, "from FreeCAD import Base");
     doCommand(Doc, "import Part");
     doCommand(Doc, "__fb__ = App.ActiveDocument.addObject(\"Part::Box\",\"PartBox\")");
-    doCommand(Doc, "__fb__.Location = Base.Vector(50.0,50.0,50.0)");
+    doCommand(Doc, "__fb__.Placement = Base.Placement(Base.Vector(50.0,50.0,50.0), Base.Rotation())");
     doCommand(Doc, "__fb__.Length = 100.0");
     doCommand(Doc, "__fb__.Width = 100.0");
     doCommand(Doc, "__fb__.Height = 100.0");
