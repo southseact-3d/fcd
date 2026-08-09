@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
+<!-- Fusion 360 Import workbench icon. Inspired by the Fusion 360
+     "F" mark rendered as a tilted cube plus a circular arrow that
+     hints at the "import" direction. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="cubeFront" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff8a3d"/>
+      <stop offset="100%" stop-color="#e85a1a"/>
+    </linearGradient>
+    <linearGradient id="cubeTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffc285"/>
+      <stop offset="100%" stop-color="#ff8a3d"/>
+    </linearGradient>
+    <linearGradient id="cubeRight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c0430f"/>
+      <stop offset="100%" stop-color="#7a2a08"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b8ee8"/>
+      <stop offset="100%" stop-color="#1e57a8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Import arrow ring (clockwise from top) -->
+  <path d="M32 6
+           a26 26 0 0 1 26 26"
+        fill="none" stroke="url(#ring)" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="58,32 58,18 44,32" fill="url(#ring)"/>
+
+  <!-- Isometric cube in front of the ring -->
+  <g transform="translate(8,30)">
+    <polygon points="0,12 16,4 32,12 16,20" fill="url(#cubeTop)"/>
+    <polygon points="0,12 16,20 16,36 0,28" fill="url(#cubeLeft)"/>
+    <polygon points="32,12 16,20 16,36 32,28" fill="url(#cubeFront)"/>
+    <!-- recolour the left face with a darker gradient so it reads
+         correctly against the ring -->
+    <polygon points="0,12 16,20 16,36 0,28" fill="url(#cubeRight)" opacity="0.85"/>
+  </g>
+</svg>
