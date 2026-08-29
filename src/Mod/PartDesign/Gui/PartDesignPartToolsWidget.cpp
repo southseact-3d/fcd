@@ -320,8 +320,16 @@ QToolButton* PartDesignPartToolsWidget::createToolButton(const char* cmdName)
     auto* btn = new QToolButton(this);
     btn->setDefaultAction(action->action());
     btn->setIcon(commandIcon(cmdName));
-    btn->setToolTip(
-        QApplication::translate(cmd->className(), cmd->getToolTipText()));
+    QString name = QApplication::translate(cmd->className(), cmd->getMenuText());
+    QString desc = QApplication::translate(cmd->className(), cmd->getToolTipText());
+    if (name != desc) {
+        btn->setToolTip(QStringLiteral(
+            "<p style='white-space:pre; margin-bottom:0.5em;'><b>%1</b></p>"
+            "<p style='white-space:pre;'>%2</p>")
+            .arg(name.toHtmlEscaped(), desc.toHtmlEscaped()));
+    } else {
+        btn->setToolTip(desc);
+    }
     btn->setText(
         QApplication::translate(cmd->className(), cmd->getMenuText()));
     btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
