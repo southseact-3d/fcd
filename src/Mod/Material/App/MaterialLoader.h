@@ -28,7 +28,7 @@
 
 #include <QDir>
 #include <QString>
-#include <yaml-cpp/yaml.h>
+#include <Base/YamlParser.h>
 
 #include "Materials.h"
 #include "trim.h"
@@ -82,17 +82,17 @@ public:
                       const QString& modelName,
                       const QString& dir,
                       const QString& modelUuid,
-                      const YAML::Node& modelData);
+                      const Base::YamlNode& modelData);
     ~MaterialYamlEntry() override = default;
 
     void
     addToTree(std::shared_ptr<std::map<QString, std::shared_ptr<Material>>> materialMap) override;
 
-    const YAML::Node& getModel() const
+    const Base::YamlNode& getModel() const
     {
         return _model;
     }
-    YAML::Node* getModelPtr()
+    Base::YamlNode* getModelPtr()
     {
         return &_model;
     }
@@ -101,14 +101,14 @@ private:
     MaterialYamlEntry();
 
     static QString
-    yamlValue(const YAML::Node& node, const std::string& key, const std::string& defaultValue);
-    static std::shared_ptr<QList<QVariant>> readList(const YAML::Node& node,
+    yamlValue(const Base::YamlNode& node, const std::string& key, const std::string& defaultValue);
+    static std::shared_ptr<QList<QVariant>> readList(const Base::YamlNode& node,
                                                      bool isImageList = false);
-    static std::shared_ptr<QList<QVariant>> readImageList(const YAML::Node& node);
-    static std::shared_ptr<Array2D> read2DArray(const YAML::Node& node, int columns);
-    static std::shared_ptr<Array3D> read3DArray(const YAML::Node& node, int columns);
+    static std::shared_ptr<QList<QVariant>> readImageList(const Base::YamlNode& node);
+    static std::shared_ptr<Array2D> read2DArray(const Base::YamlNode& node, int columns);
+    static std::shared_ptr<Array3D> read3DArray(const Base::YamlNode& node, int columns);
 
-    YAML::Node _model;
+    Base::YamlNode _model;
 };
 
 class MaterialLoader
@@ -120,13 +120,13 @@ public:
 
     static std::shared_ptr<std::list<QString>>
     getMaterialFolders(const MaterialLibraryLocal& library);
-    static void showYaml(const YAML::Node& yaml);
+    static void showYaml(const Base::YamlNode& yaml);
     static void
     dereference(const std::shared_ptr<std::map<QString, std::shared_ptr<Material>>>& materialMap,
                 const std::shared_ptr<Material>& material);
     static std::shared_ptr<MaterialEntry>
     getMaterialFromYAML(const std::shared_ptr<MaterialLibraryLocal>& library,
-                        YAML::Node& yamlroot,
+                        Base::YamlNode& yamlroot,
                         const QString& path);
 
 private:

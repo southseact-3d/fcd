@@ -59,12 +59,12 @@ MaterialYamlEntry::MaterialYamlEntry(const std::shared_ptr<MaterialLibraryLocal>
                                      const QString& modelName,
                                      const QString& dir,
                                      const QString& modelUuid,
-                                     const YAML::Node& modelData)
+                                     const Base::YamlNode& modelData)
     : MaterialEntry(library, modelName, dir, modelUuid)
     , _model(modelData)
 {}
 
-QString MaterialYamlEntry::yamlValue(const YAML::Node& node,
+QString MaterialYamlEntry::yamlValue(const Base::YamlNode& node,
                                      const std::string& key,
                                      const std::string& defaultValue)
 {
@@ -74,7 +74,7 @@ QString MaterialYamlEntry::yamlValue(const YAML::Node& node,
     return QString::fromStdString(defaultValue);
 }
 
-std::shared_ptr<QList<QVariant>> MaterialYamlEntry::readList(const YAML::Node& node,
+std::shared_ptr<QList<QVariant>> MaterialYamlEntry::readList(const Base::YamlNode& node,
                                                              bool isImageList)
 {
     auto list = std::make_shared<QList<QVariant>>();
@@ -93,12 +93,12 @@ std::shared_ptr<QList<QVariant>> MaterialYamlEntry::readList(const YAML::Node& n
     return list;
 }
 
-std::shared_ptr<QList<QVariant>> MaterialYamlEntry::readImageList(const YAML::Node& node)
+std::shared_ptr<QList<QVariant>> MaterialYamlEntry::readImageList(const Base::YamlNode& node)
 {
     return readList(node, true);
 }
 
-std::shared_ptr<Array2D> MaterialYamlEntry::read2DArray(const YAML::Node& node, int columns)
+std::shared_ptr<Array2D> MaterialYamlEntry::read2DArray(const Base::YamlNode& node, int columns)
 {
     auto array2d = std::make_shared<Array2D>();
     array2d->setColumns(columns);
@@ -126,7 +126,7 @@ std::shared_ptr<Array2D> MaterialYamlEntry::read2DArray(const YAML::Node& node, 
     return array2d;
 }
 
-std::shared_ptr<Array3D> MaterialYamlEntry::read3DArray(const YAML::Node& node, int columns)
+std::shared_ptr<Array3D> MaterialYamlEntry::read3DArray(const Base::YamlNode& node, int columns)
 {
     auto array3d = std::make_shared<Array3D>();
     array3d->setColumns(columns - 1);  // First column is third dimension
@@ -277,7 +277,7 @@ void MaterialYamlEntry::addToTree(
                             }
                         }
                     }
-                    catch (const YAML::BadConversion& e) {
+                    catch (const Base::YamlBadConversion& e) {
                         Base::Console().log("Exception %s <%s:%s> - ignored\n",
                                             e.what(),
                                             name.toStdString().c_str(),
@@ -344,7 +344,7 @@ void MaterialYamlEntry::addToTree(
                                                            propertyValue);
                         }
                     }
-                    catch (const YAML::BadConversion& e) {
+                    catch (const Base::YamlBadConversion& e) {
                         Base::Console().log("Exception %s <%s:%s> - ignored\n",
                                             e.what(),
                                             name.toStdString().c_str(),
@@ -384,7 +384,7 @@ void MaterialLoader::addLibrary(const std::shared_ptr<MaterialLibraryLocal>& mod
 
 std::shared_ptr<MaterialEntry>
 MaterialLoader::getMaterialFromYAML(const std::shared_ptr<MaterialLibraryLocal>& library,
-                                    YAML::Node& yamlroot,
+                                     Base::YamlNode& yamlroot,
                                     const QString& path)
 {
     std::shared_ptr<MaterialEntry> model = nullptr;
@@ -403,7 +403,7 @@ MaterialLoader::getMaterialFromYAML(const std::shared_ptr<MaterialLibraryLocal>&
                                                     QString::fromStdString(uuid),
                                                     yamlroot);
     }
-    catch (YAML::Exception const& e) {
+    catch (Base::YamlException const& e) {
         Base::Console().error("YAML parsing error: '%s'\n", path.toStdString().c_str());
         Base::Console().error("\t'%s'\n", e.what());
         showYaml(yamlroot);
@@ -442,13 +442,13 @@ MaterialLoader::getMaterialFromPath(const std::shared_ptr<MaterialLibraryLocal>&
         return model;
     }
 
-    YAML::Node yamlroot;
+    Base::YamlNode yamlroot;
     try {
-        yamlroot = YAML::Load(fin);
+        yamlroot = Base::YamlLoad(fin);
 
         model = getMaterialFromYAML(materialLibrary, yamlroot, path);
     }
-    catch (YAML::Exception const& e) {
+    catch (Base::YamlException const& e) {
         Base::Console().error("YAML parsing error: '%s'\n", pathName.c_str());
         Base::Console().error("\t'%s'\n", e.what());
         showYaml(yamlroot);
@@ -458,7 +458,7 @@ MaterialLoader::getMaterialFromPath(const std::shared_ptr<MaterialLibraryLocal>&
     return model;
 }
 
-void MaterialLoader::showYaml(const YAML::Node& yaml)
+void MaterialLoader::showYaml(const Base::YamlNode& yaml)
 {
     std::stringstream out;
 

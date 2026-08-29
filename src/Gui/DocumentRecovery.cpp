@@ -71,7 +71,7 @@ namespace sp = std::placeholders;
 // taken from the script doctools.py
 std::string DocumentRecovery::doctools
     = "import os,sys,string\n"
-      "from defusedxml import sax as defused_sax\n"
+      "import xml.sax as defused_sax\n"
       "from xml.sax.handler import ContentHandler\n"
       "import zipfile\n"
       "\n"

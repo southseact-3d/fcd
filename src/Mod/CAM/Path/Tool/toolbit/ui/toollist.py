@@ -23,7 +23,14 @@
 
 """Widget for displaying a list of ToolBits using TwoLineTableCell."""
 
-import yaml
+import sys
+import os
+
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "Material")
+)
+from Material import yaml_parser as yaml
+
 import Path
 from typing import Callable, List
 from PySide import QtGui, QtCore

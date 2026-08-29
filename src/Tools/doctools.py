@@ -5,7 +5,7 @@
 # FreeCAD Python script to work with the FCStd file format.
 
 import os
-from defusedxml import sax as defused_sax
+import xml.sax as defused_sax
 from xml.sax.handler import ContentHandler
 import zipfile
 

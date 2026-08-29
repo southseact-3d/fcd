@@ -43,7 +43,7 @@ ModelEntry::ModelEntry(const std::shared_ptr<ModelLibraryLocal>& library,
                        const QString& modelName,
                        const QString& dir,
                        const QString& modelUuid,
-                       const YAML::Node& modelData)
+                       const Base::YamlNode& modelData)
     : _library(library)
     , _base(baseName)
     , _name(modelName)
@@ -79,7 +79,7 @@ const QString ModelLoader::getUUIDFromPath(const QString& path)
     try {
         Base::FileInfo fi(path.toStdString());
         Base::ifstream str(fi);
-        YAML::Node yamlroot = YAML::Load(str);
+        Base::YamlNode yamlroot = Base::YamlLoad(str);
         std::string base = "Model";
         if (yamlroot["AppearanceModel"]) {
             base = "AppearanceModel";
@@ -88,7 +88,7 @@ const QString ModelLoader::getUUIDFromPath(const QString& path)
         const QString uuid = QString::fromStdString(yamlroot[base]["UUID"].as<std::string>());
         return uuid;
     }
-    catch (YAML::Exception&) {
+    catch (Base::YamlException&) {
         throw ModelNotFound();
     }
 }
@@ -101,14 +101,14 @@ std::shared_ptr<ModelEntry> ModelLoader::getModelFromPath(std::shared_ptr<ModelL
         throw ModelNotFound();
     }
 
-    YAML::Node yamlroot;
+    Base::YamlNode yamlroot;
     std::string base = "Model";
     std::string uuid;
     std::string name;
     try {
         Base::FileInfo fi(path.toStdString());
         Base::ifstream str(fi);
-        yamlroot = YAML::Load(str);
+        yamlroot = Base::YamlLoad(str);
         if (yamlroot["AppearanceModel"]) {
             base = "AppearanceModel";
         }
@@ -116,7 +116,7 @@ std::shared_ptr<ModelEntry> ModelLoader::getModelFromPath(std::shared_ptr<ModelL
         uuid = yamlroot[base]["UUID"].as<std::string>();
         name = yamlroot[base]["Name"].as<std::string>();
     }
-    catch (YAML::Exception const&) {
+    catch (Base::YamlException const&) {
         throw InvalidModel();
     }
 
@@ -131,7 +131,7 @@ std::shared_ptr<ModelEntry> ModelLoader::getModelFromPath(std::shared_ptr<ModelL
     return model;
 }
 
-void ModelLoader::showYaml(const YAML::Node& yaml) const
+void ModelLoader::showYaml(const Base::YamlNode& yaml) const
 {
     std::stringstream out;
 
@@ -206,7 +206,7 @@ void ModelLoader::dereference(std::shared_ptr<ModelEntry> model,
     model->markDereferenced();
 }
 
-QString ModelLoader::yamlValue(const YAML::Node& node,
+QString ModelLoader::yamlValue(const Base::YamlNode& node,
                                const std::string& key,
                                const std::string& defaultValue)
 {

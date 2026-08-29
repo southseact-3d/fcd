@@ -1,6 +1,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-import yaml
+import sys
+import os
+
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "Material")
+)
+from Material import yaml_parser as yaml
+
 import json
 from typing import Type, cast
 import FreeCAD
@@ -29,10 +36,14 @@ class _BaseToolBitSerializerTestCase(PathTestWithAssets):
     def setUp(self):
         """Create a tool bit for each test."""
         super().setUp()
-        if self.serializer_class is None or not issubclass(self.serializer_class, AssetSerializer):
+        if self.serializer_class is None or not issubclass(
+            self.serializer_class, AssetSerializer
+        ):
             raise NotImplementedError("Subclasses must define a valid serializer_class")
 
-        self.test_tool_bit = cast(ToolBitEndmill, self.assets.get("toolbit://5mm_Endmill"))
+        self.test_tool_bit = cast(
+            ToolBitEndmill, self.assets.get("toolbit://5mm_Endmill")
+        )
         self.test_tool_bit.label = "Test Tool"
         self.test_tool_bit.set_diameter(FreeCAD.Units.Quantity("4.12 mm"))
         self.test_tool_bit.set_length(FreeCAD.Units.Quantity("15.0 mm"))
@@ -79,16 +90,20 @@ class TestCamoticsToolBitSerializer(_BaseToolBitSerializerTestCase):
         )
         deserialized_bit = cast(
             ToolBitEndmill,
-            self.serializer_class.deserialize(camotics_data, id="test_id", dependencies=None),
+            self.serializer_class.deserialize(
+                camotics_data, id="test_id", dependencies=None
+            ),
         )
 
         self.assertIsInstance(deserialized_bit, ToolBit)
         self.assertEqual(deserialized_bit.label, "Test Tool")
         self.assertEqual(
-            deserialized_bit.get_diameter(), FreeCAD.Units.Quantity(4.12, FreeCAD.Units.Length)
+            deserialized_bit.get_diameter(),
+            FreeCAD.Units.Quantity(4.12, FreeCAD.Units.Length),
         )
         self.assertEqual(
-            deserialized_bit.get_length(), FreeCAD.Units.Quantity(15.0, FreeCAD.Units.Length)
+            deserialized_bit.get_length(),
+            FreeCAD.Units.Quantity(15.0, FreeCAD.Units.Length),
         )
         self.assertEqual(deserialized_bit.get_shape_name(), "Endmill")
 
@@ -133,22 +148,28 @@ class TestFCTBSerializer(_BaseToolBitSerializerTestCase):
         shape = ToolBitShapeEndmill("endmill")
 
         # Create the dependencies dictionary with the shape instance
-        dependencies: Mapping[AssetUri, Asset] = {AssetUri.build("toolbitshape", "endmill"): shape}
+        dependencies: Mapping[AssetUri, Asset] = {
+            AssetUri.build("toolbitshape", "endmill"): shape
+        }
 
         # Provide dummy id and dependencies for deserialization test
         deserialized_bit = cast(
             ToolBitEndmill,
-            self.serializer_class.deserialize(fctb_data, id="test_id", dependencies=dependencies),
+            self.serializer_class.deserialize(
+                fctb_data, id="test_id", dependencies=dependencies
+            ),
         )
 
         self.assertIsInstance(deserialized_bit, ToolBit)
         self.assertEqual(deserialized_bit.label, "Test Tool")
         self.assertEqual(deserialized_bit.get_shape_name(), "Endmill")
         self.assertEqual(
-            deserialized_bit.get_diameter(), FreeCAD.Units.Quantity(4.12, FreeCAD.Units.Length)
+            deserialized_bit.get_diameter(),
+            FreeCAD.Units.Quantity(4.12, FreeCAD.Units.Length),
         )
         self.assertEqual(
-            deserialized_bit.get_length(), FreeCAD.Units.Quantity(15.0, FreeCAD.Units.Length)
+            deserialized_bit.get_length(),
+            FreeCAD.Units.Quantity(15.0, FreeCAD.Units.Length),
         )
 
 
@@ -205,27 +226,35 @@ class TestYamlToolBitSerializer(_BaseToolBitSerializerTestCase):
         shape = ToolBitShapeEndmill("endmill")
 
         # Create the dependencies dictionary with the shape instance
-        dependencies: Mapping[AssetUri, Asset] = {AssetUri.build("toolbitshape", "endmill"): shape}
+        dependencies: Mapping[AssetUri, Asset] = {
+            AssetUri.build("toolbitshape", "endmill"): shape
+        }
 
         # Provide dummy id and dependencies for deserialization test
         deserialized_bit = cast(
             ToolBitEndmill,
-            self.serializer_class.deserialize(yaml_data, "TestID", dependencies=dependencies),
+            self.serializer_class.deserialize(
+                yaml_data, "TestID", dependencies=dependencies
+            ),
         )
         self.assertIsInstance(deserialized_bit, ToolBit)
         self.assertEqual(deserialized_bit.id, "TestID")
         self.assertEqual(deserialized_bit.label, "Test Tool")
         self.assertEqual(deserialized_bit.get_shape_name(), "Endmill")
         self.assertEqual(
-            deserialized_bit.get_diameter(), FreeCAD.Units.Quantity(4.12, FreeCAD.Units.Length)
+            deserialized_bit.get_diameter(),
+            FreeCAD.Units.Quantity(4.12, FreeCAD.Units.Length),
         )
         self.assertEqual(
-            deserialized_bit.get_length(), FreeCAD.Units.Quantity(15.0, FreeCAD.Units.Length)
+            deserialized_bit.get_length(),
+            FreeCAD.Units.Quantity(15.0, FreeCAD.Units.Length),
         )
 
         # Test with ID argument.
         deserialized_bit = cast(
             ToolBitEndmill,
-            self.serializer_class.deserialize(yaml_data, id="test_id", dependencies=dependencies),
+            self.serializer_class.deserialize(
+                yaml_data, id="test_id", dependencies=dependencies
+            ),
         )
         self.assertEqual(deserialized_bit.id, "test_id")

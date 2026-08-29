@@ -24,10 +24,24 @@
 
 """Widget for browsing ToolBit assets with filtering and sorting."""
 
-import yaml
+import sys
+import os
+
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "Material")
+)
+from Material import yaml_parser as yaml
+
 from typing import List, Optional, cast, Sequence
 from PySide import QtGui, QtCore
-from PySide.QtGui import QApplication, QMessageBox, QMenu, QAction, QKeySequence, QDialog
+from PySide.QtGui import (
+    QApplication,
+    QMessageBox,
+    QMenu,
+    QAction,
+    QKeySequence,
+    QDialog,
+)
 from PySide.QtCore import QMimeData
 import FreeCAD
 import Path
@@ -88,7 +102,9 @@ class ToolBitBrowserWidget(QtGui.QWidget):
             self._sort_combo.addItem("Sort by Toolbit Number", "tool_no")
         self._sort_combo.addItem("Sort by Label", "label")
         self._sort_combo.setCurrentIndex(0)
-        self._sort_combo.setVisible(self._tool_no_factory is not None)  # Hide if no tool_no_factory
+        self._sort_combo.setVisible(
+            self._tool_no_factory is not None
+        )  # Hide if no tool_no_factory
 
         # Top layout for search and sort
         self._top_layout = QtGui.QHBoxLayout()
@@ -96,9 +112,13 @@ class ToolBitBrowserWidget(QtGui.QWidget):
         self._top_layout.addWidget(self._sort_combo, 1)
 
         if self._compact_mode:
-            self._tool_list_widget = CompactToolBitListWidget(tool_no_factory=self._tool_no_factory)
+            self._tool_list_widget = CompactToolBitListWidget(
+                tool_no_factory=self._tool_no_factory
+            )
         else:
-            self._tool_list_widget = ToolBitListWidget(tool_no_factory=self._tool_no_factory)
+            self._tool_list_widget = ToolBitListWidget(
+                tool_no_factory=self._tool_no_factory
+            )
 
         # Main layout
         layout = QtGui.QVBoxLayout(self)
@@ -115,11 +135,15 @@ class ToolBitBrowserWidget(QtGui.QWidget):
 
         # Connect signals from the list widget
         self._tool_list_widget.itemDoubleClicked.connect(self._on_item_double_clicked)
-        self._tool_list_widget.itemSelectionChanged.connect(self._on_item_selection_changed)
+        self._tool_list_widget.itemSelectionChanged.connect(
+            self._on_item_selection_changed
+        )
 
         # Connect list widget context menu request to browser handler
         self._tool_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._tool_list_widget.customContextMenuRequested.connect(self._show_context_menu)
+        self._tool_list_widget.customContextMenuRequested.connect(
+            self._show_context_menu
+        )
 
         # Add keyboard shortcuts
         self._add_shortcuts()
@@ -183,13 +207,18 @@ class ToolBitBrowserWidget(QtGui.QWidget):
             self._all_assets.sort(key=lambda x: natural_sort_key(x.label))
         elif self._sort_key == "tool_no" and self._tool_no_factory:
             self._all_assets.sort(
-                key=lambda x: int(self._tool_no_factory(x) or 0) if self._tool_no_factory else 0
+                key=lambda x: (
+                    int(self._tool_no_factory(x) or 0) if self._tool_no_factory else 0
+                )
             )
 
     def _matches_search(self, toolbit, search_term):
         """Checks if a ToolBit matches the search term."""
         search_term = search_term.lower()
-        return search_term in toolbit.label.lower() or search_term in toolbit.summary.lower()
+        return (
+            search_term in toolbit.label.lower()
+            or search_term in toolbit.summary.lower()
+        )
 
     def _update_list(self):
         """Updates the list widget based on current search and sort."""
@@ -200,7 +229,8 @@ class ToolBitBrowserWidget(QtGui.QWidget):
         filtered_assets = [
             asset
             for asset in self._all_assets
-            if not self._current_search or self._matches_search(asset, self._current_search)
+            if not self._current_search
+            or self._matches_search(asset, self._current_search)
         ]
 
         # Collect current items in the list widget
@@ -372,7 +402,9 @@ class ToolBitBrowserWidget(QtGui.QWidget):
         if not uris:
             return
 
-        selected_bits = [cast(ToolBit, self._asset_manager.get(AssetUri(uri))) for uri in uris]
+        selected_bits = [
+            cast(ToolBit, self._asset_manager.get(AssetUri(uri))) for uri in uris
+        ]
         selected_bits = [bit for bit in selected_bits if bit]  # Filter out None
         if not selected_bits:
             return
@@ -394,7 +426,9 @@ class ToolBitBrowserWidget(QtGui.QWidget):
             clipboard_data_dict.update(extra_data)
 
         # Serialize the dictionary to YAML
-        clipboard_content_yaml = yaml.dump(clipboard_data_dict, default_flow_style=False)
+        clipboard_content_yaml = yaml.dump(
+            clipboard_data_dict, default_flow_style=False
+        )
 
         # Put the YAML data on the clipboard with a custom MIME type
         mime_data = QMimeData()
@@ -444,7 +478,9 @@ class ToolBitBrowserWidget(QtGui.QWidget):
                 toolbit_uri = AssetUri(uri_string)
 
                 # First, remove the toolbit from all libraries that contain it
-                libraries_to_update = self._find_libraries_containing_toolbit(toolbit_uri)
+                libraries_to_update = self._find_libraries_containing_toolbit(
+                    toolbit_uri
+                )
                 for library in libraries_to_update:
                     library.remove_bit_by_uri(uri_string)
                     if library not in libraries_modified:  # Avoid duplicates
@@ -482,7 +518,9 @@ class ToolBitBrowserWidget(QtGui.QWidget):
         libraries_with_toolbit = []
         try:
             # Get all libraries from the asset manager
-            all_libraries = self._asset_manager.fetch("toolbitlibrary", store="local", depth=1)
+            all_libraries = self._asset_manager.fetch(
+                "toolbitlibrary", store="local", depth=1
+            )
 
             for library in all_libraries:
                 if isinstance(library, Library):
@@ -493,7 +531,9 @@ class ToolBitBrowserWidget(QtGui.QWidget):
                             break
 
         except Exception as e:
-            Path.Log.error(f"Error finding libraries containing toolbit {toolbit_uri}: {e}")
+            Path.Log.error(
+                f"Error finding libraries containing toolbit {toolbit_uri}: {e}"
+            )
 
         return libraries_with_toolbit
 

@@ -1,4 +1,4 @@
 macro(SetupYamlCpp)
-    # -------------------------------- YamlCpp --------------------------------
-    find_package(yaml-cpp REQUIRED)
+    # yaml-cpp has been replaced by Base::YamlParser
+    # This macro is kept as a no-op for compatibility
 endmacro(SetupYamlCpp)

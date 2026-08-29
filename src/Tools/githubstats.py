@@ -3,10 +3,13 @@
 
 print("Fetching download statistics from github...")
 
-import requests
+import json
+import urllib.request
 
-r = requests.get("https://api.github.com/repos/FreeCAD/FreeCAD/releases")
-myobj = r.json()
+response = urllib.request.urlopen(
+    "https://api.github.com/repos/FreeCAD/FreeCAD/releases"
+)
+myobj = json.loads(response.read())
 for p in myobj:
     if "assets" in p:
         for asset in p["assets"]:
